@@ -8,6 +8,7 @@ global using StudentBazaar.Web.Models.Enums;
 global using StudentBazaar.Web.Models;
 global using System.Linq.Expressions;
 global using StudentBazaar.Web.Repositories;
+global using StudentBazaar.Web.Repositories;
 
 
 

@@ -1,6 +1,6 @@
 ﻿
-using StudentBazaar.Web.Repositories;
-using StudentBazaar.Web.Repositories;
+using StudentBazaar.Web.implementation;
+using StudentBazaar.Web.Implementation;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,7 +16,19 @@ builder.Services.AddControllersWithViews();
 // Register repositories
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 
-GetBuilder(builder).Services.AddScoped<ICategoryRepository, CategoryRepository>();
+
+builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+builder.Services.AddScoped<ICollegeRepository, CollegeRepository>();
+builder.Services.AddScoped<IListingRepository, ListingRepository>();
+builder.Services.AddScoped<IMajorRepository, MajorRepository>();
+builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+builder.Services.AddScoped<IProductCategoryRepository, ProductCategoryRepository>();
+builder.Services.AddScoped<IProductRepository, ProductRepository>();
+builder.Services.AddScoped<IRatingRepository, RatingRepository>();
+builder.Services.AddScoped<IShoppingCartItemRepository, ShoppingCartItemRepository>();
+builder.Services.AddScoped<IStudyYearRepository, StudyYearRepository>();
+
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

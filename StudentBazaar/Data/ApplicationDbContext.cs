@@ -1,4 +1,6 @@
 ﻿
+using System.ComponentModel;
+
 namespace StudentBazaar.Web.Data;
 
 public class ApplicationDbContext : DbContext
@@ -194,5 +196,10 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<College>()
             .HasIndex(c => new { c.CollegeName, c.UniversityId })
             .IsUnique();
+    }
+
+    internal void UpdateCategoryAttribute(CategoryAttribute categoryAttribute)
+    {
+        throw new NotImplementedException();
     }
 }

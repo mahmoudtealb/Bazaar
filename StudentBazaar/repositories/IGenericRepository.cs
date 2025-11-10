@@ -1,22 +1,29 @@
-﻿using System.Linq.Expressions;
+﻿
 
 namespace StudentBazaar.Web.Repositories
 {
     public interface IGenericRepository<T> where T : class
     {
-        // Retrieve all entities (optionally filtered and including related data)
-        IEnumerable<T> GetAll(Expression<Func<T, bool>>? predicate, string? includeWord);
+        // ✅ Get all entities (with optional filter and include)
+        Task<IEnumerable<T>> GetAllAsync(
+            Expression<Func<T, bool>>? predicate = null,
+            string? includeWord = null);
 
-        // Retrieve the first entity that matches the condition, or null if not found
-        T? GetFirstOrDefault(Expression<Func<T, bool>> predicate, string? includeWord);
+        // ✅ Get first or default entity
+        Task<T?> GetFirstOrDefaultAsync(
+            Expression<Func<T, bool>> predicate,
+            string? includeWord = null);
 
-        // Add a new entity to the context
-        void Add(T entity);
+        // ✅ Add new entity
+        Task AddAsync(T entity);
 
-        // Remove a single entity from the context
+        // ✅ Remove one entity
         void Remove(T entity);
 
-        // Remove multiple entities from the context
+        // ✅ Remove multiple entities
         void RemoveRange(IEnumerable<T> entities);
+
+        // ✅ Save changes
+        Task SaveAsync();
     }
 }

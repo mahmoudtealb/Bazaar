@@ -1,60 +1,58 @@
-﻿using Microsoft.EntityFrameworkCore;
-using System.Linq.Expressions;
-
-namespace StudentBazaar.Web.Repositories
-{
-    public class GenericRepository<T> : IGenericRepository<T> where T : class
+﻿
+    namespace StudentBazaar.Web.Repositories
     {
-        protected readonly ApplicationDbContext _context;
-        internal DbSet<T> dbSet;
-
-        public GenericRepository(ApplicationDbContext context)
+        public class GenericRepository<T> : IGenericRepository<T> where T : class
         {
-            _context = context;
-            dbSet = _context.Set<T>();
-        }
+            private readonly ApplicationDbContext _context;
+            private readonly DbSet<T> _dbSet;
 
-        // Get all entities (optionally filtered and including related data)
-        public IEnumerable<T> GetAll(Expression<Func<T, bool>>? predicate, string? includeWord)
-        {
-            IQueryable<T> query = dbSet;
+            public GenericRepository(ApplicationDbContext context)
+            {
+                _context = context;
+                _dbSet = _context.Set<T>();
+            }
 
-            if (predicate != null)
-                query = query.Where(predicate);
+            public async Task<IEnumerable<T>> GetAllAsync(Expression<Func<T, bool>>? predicate = null, string? includeWord = null)
+            {
+                IQueryable<T> query = _dbSet;
 
-            if (!string.IsNullOrEmpty(includeWord))
-                query = query.Include(includeWord);
+                if (predicate != null)
+                    query = query.Where(predicate);
 
-            return query.ToList();
-        }
+                if (!string.IsNullOrEmpty(includeWord))
+                    query = query.Include(includeWord);
 
-        // Get the first matching entity or return null if not found
-        public T? GetFirstOrDefault(Expression<Func<T, bool>> predicate, string? includeWord)
-        {
-            IQueryable<T> query = dbSet;
+                return await query.ToListAsync();
+            }
 
-            if (!string.IsNullOrEmpty(includeWord))
-                query = query.Include(includeWord);
+            public async Task<T?> GetFirstOrDefaultAsync(Expression<Func<T, bool>> predicate, string? includeWord = null)
+            {
+                IQueryable<T> query = _dbSet;
 
-            return query.FirstOrDefault(predicate);
-        }
+                if (!string.IsNullOrEmpty(includeWord))
+                    query = query.Include(includeWord);
 
-        // Add a new entity to the database
-        public void Add(T entity)
-        {
-            dbSet.Add(entity);
-        }
+                return await query.FirstOrDefaultAsync(predicate);
+            }
 
-        // Remove a single entity
-        public void Remove(T entity)
-        {
-            dbSet.Remove(entity);
-        }
+            public async Task AddAsync(T entity)
+            {
+                await _dbSet.AddAsync(entity);
+            }
 
-        // Remove multiple entities at once
-        public void RemoveRange(IEnumerable<T> entities)
-        {
-            dbSet.RemoveRange(entities);
+            public void Remove(T entity)
+            {
+                _dbSet.Remove(entity);
+            }
+
+            public void RemoveRange(IEnumerable<T> entities)
+            {
+                _dbSet.RemoveRange(entities);
+            }
+
+            public async Task SaveAsync()
+            {
+                await _context.SaveChangesAsync();
+            }
         }
     }
-}

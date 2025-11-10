@@ -3,27 +3,27 @@ namespace StudentBazaar.Web.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class ProductController : ControllerBase
+    public class MajorController : ControllerBase
     {
-        private readonly IGenericRepository<Product> _repo;
+        private readonly IGenericRepository<Major> _repo;
 
-        public ProductController(IGenericRepository<Product> repo)
+        public MajorController(IGenericRepository<Major> repo)
         {
             _repo = repo;
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll() => Ok(await _repo.GetAllAsync(includeWord: "Category,StudyYear,Images,Listings,Ratings"));
+        public async Task<IActionResult> GetAll() => Ok(await _repo.GetAllAsync(includeWord: "College,StudyYears"));
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
-            var entity = await _repo.GetFirstOrDefaultAsync(p => p.Id == id, includeWord: "Category,StudyYear,Images,Listings,Ratings");
+            var entity = await _repo.GetFirstOrDefaultAsync(m => m.Id == id, includeWord: "College,StudyYears");
             return entity == null ? NotFound() : Ok(entity);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] Product entity)
+        public async Task<IActionResult> Create([FromBody] Major entity)
         {
             await _repo.AddAsync(entity);
             await _repo.SaveAsync();
@@ -31,14 +31,13 @@ namespace StudentBazaar.Web.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] Product entity)
+        public async Task<IActionResult> Update(int id, [FromBody] Major entity)
         {
-            var existing = await _repo.GetFirstOrDefaultAsync(p => p.Id == id);
+            var existing = await _repo.GetFirstOrDefaultAsync(m => m.Id == id);
             if (existing == null) return NotFound();
 
-            existing.Name = entity.Name;
-            existing.CategoryId = entity.CategoryId;
-            existing.StudyYearId = entity.StudyYearId;
+            existing.MajorName = entity.MajorName;
+            existing.CollegeId = entity.CollegeId;
             existing.UpdatedAt = DateTime.Now;
 
             await _repo.SaveAsync();
@@ -48,7 +47,7 @@ namespace StudentBazaar.Web.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var existing = await _repo.GetFirstOrDefaultAsync(p => p.Id == id);
+            var existing = await _repo.GetFirstOrDefaultAsync(m => m.Id == id);
             if (existing == null) return NotFound();
 
             _repo.Remove(existing);
