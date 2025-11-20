@@ -1,5 +1,7 @@
-﻿
-using StudentBazaar.Web.ViewModels;
+﻿using StudentBazaar.Web.ViewModels;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using StudentBazaar.Web.Models;
 
 namespace StudentBazaar.Web.Controllers
 {
@@ -8,15 +10,18 @@ namespace StudentBazaar.Web.Controllers
         private readonly IGenericRepository<Product> _repo;
         private readonly IGenericRepository<ProductCategory> _categoryRepo;
         private readonly IGenericRepository<StudyYear> _studyYearRepo;
+        private readonly IWebHostEnvironment _env;
 
         public ProductController(
             IGenericRepository<Product> repo,
             IGenericRepository<ProductCategory> categoryRepo,
-            IGenericRepository<StudyYear> studyYearRepo)
+            IGenericRepository<StudyYear> studyYearRepo,
+            IWebHostEnvironment env)
         {
             _repo = repo;
             _categoryRepo = categoryRepo;
             _studyYearRepo = studyYearRepo;
+            _env = env;
         }
 
         // GET: Product
@@ -26,27 +31,10 @@ namespace StudentBazaar.Web.Controllers
             return View(products);
         }
 
-        // GET: Product/Details/5
-        public async Task<IActionResult> Details(int id)
-        {
-            var entity = await _repo.GetFirstOrDefaultAsync(p => p.Id == id, includeWord: "Category,StudyYear,Images,Listings,Ratings");
-            if (entity == null)
-                return NotFound();
-
-            return View(entity);
-        }
-
         // GET: Product/Create
         public async Task<IActionResult> Create()
         {
-            var model = new ProductCreateViewModel
-            {
-                Categories = (await _categoryRepo.GetAllAsync())
-                                .Select(c => new SelectListItem(c.CategoryName, c.Id.ToString())),
-                StudyYears = (await _studyYearRepo.GetAllAsync())
-                                .Select(s => new SelectListItem(s.YearName, s.Id.ToString()))
-            };
-
+            var model = await PopulateCreateViewModel();
             return View(model);
         }
 
@@ -57,17 +45,17 @@ namespace StudentBazaar.Web.Controllers
         {
             if (!ModelState.IsValid)
             {
-                model.Categories = (await _categoryRepo.GetAllAsync())
-                                .Select(c => new SelectListItem(c.CategoryName, c.Id.ToString()));
-                model.StudyYears = (await _studyYearRepo.GetAllAsync())
-                                .Select(s => new SelectListItem(s.YearName, s.Id.ToString()));
+                model = await PopulateCreateViewModel(model.Product);
                 return View(model);
             }
 
-            // إضافة المنتج
             var product = model.Product;
-            await _repo.AddAsync(product);
-            await _repo.SaveAsync();
+            product.Images = new List<ProductImage>();
+
+            // مسار wwwroot/uploads
+            var uploadRoot = Path.Combine(_env.WebRootPath, "uploads");
+            if (!Directory.Exists(uploadRoot))
+                Directory.CreateDirectory(uploadRoot);
 
             // رفع الصور
             if (model.Files != null && model.Files.Any())
@@ -75,23 +63,23 @@ namespace StudentBazaar.Web.Controllers
                 foreach (var file in model.Files)
                 {
                     var fileName = $"{Guid.NewGuid()}_{file.FileName}";
-                    var path = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads", fileName);
+                    var filePath = Path.Combine(uploadRoot, fileName);
 
-                    using (var stream = new FileStream(path, FileMode.Create))
+                    using (var stream = new FileStream(filePath, FileMode.Create))
                     {
                         await file.CopyToAsync(stream);
                     }
 
                     product.Images.Add(new ProductImage
                     {
-                        ProductId = product.Id,
                         ImageUrl = "/uploads/" + fileName,
                         IsMainImage = false
                     });
                 }
-
-                await _repo.SaveAsync();
             }
+
+            await _repo.AddAsync(product);
+            await _repo.SaveAsync();
 
             return RedirectToAction(nameof(Index));
         }
@@ -103,15 +91,7 @@ namespace StudentBazaar.Web.Controllers
             if (existing == null)
                 return NotFound();
 
-            var model = new ProductCreateViewModel
-            {
-                Product = existing,
-                Categories = (await _categoryRepo.GetAllAsync())
-                                .Select(c => new SelectListItem(c.CategoryName  , c.Id.ToString())),
-                StudyYears = (await _studyYearRepo.GetAllAsync())
-                                .Select(s => new SelectListItem(s.YearName, s.Id.ToString()))
-            };
-
+            var model = await PopulateCreateViewModel(existing);
             return View(model);
         }
 
@@ -122,10 +102,7 @@ namespace StudentBazaar.Web.Controllers
         {
             if (!ModelState.IsValid)
             {
-                model.Categories = (await _categoryRepo.GetAllAsync())
-                                .Select(c => new SelectListItem(c.CategoryName, c.Id.ToString()));
-                model.StudyYears = (await _studyYearRepo.GetAllAsync())
-                                .Select(s => new SelectListItem(s.YearName, s.Id.ToString()));
+                model = await PopulateCreateViewModel(model.Product);
                 return View(model);
             }
 
@@ -138,15 +115,18 @@ namespace StudentBazaar.Web.Controllers
             existing.StudyYearId = model.Product.StudyYearId;
             existing.UpdatedAt = DateTime.Now;
 
-            // رفع صور جديدة
+            var uploadRoot = Path.Combine(_env.WebRootPath, "uploads");
+            if (!Directory.Exists(uploadRoot))
+                Directory.CreateDirectory(uploadRoot);
+
             if (model.Files != null && model.Files.Any())
             {
                 foreach (var file in model.Files)
                 {
                     var fileName = $"{Guid.NewGuid()}_{file.FileName}";
-                    var path = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads", fileName);
+                    var filePath = Path.Combine(uploadRoot, fileName);
 
-                    using (var stream = new FileStream(path, FileMode.Create))
+                    using (var stream = new FileStream(filePath, FileMode.Create))
                     {
                         await file.CopyToAsync(stream);
                     }
@@ -186,6 +166,23 @@ namespace StudentBazaar.Web.Controllers
             _repo.Remove(entity);
             await _repo.SaveAsync();
             return RedirectToAction(nameof(Index));
+        }
+
+        // ======= HELPERS =======
+        private async Task<ProductCreateViewModel> PopulateCreateViewModel(Product? product = null)
+        {
+            var categories = (await _categoryRepo.GetAllAsync())
+                .Select(c => new SelectListItem(c.CategoryName, c.Id.ToString()));
+
+            var studyYears = (await _studyYearRepo.GetAllAsync())
+                .Select(s => new SelectListItem(s.YearName, s.Id.ToString()));
+
+            return new ProductCreateViewModel
+            {
+                Product = product ?? new Product(),
+                Categories = categories,
+                StudyYears = studyYears
+            };
         }
     }
 }

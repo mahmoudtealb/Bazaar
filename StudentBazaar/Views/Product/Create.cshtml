@@ -16,8 +16,7 @@
 
     <div class="mb-3">
         <label asp-for="Product.CategoryId"></label>
-        <select asp-for="Product.CategoryId" class="form-control"
-                asp-items="Model.Categories">
+        <select asp-for="Product.CategoryId" class="form-control" asp-items="Model.Categories">
             <option value="">-- Select Category --</option>
         </select>
         <span asp-validation-for="Product.CategoryId" class="text-danger"></span>
@@ -25,16 +24,16 @@
 
     <div class="mb-3">
         <label asp-for="Product.StudyYearId"></label>
-        <select asp-for="Product.StudyYearId" class="form-control"
-                asp-items="Model.StudyYears">
+        <select asp-for="Product.StudyYearId" class="form-control" asp-items="Model.StudyYears">
             <option value="">-- Select Study Year --</option>
         </select>
         <span asp-validation-for="Product.StudyYearId" class="text-danger"></span>
     </div>
 
     <div class="mb-3">
-        <label>Product Images</label>
-        <input type="file" name="Files" multiple class="form-control" />
+        <label asp-for="Files">Product Images</label>
+        <input asp-for="Files" type="file" multiple class="form-control" />
+        <span asp-validation-for="Files" class="text-danger"></span>
     </div>
 
     <button type="submit" class="btn btn-success">Save</button>
