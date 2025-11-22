@@ -17,7 +17,7 @@ namespace StudentBazaar.Web.Data
         public DbSet<University> Universities { get; set; }
         public DbSet<College> Colleges { get; set; }
         public DbSet<Major> Majors { get; set; }
-        public DbSet<StudyYear> StudyYears { get; set; }
+    //    public DbSet<StudyYear> StudyYears { get; set; }
 
         // Product-related
         public DbSet<ProductCategory> ProductCategories { get; set; }
@@ -65,23 +65,16 @@ namespace StudentBazaar.Web.Data
                 .HasForeignKey(m => m.CollegeId)
                 .OnDelete(DeleteBehavior.Cascade); // حذف التخصصات مع الكلية
 
-            // Major → StudyYears (Cascade)
-            modelBuilder.Entity<Major>()
-                .HasMany(m => m.StudyYears)
-                .WithOne(sy => sy.Major)
-                .HasForeignKey(sy => sy.MajorId)
-                .OnDelete(DeleteBehavior.Cascade);
+            //// Major → StudyYears (Cascade)
+            //modelBuilder.Entity<Major>()
+            //    .HasMany(m => m.StudyYears)
+            //    .WithOne(sy => sy.Major)
+            //    .HasForeignKey(sy => sy.MajorId)
+            //    .OnDelete(DeleteBehavior.Cascade);
 
             // ==========================================
             // 🛍️ علاقات المنتج والبيع (Product / Listing / Rating / Category)
             // ==========================================
-
-            // StudyYear → Products (Cascade)
-            modelBuilder.Entity<StudyYear>()
-                .HasMany(sy => sy.Products)
-                .WithOne(p => p.StudyYear)
-                .HasForeignKey(p => p.StudyYearId)
-                .OnDelete(DeleteBehavior.Cascade);
 
             // ProductCategory → Products (Cascade)
             modelBuilder.Entity<ProductCategory>()

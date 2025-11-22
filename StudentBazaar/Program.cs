@@ -44,7 +44,7 @@ builder.Services.AddScoped<IProductCategoryRepository, ProductCategoryRepository
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<IRatingRepository, RatingRepository>();
 builder.Services.AddScoped<IShoppingCartItemRepository, ShoppingCartItemRepository>();
-builder.Services.AddScoped<IStudyYearRepository, StudyYearRepository>();
+
 builder.Services.AddScoped<IUniversityRepository, UniversityRepository>();
 
 var app = builder.Build();
@@ -81,7 +81,7 @@ using (var scope = app.Services.CreateScope())
 {
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole<int>>>();
 
-    string[] roles = { "User", "Seller", "Buyer" };
+    string[] roles = { "Admin", "Buyer", "Seller" };
 
     foreach (var role in roles)
     {

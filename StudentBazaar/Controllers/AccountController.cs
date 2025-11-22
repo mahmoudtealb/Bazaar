@@ -70,12 +70,13 @@ namespace StudentBazaar.Web.Controllers
             var result = await _userManager.CreateAsync(user, model.Password);
             if (result.Succeeded)
             {
-                // Assign default role
-                await _userManager.AddToRoleAsync(user, "User");
+                // Assign selected role (Admin, Buyer, or Seller)
+                var roleToAssign = model.Role ?? "Buyer"; // Default to Buyer if not specified
+                await _userManager.AddToRoleAsync(user, roleToAssign);
 
                 // Sign in user
                 await _signInManager.SignInAsync(user, isPersistent: false);
-                return RedirectToAction("Index", "Home");
+                return RedirectToAction("Index", "Product");
             }
 
             foreach (var error in result.Errors)
@@ -115,7 +116,24 @@ namespace StudentBazaar.Web.Controllers
             var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, isPersistent: false, lockoutOnFailure: false);
             if (result.Succeeded)
             {
-                return !string.IsNullOrEmpty(returnUrl) ? LocalRedirect(returnUrl) : RedirectToAction("Index", "Home");
+                // Get the logged-in user
+                var user = await _userManager.FindByEmailAsync(model.Email);
+                if (user != null)
+                {
+                    // Get user's roles
+                    var userRoles = await _userManager.GetRolesAsync(user);
+                    
+                    // Validate that user has the selected role
+                    if (!string.IsNullOrEmpty(model.Role) && !userRoles.Contains(model.Role))
+                    {
+                        await _signInManager.SignOutAsync();
+                        ModelState.AddModelError("", $"You are not registered as a {model.Role}. Please select the correct role or register with that role.");
+                        return View(model);
+                    }
+                }
+
+                // Redirect to Product page as required
+                return !string.IsNullOrEmpty(returnUrl) ? LocalRedirect(returnUrl) : RedirectToAction("Index", "Product");
             }
 
             ModelState.AddModelError("", "Invalid login attempt");

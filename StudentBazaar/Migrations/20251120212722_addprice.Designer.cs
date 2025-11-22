@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using StudentBazaar.Web.Data;
 
@@ -11,9 +12,11 @@ using StudentBazaar.Web.Data;
 namespace StudentBazaar.Web.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251120212722_addprice")]
+    partial class addprice
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -601,6 +604,35 @@ namespace StudentBazaar.Web.Migrations
                     b.ToTable("ShoppingCartItems");
                 });
 
+            modelBuilder.Entity("StudentBazaar.Web.Models.StudyYear", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("MajorId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("YearName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MajorId");
+
+                    b.ToTable("StudyYears");
+                });
+
             modelBuilder.Entity("StudentBazaar.Web.Models.University", b =>
                 {
                     b.Property<int>("Id")
@@ -842,6 +874,17 @@ namespace StudentBazaar.Web.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("StudentBazaar.Web.Models.StudyYear", b =>
+                {
+                    b.HasOne("StudentBazaar.Web.Models.Major", "Major")
+                        .WithMany("StudyYears")
+                        .HasForeignKey("MajorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Major");
+                });
+
             modelBuilder.Entity("StudentBazaar.Web.Models.ApplicationUser", b =>
                 {
                     b.Navigation("ListingsPosted");
@@ -867,6 +910,11 @@ namespace StudentBazaar.Web.Migrations
                     b.Navigation("Orders");
 
                     b.Navigation("ShoppingCartItems");
+                });
+
+            modelBuilder.Entity("StudentBazaar.Web.Models.Major", b =>
+                {
+                    b.Navigation("StudyYears");
                 });
 
             modelBuilder.Entity("StudentBazaar.Web.Models.Order", b =>

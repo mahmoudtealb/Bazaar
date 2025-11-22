@@ -22,6 +22,10 @@ namespace StudentBazaar.Web.Models
         public string ConfirmPassword { get; set; } = string.Empty;
 
         [Required]
+        [Display(Name = "Register As")]
+        public string Role { get; set; } = "Buyer"; // Default to Buyer
+
+        [Required]
         public int UniversityId { get; set; }
 
         [Required]

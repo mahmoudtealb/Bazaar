@@ -20,7 +20,7 @@ namespace StudentBazaar.Web.Models
         // 🔁 Reverse Relationships (One Major -> Many StudyYears)
         // ==========================
 
-        public ICollection<StudyYear> StudyYears { get; set; } = new List<StudyYear>(); 
+    //    public ICollection<StudyYear> StudyYears { get; set; } = new List<StudyYear>(); 
 
     }
 }

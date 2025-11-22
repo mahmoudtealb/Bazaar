@@ -1,4 +1,4 @@
-﻿namespace StudentBazaar.Web.Controllers
+namespace StudentBazaar.Web.Controllers
 {
     public class ShoppingCartItemController : Controller
     {
