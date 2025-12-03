@@ -1,0 +1,75 @@
+@model StudentBazaar.Entities.Models.College
+@{
+    ViewData["Title"] = "Delete College";
+    Layout = "_AdminLayout";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-danger">Delete College</h1>
+        <a asp-action="Index" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to List
+        </a>
+    </div>
+
+    <div class="alert alert-warning">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        <strong>Warning!</strong> Are you sure you want to delete this college? This action cannot be undone.
+    </div>
+
+    <div class="card shadow">
+        <div class="card-body">
+            <h4 class="mb-4">College Information</h4>
+            <dl class="row">
+               @*  <dt class="col-sm-3">ID</dt>
+                <dd class="col-sm-9">@Model.Id</dd> *@
+
+                <dt class="col-sm-3">College Name</dt>
+                <dd class="col-sm-9"><strong>@Model.CollegeName</strong></dd>
+
+                <dt class="col-sm-3">University</dt>
+                <dd class="col-sm-9">
+                    <span class="badge bg-primary">@(Model.University?.UniversityName ?? "N/A")</span>
+                </dd>
+
+                <dt class="col-sm-3">Majors Count</dt>
+                <dd class="col-sm-9">
+                    <span class="badge bg-info">@(Model.Majors?.Count ?? 0) major(s)</span>
+                    @if (Model.Majors != null && Model.Majors.Any())
+                    {
+                        <p class="text-info mt-2">Note: Deleting this college will also delete all associated majors (cascade delete).</p>
+                    }
+                </dd>
+
+                <dt class="col-sm-3">Users Count</dt>
+                <dd class="col-sm-9">
+                    @if (Model.Users != null && Model.Users.Any())
+                    {
+                        <span class="badge bg-danger">@Model.Users.Count user(s) - Cannot delete!</span>
+                        <p class="text-danger mt-2">This college has associated users. Please remove or reassign users before deleting.</p>
+                    }
+                    else
+                    {
+                        <span class="badge bg-success">0 users - Safe to delete</span>
+                    }
+                </dd>
+
+                <dt class="col-sm-3">Created At</dt>
+                <dd class="col-sm-9">@Model.CreatedAt.ToString("yyyy-MM-dd HH:mm")</dd>
+            </dl>
+
+            <form asp-action="Delete" method="post" class="mt-4">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="Id" />
+                
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-danger" @(Model.Users != null && Model.Users.Any() ? "disabled" : "")>
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+

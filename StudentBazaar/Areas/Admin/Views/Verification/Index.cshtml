@@ -1,0 +1,77 @@
+@model List<StudentBazaar.Entities.Models.StudentVerification>
+@{
+    ViewData["Title"] = "Student Verifications";
+    Layout = "_AdminLayout";
+}
+
+<div class="container-fluid">
+    <h1 class="h3 mb-4">Student Verifications</h1>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+
+    <!-- Filters -->
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <select name="approved" class="form-select">
+                        <option value="">All</option>
+                        <option value="false" selected="@(ViewContext.HttpContext.Request.Query["approved"] == "false")">Pending</option>
+                        <option value="true" selected="@(ViewContext.HttpContext.Request.Query["approved"] == "true")">Approved</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary">Filter</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Verifications Table -->
+    <div class="card shadow">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>User</th>
+                            <th>Student ID</th>
+                            <th>Status</th>
+                            <th>Requested At</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var verification in Model)
+                        {
+                            <tr>
+                                <td>@verification.Id</td>
+                                <td>@verification.User?.FullName</td>
+                                <td>@verification.StudentIdNumber</td>
+                                <td>
+                                    @if (verification.Approved)
+                                    {
+                                        <span class="badge bg-success">Approved</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-warning">Pending</span>
+                                    }
+                                </td>
+                                <td>@verification.RequestedAt.ToString("yyyy-MM-dd")</td>
+                                <td>
+                                    <a asp-action="Details" asp-route-id="@verification.Id" class="btn btn-sm btn-info">View</a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+

@@ -1,0 +1,89 @@
+@model StudentBazaar.Entities.Models.StudentVerification
+@{
+    ViewData["Title"] = "Verification Details";
+    Layout = "_AdminLayout";
+}
+
+<div class="container-fluid">
+    <h1 class="h3 mb-4">Verification Details</h1>
+
+    <div class="card shadow">
+        <div class="card-body">
+            <dl class="row">
+                <dt class="col-sm-3">ID</dt>
+                <dd class="col-sm-9">@Model.Id</dd>
+
+                <dt class="col-sm-3">User</dt>
+                <dd class="col-sm-9">@Model.User?.FullName</dd>
+
+                <dt class="col-sm-3">Student ID Number</dt>
+                <dd class="col-sm-9">@Model.StudentIdNumber</dd>
+
+                <dt class="col-sm-3">Document</dt>
+                <dd class="col-sm-9">
+                    @if (!string.IsNullOrEmpty(Model.DocumentUrl))
+                    {
+                        <a href="@Model.DocumentUrl" target="_blank" class="btn btn-sm btn-info">View Document</a>
+                    }
+                    else
+                    {
+                        <span class="text-muted">No document uploaded</span>
+                    }
+                </dd>
+
+                <dt class="col-sm-3">Status</dt>
+                <dd class="col-sm-9">
+                    @if (Model.Approved)
+                    {
+                        <span class="badge bg-success">Approved</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-warning">Pending</span>
+                    }
+                </dd>
+
+                <dt class="col-sm-3">Requested At</dt>
+                <dd class="col-sm-9">@Model.RequestedAt</dd>
+
+                @if (Model.Approved)
+                {
+                    <dt class="col-sm-3">Approved By</dt>
+                    <dd class="col-sm-9">@Model.ApprovedBy?.FullName</dd>
+
+                    <dt class="col-sm-3">Approved At</dt>
+                    <dd class="col-sm-9">@Model.ApprovedAt</dd>
+                }
+
+                @if (!string.IsNullOrEmpty(Model.RejectionReason))
+                {
+                    <dt class="col-sm-3">Rejection Reason</dt>
+                    <dd class="col-sm-9">@Model.RejectionReason</dd>
+                }
+            </dl>
+
+            @if (!Model.Approved)
+            {
+                <div class="mt-4">
+                    <form asp-action="Approve" method="post" class="d-inline">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        <button type="submit" class="btn btn-success">Approve</button>
+                    </form>
+                    <form asp-action="Reject" method="post" class="d-inline">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        <div class="mb-3">
+                            <label class="form-label">Rejection Reason</label>
+                            <textarea name="rejectionReason" class="form-control" rows="3" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-danger">Reject</button>
+                    </form>
+                </div>
+            }
+
+            <a asp-action="Index" class="btn btn-primary">Back to List</a>
+        </div>
+    </div>
+</div>
+

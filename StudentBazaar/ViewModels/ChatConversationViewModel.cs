@@ -1,6 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-using StudentBazaar.Web.Models;
-
+﻿
 namespace StudentBazaar.Web.ViewModels
 {
     public class ChatConversationViewModel
@@ -25,6 +23,9 @@ namespace StudentBazaar.Web.ViewModels
 
         // مفتاح الجروب في SignalR
         public string ConversationKey { get; set; } = string.Empty;
+
+        // List of all conversations for sidebar
+        public List<ConversationSummary> AllConversations { get; set; } = new();
     }
 
     // عنصر في صفحة "محادثاتك"
@@ -47,5 +48,18 @@ namespace StudentBazaar.Web.ViewModels
     {
         public List<ChatConversationItemViewModel> AsBuyer { get; set; } = new();
         public List<ChatConversationItemViewModel> AsSeller { get; set; } = new();
+    }
+
+    // Summary for sidebar conversation list
+    public class ConversationSummary
+    {
+        public int ProductId { get; set; }
+        public int OtherUserId { get; set; }
+        public string OtherUserName { get; set; } = string.Empty;
+        public string OtherUserImage { get; set; } = string.Empty;
+        public string LastMessage { get; set; } = string.Empty;
+        public int UnreadCount { get; set; }
+        public bool IsActive { get; set; }
+        public DateTime LastMessageAt { get; set; }
     }
 }

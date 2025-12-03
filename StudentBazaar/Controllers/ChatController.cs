@@ -1,11 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SignalR;
-using StudentBazaar.Web.Hubs;
-using StudentBazaar.Web.Models;
-using StudentBazaar.Web.Repositories;
-using StudentBazaar.Web.ViewModels;
+﻿
 
 namespace StudentBazaar.Web.Controllers
 {
@@ -68,6 +61,25 @@ namespace StudentBazaar.Web.Controllers
                       (m.SenderId == otherUserId && m.ReceiverId == currentUserId)),
                 includeWord: "Sender,Receiver");
 
+            // Mark all unread messages as read when opening the conversation
+            var unreadMessages = messages.Where(m => m.ReceiverId == currentUserId && !m.IsRead).ToList();
+            if (unreadMessages.Any())
+            {
+                foreach (var msg in unreadMessages)
+                {
+                    msg.IsRead = true;
+                }
+                await _chatRepo.SaveAsync();
+            }
+
+            var allConversations = await GetAllConversationsAsync(currentUserId);
+            
+            // Mark active conversation
+            foreach (var conv in allConversations)
+            {
+                conv.IsActive = (conv.ProductId == productId && conv.OtherUserId == otherUserId);
+            }
+
             var vm = new ChatConversationViewModel
             {
                 ProductId = product.Id,
@@ -77,48 +89,130 @@ namespace StudentBazaar.Web.Controllers
                 Messages = messages.OrderBy(m => m.SentAt).ToList(),
                 CurrentUserId = currentUserId,
                 IsSeller = (currentUserId == product.OwnerId),
-                ConversationKey = BuildConversationKey(currentUserId, otherUserId, product.Id)
+                ConversationKey = BuildConversationKey(currentUserId, otherUserId, product.Id),
+                AllConversations = allConversations
             };
 
             return View("Conversation", vm);
         }
 
+        // Helper method to get all conversations for sidebar
+        private async Task<List<ConversationSummary>> GetAllConversationsAsync(int currentUserId)
+        {
+            var allMessages = await _chatRepo.GetAllAsync(
+                m => m.SenderId == currentUserId || m.ReceiverId == currentUserId,
+                includeWord: "Product,Sender,Receiver");
+
+            var conversations = allMessages
+                .GroupBy(m => new
+                {
+                    m.ProductId,
+                    OtherUserId = (m.SenderId == currentUserId ? m.ReceiverId : m.SenderId)
+                })
+                .Select(g =>
+                {
+                    var last = g.OrderByDescending(x => x.SentAt).First();
+                    var other = last.SenderId == currentUserId ? last.Receiver : last.Sender;
+                    var unread = g.Count(x => x.ReceiverId == currentUserId && !x.IsRead);
+                    var otherUserImage = !string.IsNullOrEmpty(other?.ProfilePictureUrl)
+                        ? other.ProfilePictureUrl
+                        : "https://bootdey.com/img/Content/avatar/avatar3.png";
+
+                    return new ConversationSummary
+                    {
+                        ProductId = g.Key.ProductId ?? 0,
+                        OtherUserId = g.Key.OtherUserId,
+                        OtherUserName = other?.FullName ?? "User",
+                        OtherUserImage = otherUserImage,
+                        LastMessage = last.Content,
+                        LastMessageAt = last.SentAt,
+                        UnreadCount = unread,
+                        IsActive = false // Will be set based on current view
+                    };
+                })
+                .OrderByDescending(x => x.LastMessageAt)
+                .ToList();
+
+            return conversations;
+        }
+
         // نفس شاشة المحادثة لكن تُفتح من صفحة "محادثاتك"
         [HttpGet]
-        public async Task<IActionResult> Open(int productId, int otherUserId)
+        public async Task<IActionResult> Open(int? productId = null, int? otherUserId = null)
         {
+            var currentUserId = GetCurrentUserId();
+            var allConversations = await GetAllConversationsAsync(currentUserId);
+
+            // If no parameters, show "Select a conversation" message
+            if (!productId.HasValue || !otherUserId.HasValue)
+            {
+                // Show empty state with "Select a conversation" message
+                var vm = new ChatConversationViewModel
+                {
+                    ProductId = 0,
+                    Product = new Product { Name = "No Product", Price = 0 },
+                    OtherUserId = 0,
+                    OtherUserName = "",
+                    Messages = new List<ChatMessage>(),
+                    CurrentUserId = currentUserId,
+                    IsSeller = false,
+                    ConversationKey = "",
+                    AllConversations = allConversations
+                };
+                return View("Conversation", vm);
+            }
+
             var product = await _productRepo.GetFirstOrDefaultAsync(
-                p => p.Id == productId,
+                p => p.Id == productId.Value,
                 includeWord: "Owner");
 
             if (product == null)
                 return NotFound();
 
-            var currentUserId = GetCurrentUserId();
-
             var messages = await _chatRepo.GetAllAsync(
-                m => m.ProductId == productId &&
-                     ((m.SenderId == currentUserId && m.ReceiverId == otherUserId) ||
-                      (m.SenderId == otherUserId && m.ReceiverId == currentUserId)),
+                m => m.ProductId == productId.Value &&
+                     ((m.SenderId == currentUserId && m.ReceiverId == otherUserId.Value) ||
+                      (m.SenderId == otherUserId.Value && m.ReceiverId == currentUserId)),
                 includeWord: "Sender,Receiver");
+
+            // Mark all unread messages as read when opening the conversation
+            var unreadMessages = messages.Where(m => m.ReceiverId == currentUserId && !m.IsRead).ToList();
+            if (unreadMessages.Any())
+            {
+                foreach (var msg in unreadMessages)
+                {
+                    msg.IsRead = true;
+                }
+                await _chatRepo.SaveAsync();
+                
+                // Reload conversations to update unread counts
+                allConversations = await GetAllConversationsAsync(currentUserId);
+            }
 
             var otherUser = messages
                 .Select(m => m.SenderId == currentUserId ? m.Receiver : m.Sender)
                 .FirstOrDefault() ?? product.Owner;
 
-            var vm = new ChatConversationViewModel
+            // Mark active conversation
+            foreach (var conv in allConversations)
+            {
+                conv.IsActive = (conv.ProductId == productId.Value && conv.OtherUserId == otherUserId.Value);
+            }
+
+            var vm2 = new ChatConversationViewModel
             {
                 ProductId = product.Id,
                 Product = product,
-                OtherUserId = otherUserId,
+                OtherUserId = otherUserId.Value,
                 OtherUserName = otherUser?.FullName ?? "User",
                 Messages = messages.OrderBy(m => m.SentAt).ToList(),
                 CurrentUserId = currentUserId,
                 IsSeller = (currentUserId == product.OwnerId),
-                ConversationKey = BuildConversationKey(currentUserId, otherUserId, product.Id)
+                ConversationKey = BuildConversationKey(currentUserId, otherUserId.Value, product.Id),
+                AllConversations = allConversations
             };
 
-            return View("Conversation", vm);
+            return View("Conversation", vm2);
         }
 
         // ==========================
@@ -150,92 +244,70 @@ namespace StudentBazaar.Web.Controllers
 
             var convKey = BuildConversationKey(senderId, model.OtherUserId, model.ProductId);
 
+            // Send to conversation group
             await _hubContext.Clients.Group(convKey).SendAsync("ReceiveMessage", new
             {
                 productId = model.ProductId,
                 senderId = senderId,
+                receiverId = model.OtherUserId,
                 content = message.Content,
                 sentAt = message.SentAt.ToLocalTime().ToString("yyyy/MM/dd - hh:mm tt")
+            });
+
+            // Notify receiver about new unread message (for badge update)
+            await _hubContext.Clients.User(model.OtherUserId.ToString()).SendAsync("NewUnreadMessage", new
+            {
+                fromUserId = senderId,
+                toUserId = model.OtherUserId
             });
 
             return Json(new { success = true });
         }
 
         // ==========================
-        // 3) صفحة "محادثاتك"
+        // 3) صفحة "محادثاتك" - Redirected to Open
         // ==========================
         [HttpGet]
-        public async Task<IActionResult> MyConversations()
+        public IActionResult MyConversations()
         {
-            var currentUserId = GetCurrentUserId();
+            return RedirectToAction("Open");
+        }
 
-            var allMessages = await _chatRepo.GetAllAsync(
-                m => m.SenderId == currentUserId || m.ReceiverId == currentUserId,
-                includeWord: "Product,Sender,Receiver");
-
-            // كمشتري
-            var asBuyer = allMessages
-                .Where(m => m.Product!.OwnerId != currentUserId)
-                .GroupBy(m => new
-                {
-                    m.ProductId,
-                    OtherUserId = (m.SenderId == currentUserId ? m.ReceiverId : m.SenderId)
-                })
-                .Select(g =>
-                {
-                    var last = g.OrderByDescending(x => x.SentAt).First();
-                    var other = last.SenderId == currentUserId ? last.Receiver : last.Sender;
-                    var unread = g.Count(x => x.ReceiverId == currentUserId && !x.IsRead);
-
-                    return new ChatConversationItemViewModel
-                    {
-                        ProductId = g.Key.ProductId ?? 0,
-                        ProductName = last.Product?.Name ?? "",
-                        OtherUserId = g.Key.OtherUserId,
-                        OtherUserName = other?.FullName ?? "User",
-                        LastMessage = last.Content,
-                        LastMessageAt = last.SentAt,
-                        UnreadCount = unread
-                    };
-                })
-                .OrderByDescending(x => x.LastMessageAt)
-                .ToList();
-
-            // كبائع
-            var asSeller = allMessages
-                .Where(m => m.Product!.OwnerId == currentUserId)
-                .GroupBy(m => new
-                {
-                    m.ProductId,
-                    OtherUserId = (m.SenderId == currentUserId ? m.ReceiverId : m.SenderId)
-                })
-                .Select(g =>
-                {
-                    var last = g.OrderByDescending(x => x.SentAt).First();
-                    var other = last.SenderId == currentUserId ? last.Receiver : last.Sender;
-                    var unread = g.Count(x => x.ReceiverId == currentUserId && !x.IsRead);
-
-                    return new ChatConversationItemViewModel
-                    {
-                        ProductId = g.Key.ProductId ?? 0,
-                        ProductName = last.Product?.Name ?? "",
-                        OtherUserId = g.Key.OtherUserId,
-                        OtherUserName = other?.FullName ?? "User",
-                        LastMessage = last.Content,
-                        LastMessageAt = last.SentAt,
-                        UnreadCount = unread
-                    };
-                })
-                .OrderByDescending(x => x.LastMessageAt)
-                .ToList();
-
-            var vm = new ChatMyConversationsViewModel
+        // ==========================
+        // 4) حذف المحادثة
+        // ==========================
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConversation(int productId, int otherUserId)
+        {
+            try
             {
-                AsBuyer = asBuyer,
-                AsSeller = asSeller
-            };
+                var currentUserId = GetCurrentUserId();
 
-            return View(vm);
+                // جلب جميع الرسائل في هذه المحادثة
+                var messages = await _chatRepo.GetAllAsync(
+                    m => m.ProductId == productId &&
+                         ((m.SenderId == currentUserId && m.ReceiverId == otherUserId) ||
+                          (m.SenderId == otherUserId && m.ReceiverId == currentUserId)));
+
+                if (!messages.Any())
+                {
+                    TempData["Info"] = "No messages found to delete.";
+                    return RedirectToAction("MyConversations");
+                }
+
+                // حذف جميع الرسائل
+                _chatRepo.RemoveRange(messages);
+                await _chatRepo.SaveAsync();
+
+                TempData["Success"] = "Conversation deleted successfully.";
+                return RedirectToAction("Open");
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = "An error occurred while deleting the conversation.";
+                return RedirectToAction("Open");
+            }
         }
     }
 }

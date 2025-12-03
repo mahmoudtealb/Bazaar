@@ -1,0 +1,228 @@
+@model List<StudentBazaar.Entities.Models.ChatMessage>
+@{
+    ViewData["Title"] = "Chat Monitoring";
+    Layout = "_AdminLayout";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">
+            <i class="fas fa-comments me-2"></i>
+            Chat Monitoring
+        </h1>
+        <div class="text-muted">
+            <i class="fas fa-info-circle me-1"></i>
+            Total Messages: <strong>@ViewBag.TotalCount</strong>
+        </div>
+    </div>
+
+    <partial name="_AdminAlerts" />
+
+    <!-- Search and Filters -->
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Search by Message</label>
+                    <input type="text" name="search" class="form-control" placeholder="Search messages..." value="@ViewContext.HttpContext.Request.Query["search"]">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Page Size</label>
+                    <select name="pageSize" class="form-select" onchange="this.form.submit()">
+                        <option value="20" selected="@(ViewBag.PageSize == 20)">20 per page</option>
+                        <option value="50" selected="@(ViewBag.PageSize == 50)">50 per page</option>
+                        <option value="100" selected="@(ViewBag.PageSize == 100)">100 per page</option>
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <a href="@Url.Action("Index")" class="btn btn-secondary w-100">
+                        <i class="fas fa-redo"></i> Reset
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Messages Table -->
+    <div class="card shadow">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-primary">
+                <i class="fas fa-list me-2"></i>
+                Messages (@ViewBag.TotalCount total)
+            </h6>
+            <span class="badge bg-info">Page @ViewBag.Page of @ViewBag.TotalPages</span>
+        </div>
+        <div class="card-body">
+            @if (Model.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover table-bordered">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 120px;">
+                                    <i class="fas fa-user me-1"></i> Sender
+                                </th>
+                                <th style="width: 120px;">
+                                    <i class="fas fa-user-check me-1"></i> Receiver
+                                </th>
+                                <th style="width: 150px;">
+                                    <i class="fas fa-box me-1"></i> Product
+                                </th>
+                                <th>
+                                    <i class="fas fa-comment me-1"></i> Message
+                                </th>
+                                <th style="width: 150px;">
+                                    <i class="fas fa-clock me-1"></i> Date
+                                </th>
+                                <th style="width: 100px;">
+                                    <i class="fas fa-cog me-1"></i> Actions
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var message in Model)
+                            {
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar-circle bg-primary text-white me-2" style="width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.85rem;">
+                                                @(message.Sender?.FullName?.Substring(0, 1).ToUpper() ?? "?")
+                                            </div>
+                                            <div>
+                                                <strong class="text-primary">@(message.Sender?.FullName ?? "Unknown")</strong>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar-circle bg-success text-white me-2" style="width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.85rem;">
+                                                @(message.Receiver?.FullName?.Substring(0, 1).ToUpper() ?? "?")
+                                            </div>
+                                            <div>
+                                                <strong class="text-success">@(message.Receiver?.FullName ?? "Unknown")</strong>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">
+                                            <i class="fas fa-box me-1"></i>
+                                            @(message.Product?.Name ?? "N/A")
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="message-preview" style="max-width: 300px;">
+                                            <span class="text-muted" title="@message.Content">
+                                                @if (message.Content.Length > 60)
+                                                {
+                                                    @message.Content.Substring(0, 60)
+                                                    <span class="text-muted">...</span>
+                                                }
+                                                else
+                                                {
+                                                    @message.Content
+                                                }
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">
+                                            <i class="fas fa-calendar me-1"></i>
+                                            @message.SentAt.ToString("yyyy-MM-dd")
+                                            <br>
+                                            <i class="fas fa-clock me-1"></i>
+                                            @message.SentAt.ToString("HH:mm")
+                                        </small>
+                                    </td>
+                                    <td>
+                                        <form asp-action="RemoveMessage" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to remove this message?');">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@message.Id" />
+                                            <button type="submit" class="btn btn-sm btn-danger" title="Remove Message">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                @if (ViewBag.TotalPages > 1)
+                {
+                    <nav aria-label="Page navigation" class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            @if (ViewBag.Page > 1)
+                            {
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=@(ViewBag.Page - 1)&pageSize=@ViewBag.PageSize&search=@ViewBag.Search">
+                                        <i class="fas fa-chevron-left"></i> Previous
+                                    </a>
+                                </li>
+                            }
+
+                            @for (int i = Math.Max(1, ViewBag.Page - 2); i <= Math.Min(ViewBag.TotalPages, ViewBag.Page + 2); i++)
+                            {
+                                <li class="page-item @(i == ViewBag.Page ? "active" : "")">
+                                    <a class="page-link" href="?page=@i&pageSize=@ViewBag.PageSize&search=@ViewBag.Search">@i</a>
+                                </li>
+                            }
+
+                            @if (ViewBag.Page < ViewBag.TotalPages)
+                            {
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=@(ViewBag.Page + 1)&pageSize=@ViewBag.PageSize&search=@ViewBag.Search">
+                                        Next <i class="fas fa-chevron-right"></i>
+                                    </a>
+                                </li>
+                            }
+                        </ul>
+                    </nav>
+                }
+            }
+            else
+            {
+                <div class="text-center py-5">
+                    <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No messages found</h5>
+                    <p class="text-muted">There are no chat messages to display.</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<style>
+    .avatar-circle {
+        flex-shrink: 0;
+    }
+    
+    .message-preview {
+        word-wrap: break-word;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .table tbody tr:hover {
+        background-color: #f8f9fa;
+        transition: background-color 0.2s ease;
+    }
+    
+    .table thead th {
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.5px;
+    }
+    
+    .badge {
+        padding: 0.4em 0.6em;
+        font-weight: 500;
+    }
+</style>

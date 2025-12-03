@@ -1,0 +1,144 @@
+@model StudentBazaar.Entities.Models.Order
+@{
+    ViewData["Title"] = "Order Details";
+    Layout = "_AdminLayout";
+}
+
+<div class="container-fluid">
+    <h1 class="h3 mb-4">Order Details #@Model.Id</h1>
+
+    <partial name="_AdminAlerts" />
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow mb-4">
+                <div class="card-header">
+                    <h5>Order Items</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.OrderItems != null && Model.OrderItems.Any())
+                    {
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Price</th>
+                                    <th>Quantity</th>
+                                    <th>Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model.OrderItems)
+                                {
+                                    <tr>
+                                        <td>
+                                            <strong>@item.ProductName</strong>
+                                            @if (item.Product != null && item.Product.Images != null && item.Product.Images.Any())
+                                            {
+                                                var mainImage = item.Product.Images.FirstOrDefault(img => img.IsMainImage) 
+                                                    ?? item.Product.Images.First();
+                                                <br />
+                                                <img src="@mainImage.ImageUrl" alt="@item.ProductName" 
+                                                     class="img-thumbnail" style="max-width: 100px; max-height: 100px;" />
+                                            }
+                                        </td>
+                                        <td>@item.Price.ToString("F2") </td>
+                                        <td>@item.Quantity</td>
+                                        <td>@item.Subtotal.ToString("F2") </td>
+                                    </tr>
+                                }
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <th colspan="3" class="text-end">Total:</th>
+                                    <th>@Model.TotalAmount.ToString("F2") </th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    }
+                    else if (Model.Listing != null && Model.Listing.Product != null)
+                    {
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        @if (Model.Listing.Product.Images != null && Model.Listing.Product.Images.Any())
+                                        {
+                                            var mainImage = Model.Listing.Product.Images.FirstOrDefault(img => img.IsMainImage) 
+                                                ?? Model.Listing.Product.Images.First();
+                                            <img src="@mainImage.ImageUrl" alt="@Model.Listing.Product.Name" 
+                                                 class="img-thumbnail" style="max-width: 150px; max-height: 150px;" />
+                                        }
+                                    </div>
+                                    <div class="col-md-9">
+                                        <h5>@Model.Listing.Product.Name</h5>
+                                        <p class="text-muted">@Model.Listing.Description</p>
+                                        <p><strong>Price:</strong> @Model.Listing.Price.ToString("F2") </p>
+                                        <p><strong>Condition:</strong> @Model.Listing.Condition</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted">No items found in this order.</p>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow mb-4">
+                <div class="card-header">
+                    <h5>Order Information</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                       @*  <dt class="col-sm-5">Order ID:</dt>
+                        <dd class="col-sm-7">@Model.Id</dd> *@
+
+                        <dt class="col-sm-5">Buyer:</dt>
+                        <dd class="col-sm-7">@(Model.Buyer?.FullName ?? "N/A")</dd>
+
+                        <dt class="col-sm-5">Order Date:</dt>
+                        <dd class="col-sm-7">@Model.OrderDate.ToString("yyyy-MM-dd HH:mm")</dd>
+
+                        <dt class="col-sm-5">Status:</dt>
+                        <dd class="col-sm-7">
+                            @{
+                                var statusClass = Model.Status switch
+                                {
+                                    StudentBazaar.Entities.Models.OrderStatus.Pending => "warning",
+                                  //  StudentBazaar.Entities.Models.OrderStatus.Approved => "info",
+                                    StudentBazaar.Entities.Models.OrderStatus.Shipped => "primary",
+                                    StudentBazaar.Entities.Models.OrderStatus.Delivered => "success",
+                                    StudentBazaar.Entities.Models.OrderStatus.Completed => "success",
+                                    StudentBazaar.Entities.Models.OrderStatus.Cancelled => "danger",
+                                    _ => "secondary"
+                                };
+                            }
+                            <span class="badge bg-@statusClass">@Model.Status</span>
+                        </dd>
+
+                        <dt class="col-sm-5">Payment Method:</dt>
+                        <dd class="col-sm-7">@Model.PaymentMethod</dd>
+
+                        <dt class="col-sm-5">Total Amount:</dt>
+                        <dd class="col-sm-7"><strong>@Model.TotalAmount.ToString("F2") </strong></dd>
+
+                        <dt class="col-sm-5">Commission:</dt>
+                        <dd class="col-sm-7">@Model.SiteCommission.ToString("F2") </dd>
+                    </dl>
+                </div>
+            </div>
+
+            <div class="card shadow">
+                <div class="card-body">
+                    <a asp-action="Index" class="btn btn-secondary">Back to Orders</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

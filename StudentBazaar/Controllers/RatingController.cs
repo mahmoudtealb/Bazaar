@@ -1,4 +1,6 @@
-﻿namespace StudentBazaar.Web.Controllers
+﻿using StudentBazaar.Entities.Repositories;
+
+namespace StudentBazaar.Web.Controllers
 {
     public class RatingController : Controller
     {

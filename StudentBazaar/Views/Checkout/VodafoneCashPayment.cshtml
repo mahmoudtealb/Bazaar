@@ -1,154 +1,793 @@
 @{
     ViewData["Title"] = "Vodafone Cash Payment";
+    Layout = null;
+    var cartItems = ViewBag.CartItems as List<StudentBazaar.Web.Models.CartItemViewModel> ?? new List<StudentBazaar.Web.Models.CartItemViewModel>();
 }
 
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" />
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - StudentBazaar</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" />
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-<style>
-    .vodafone-container {
-        max-width: 600px;
-        margin: 50px auto;
-        padding: 40px;
-        background: linear-gradient(135deg, #e10000 0%, #ff6b6b 100%);
-        border-radius: 20px;
-        box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-        color: white;
-    }
-    .vodafone-logo {
-        font-size: 48px;
-        font-weight: bold;
-        margin-bottom: 20px;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-    }
-    .payment-card {
-        background: white;
-        border-radius: 15px;
-        padding: 30px;
-        color: #333;
-        margin-top: 20px;
-    }
-    .phone-input {
-        font-size: 24px;
-        font-weight: bold;
-        text-align: center;
-        letter-spacing: 2px;
-        border: 2px solid #e10000;
-        border-radius: 10px;
-        padding: 15px;
-    }
-    .btn-vodafone {
-        background: #e10000;
-        color: white;
-        padding: 15px 40px;
-        border-radius: 30px;
-        border: none;
-        font-size: 18px;
-        font-weight: bold;
-        transition: all 0.3s;
-        width: 100%;
-        margin-top: 20px;
-    }
-    .btn-vodafone:hover {
-        background: #c10000;
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-    }
-    .qr-code {
-        width: 200px;
-        height: 200px;
-        background: #f5f5f5;
-        border: 3px solid #e10000;
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 20px auto;
-        font-size: 48px;
-    }
-    .instruction-box {
-        background: #fff3cd;
-        border-left: 4px solid #ffc107;
-        padding: 15px;
-        border-radius: 5px;
-        margin: 20px 0;
-    }
-</style>
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            padding: 20px;
+        }
 
-<div class="container">
-    <div class="vodafone-container text-center">
-        <div class="vodafone-logo">VODAFONE CASH</div>
-        
-        <h2 class="mb-4">Complete Your Payment</h2>
-        
-        <div class="payment-card">
-            <h4 class="mb-3">Payment Details</h4>
-            <div class="d-flex justify-content-between mb-3 pb-3 border-bottom">
-                <span class="text-muted">Amount to Pay:</span>
-                <strong class="fs-4 text-danger">EGP @ViewBag.Amount</strong>
-            </div>
-            
-            @if (!string.IsNullOrEmpty(ViewBag.Items?.ToString()))
-            {
-                <div class="mb-3 pb-3 border-bottom">
-                    <small class="text-muted d-block mb-2">Items:</small>
-                    <span>@ViewBag.Items</span>
-                </div>
+        .payment-wrapper {
+            max-width: 650px;
+            width: 100%;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        @@keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
             }
-            
-            <div class="instruction-box text-start">
-                <h6 class="mb-2"><i class="bi bi-info-circle"></i> Instructions:</h6>
-                <ol class="mb-0 small">
-                    <li>Enter your Vodafone Cash mobile number</li>
-                    <li>Click "Pay Now" to proceed</li>
-                    <li>You will receive a confirmation SMS</li>
-                    <li>Confirm the payment on your phone</li>
-                </ol>
-            </div>
-            
-            <form asp-action="CompleteVodafoneCashPayment" method="post" id="vodafoneForm">
-                <div class="mb-3">
-                    <label for="phoneNumber" class="form-label fw-bold">Vodafone Cash Number</label>
-                    <input type="tel" 
-                           class="form-control phone-input" 
-                           id="phoneNumber" 
-                           name="phoneNumber" 
-                           placeholder="01XX XXX XXXX" 
-                           pattern="[0-9]{11}" 
-                           maxlength="11"
-                           required>
-                    <small class="text-muted">Enter your 11-digit Vodafone number</small>
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .payment-container {
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .payment-header {
+            background: linear-gradient(135deg, #e10000 0%, #c10000 100%);
+            padding: 40px 30px;
+            text-align: center;
+            color: white;
+            position: relative;
+        }
+
+        .payment-header::after {
+            content: '';
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 60px;
+            background: white;
+            border-radius: 50%;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .vodafone-icon {
+            width: 80px;
+            height: 80px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            position: relative;
+            z-index: 1;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        }
+
+        .vodafone-icon i {
+            font-size: 3rem;
+            color: #e10000;
+        }
+
+        .payment-header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 1;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .payment-header p {
+            font-size: 1rem;
+            opacity: 0.95;
+            position: relative;
+            z-index: 1;
+        }
+
+        .payment-content {
+            padding: 50px 30px 30px;
+        }
+
+        .amount-display {
+            background: linear-gradient(135deg, #fff5f5 0%, #ffe0e0 100%);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 30px;
+            text-align: center;
+            border: 2px solid #ffcccc;
+        }
+
+        .amount-label {
+            font-size: 0.95rem;
+            color: #6c757d;
+            font-weight: 600;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .amount-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #e10000;
+            margin: 0;
+        }
+
+        .amount-breakdown {
+            text-align: left;
+            margin-top: 15px;
+        }
+
+        .breakdown-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            font-size: 0.875rem;
+        }
+
+        .breakdown-label {
+            color: #6c757d;
+            font-weight: 500;
+        }
+
+        .breakdown-value {
+            color: #1a1a1a;
+            font-weight: 600;
+        }
+
+        .breakdown-divider {
+            height: 1px;
+            background: #e0e0e0;
+            margin: 12px 0;
+        }
+
+        .total-row {
+            margin-top: 8px;
+            padding-top: 12px;
+            border-top: 2px solid #e0e0e0;
+        }
+
+        .total-row .breakdown-label {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #1a1a1a;
+        }
+
+        .total-row .breakdown-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #e10000;
+        }
+
+        .order-items-section {
+            margin-bottom: 25px;
+        }
+
+        .order-items-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .order-items-list {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 16px;
+            max-height: 220px;
+            overflow-y: auto;
+        }
+
+        .order-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .order-item:last-child {
+            border-bottom: none;
+        }
+
+        .order-item-image {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            object-fit: cover;
+            background: #e9ecef;
+            flex-shrink: 0;
+        }
+
+        .order-item-details {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .order-item-name {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #1a1a1a;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .order-item-meta {
+            font-size: 0.75rem;
+            color: #6c757d;
+        }
+
+        .order-item-price {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #1a1a1a;
+            white-space: nowrap;
+        }
+
+        .payment-info {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .payment-info i {
+            color: #856404;
+            font-size: 1.3rem;
+            margin-top: 2px;
+        }
+
+        .payment-info ul {
+            margin: 0;
+            padding-left: 20px;
+            color: #856404;
+            font-size: 0.95rem;
+            line-height: 1.8;
+        }
+
+        .phone-input-group {
+            margin-bottom: 25px;
+        }
+
+        .phone-input-label {
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .phone-input {
+            font-size: 1.2rem;
+            font-weight: 600;
+            text-align: center;
+            letter-spacing: 2px;
+            border: 2px solid #e10000;
+            border-radius: 12px;
+            padding: 18px;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+
+        .phone-input:focus {
+            border-color: #c10000;
+            box-shadow: 0 0 0 0.2rem rgba(225, 0, 0, 0.15);
+            outline: none;
+        }
+
+        .phone-input::placeholder {
+            letter-spacing: 2px;
+            color: #adb5bd;
+        }
+
+        .phone-help-text {
+            color: #6c757d;
+            font-size: 0.85rem;
+            margin-top: 8px;
+            text-align: center;
+        }
+
+        .phone-description {
+            color: #6c757d;
+            font-size: 0.9rem;
+            margin-top: 8px;
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+
+        .phone-input.invalid {
+            border-color: #dc3545;
+            box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.15);
+        }
+
+        .phone-input.valid {
+            border-color: #28a745;
+            box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.15);
+        }
+
+        .qr-section {
+            text-align: center;
+            margin: 30px 0;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 16px;
+        }
+
+        .qr-title {
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1rem;
+        }
+
+        #qrcode {
+            display: inline-block;
+            padding: 15px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin-bottom: 15px;
+        }
+
+        .qr-instruction {
+            color: #6c757d;
+            font-size: 0.9rem;
+            margin-top: 10px;
+        }
+
+        .btn-vodafone {
+            background: linear-gradient(135deg, #e10000 0%, #c10000 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 18px 40px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            width: 100%;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(225, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .btn-vodafone:hover {
+            background: linear-gradient(135deg, #c10000 0%, #a00000 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(225, 0, 0, 0.4);
+            color: white;
+        }
+
+        .btn-vodafone:active {
+            transform: translateY(0);
+        }
+
+        .btn-vodafone:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-cancel {
+            background: white;
+            color: #6c757d;
+            border: 2px solid #dee2e6;
+            border-radius: 12px;
+            padding: 14px 30px;
+            font-size: 1rem;
+            font-weight: 600;
+            width: 100%;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-cancel:hover {
+            background: #f8f9fa;
+            border-color: #adb5bd;
+            color: #495057;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .security-badge {
+            text-align: center;
+            margin-top: 25px;
+            padding-top: 25px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .security-badge i {
+            color: #28a745;
+            font-size: 1.5rem;
+            margin-right: 8px;
+        }
+
+        .security-badge span {
+            color: #6c757d;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        @@media (max-width: 576px) {
+            .payment-wrapper {
+                padding: 0 10px;
+            }
+
+            .payment-header {
+                padding: 30px 20px;
+            }
+
+            .payment-header h1 {
+                font-size: 1.6rem;
+            }
+
+            .payment-content {
+                padding: 40px 20px 20px;
+            }
+
+            .amount-value {
+                font-size: 2rem;
+            }
+
+            .btn-vodafone,
+            .btn-cancel {
+                padding: 16px 30px;
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="payment-wrapper">
+        <div class="payment-container">
+            <div class="payment-header">
+                <div class="vodafone-icon">
+                    <i class="bi bi-phone"></i>
                 </div>
-                
-                <div class="qr-code">
-                    <div class="text-muted">
-                        <i class="bi bi-qr-code-scan"></i>
-                        <small class="d-block mt-2">QR Code</small>
+                <h1>Vodafone Cash</h1>
+                <p>Complete Your Payment</p>
+            </div>
+
+            <div class="payment-content">
+                <div class="amount-display">
+                    <div class="amount-label">Amount to Pay</div>
+                    <div class="amount-breakdown">
+                        <div class="breakdown-row">
+                            <span class="breakdown-label">Subtotal:</span>
+                            <span class="breakdown-value" id="subtotalDisplay">@(ViewBag.Subtotal ?? "0.00") EGP</span>
+                        </div>
+                        <div class="breakdown-row">
+                            <span class="breakdown-label">Shipping:</span>
+                            <span class="breakdown-value" id="shippingDisplay">
+                                @{
+                                    var shippingValue = ViewBag.Shipping?.ToString() ?? "0.00";
+                                    decimal shipping = 0m;
+                                    decimal.TryParse(shippingValue, out shipping);
+                                }
+                                @if (shipping > 0)
+                                {
+                                    <span>@shipping.ToString("F2") EGP</span>
+                                }
+                                else
+                                {
+                                    <span style="color: #28a745; font-weight: 600;">FREE</span>
+                                }
+                            </span>
+                        </div>
+                        <div class="breakdown-divider"></div>
+                        <div class="breakdown-row total-row">
+                            <span class="breakdown-label">Total:</span>
+                            <span class="breakdown-value amount-value" id="amountDisplay">@(ViewBag.Amount != null && ViewBag.Amount != "0.00" ? ViewBag.Amount : "0.00") EGP</span>
+                        </div>
                     </div>
                 </div>
-                
-                <button type="submit" class="btn btn-vodafone">
-                    <i class="bi bi-phone"></i> Pay Now with Vodafone Cash
-                </button>
-            </form>
-            
-            <a href="/Checkout" class="btn btn-link text-muted mt-3">Cancel Payment</a>
+
+                @if (cartItems.Any())
+                {
+                    <div class="order-items-section">
+                        <div class="order-items-title">
+                            <i class="bi bi-cart"></i>
+                            Order Items
+                        </div>
+                        <div class="order-items-list">
+                            @foreach (var item in cartItems)
+                            {
+                                <div class="order-item">
+                                    @if (!string.IsNullOrEmpty(item.ImageUrl))
+                                    {
+                                        <img src="@item.ImageUrl" alt="@item.ProductName" class="order-item-image" />
+                                    }
+                                    else
+                                    {
+                                        <div class="order-item-image" style="display: flex; align-items: center; justify-content: center; background: #e9ecef;">
+                                            <i class="bi bi-image" style="color: #adb5bd; font-size: 1.5rem;"></i>
+                                        </div>
+                                    }
+                                    <div class="order-item-details">
+                                        <div class="order-item-name">@item.ProductName</div>
+                                        <div class="order-item-meta">Qty: @item.Quantity × @item.Price.ToString("F2") EGP</div>
+                                    </div>
+                                    <div class="order-item-price">@((item.Price * item.Quantity).ToString("F2")) EGP</div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+
+               @*  <div class="payment-info">
+                    <i class="bi bi-info-circle"></i>
+                    <ul>
+                        <li>Enter your Vodafone Cash mobile number (11 digits)</li>
+                        <li>Click "Pay Now" to proceed with payment</li>
+                        <li>You will receive a confirmation SMS on your phone</li>
+                        <li>Confirm the payment on your Vodafone Cash app</li>
+                    </ul>
+                </div> *@
+
+                <form asp-action="CompleteVodafoneCashPayment" method="post" id="vodafoneForm">
+                    <div class="phone-input-group">
+                        <label for="phoneNumber" class="phone-input-label">
+                            <i class="bi bi-phone me-2"></i>Vodafone Cash Number
+                        </label>
+                        <div class="phone-description">
+                            Enter your phone number below to pay for these items with your mobile.<br>
+                            We'll text you a PIN number to confirm your payment.
+                        </div>
+                        <br>
+
+                        <input type="tel" 
+                               class="phone-input" 
+                               id="phoneNumber" 
+                               name="phoneNumber" 
+                               placeholder="01XXXXXXXXX" 
+                               pattern="[0-9]{11}"
+                               maxlength="11"
+                               required>
+                        <div class="phone-help-text">Enter your 11-digit Vodafone Cash number</div>
+                    </div>
+
+                    <div class="qr-section">
+                        <div class="qr-title">
+                            <i class="bi bi-qr-code me-2"></i>Scan QR Code to Pay
+                        </div>
+                        <div id="qrcode"></div>
+                        <div class="qr-instruction">
+                            Scan this QR code with your Vodafone Cash app to complete payment
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-vodafone" id="payBtn">
+                        <i class="bi bi-phone"></i>
+                        Pay Now with Vodafone Cash
+                    </button>
+                </form>
+
+                <a href="/Checkout" class="btn-cancel">
+                    <i class="bi bi-x-circle"></i>
+                    Cancel Payment
+                </a>
+
+                <div class="security-badge">
+                    <i class="bi bi-shield-check"></i>
+                    <span>Secure Payment</span>
+                </div>
+            </div>
         </div>
     </div>
-</div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-    // Format phone number input
-    document.addEventListener('DOMContentLoaded', function() {
-        var phoneInput = document.getElementById('phoneNumber');
-        if (phoneInput) {
-            phoneInput.addEventListener('input', function(e) {
-                let value = e.target.value.replace(/\D/g, '');
-                if (value.length > 11) value = value.slice(0, 11);
-                e.target.value = value;
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const phoneInput = document.getElementById('phoneNumber');
+            const form = document.getElementById('vodafoneForm');
+            const payBtn = document.getElementById('payBtn');
+            const amountDisplay = document.getElementById('amountDisplay');
+            const amount = '@(ViewBag.Amount ?? "0.00")';
+
+            // Format phone number input - only allow digits, no formatting
+            if (phoneInput) {
+                phoneInput.addEventListener('input', function(e) {
+                    // Remove all non-digit characters
+                    let value = e.target.value.replace(/\D/g, '');
+                    
+                    // Limit to 11 digits only
+                    if (value.length > 11) {
+                        value = value.slice(0, 11);
+                    }
+                    
+                    // Update the input value with only digits
+                    if (e.target.value !== value) {
+                        const cursorPosition = e.target.selectionStart;
+                        e.target.value = value;
+                        
+                        // Restore cursor position (adjust if we removed characters)
+                        const newPosition = Math.min(cursorPosition, value.length);
+                        e.target.setSelectionRange(newPosition, newPosition);
+                    }
+                });
+
+                // Prevent non-numeric input
+                phoneInput.addEventListener('keypress', function(e) {
+                    // Allow: backspace, delete, tab, escape, enter, and numbers
+                    if ([46, 8, 9, 27, 13].indexOf(e.keyCode) !== -1 ||
+                        // Allow: Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
+                        (e.keyCode === 65 && e.ctrlKey === true) ||
+                        (e.keyCode === 67 && e.ctrlKey === true) ||
+                        (e.keyCode === 86 && e.ctrlKey === true) ||
+                        (e.keyCode === 88 && e.ctrlKey === true) ||
+                        // Allow: home, end, left, right
+                        (e.keyCode >= 35 && e.keyCode <= 39)) {
+                        return;
+                    }
+                    // Ensure that it is a number and stop the keypress
+                    if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
+                        e.preventDefault();
+                    }
+                });
+
+                // Handle paste event
+                phoneInput.addEventListener('paste', function(e) {
+                    e.preventDefault();
+                    const paste = (e.clipboardData || window.clipboardData).getData('text');
+                    const numbers = paste.replace(/\D/g, '').slice(0, 11);
+                    const cursorPosition = e.target.selectionStart;
+                    const currentValue = e.target.value;
+                    const newValue = currentValue.slice(0, cursorPosition) + numbers + currentValue.slice(e.target.selectionEnd);
+                    const cleanValue = newValue.replace(/\D/g, '').slice(0, 11);
+                    e.target.value = cleanValue;
+                    const newPosition = Math.min(cursorPosition + numbers.length, cleanValue.length);
+                    e.target.setSelectionRange(newPosition, newPosition);
+                });
+
+                // Custom validation
+                phoneInput.addEventListener('invalid', function(e) {
+                    e.preventDefault();
+                    const phoneDigits = phoneInput.value.replace(/\D/g, '');
+                    if (phoneDigits.length !== 11) {
+                        phoneInput.setCustomValidity('Please enter a valid 11-digit Vodafone Cash number');
+                    } else if (!phoneDigits.startsWith('01')) {
+                        phoneInput.setCustomValidity('Vodafone Cash number must start with 01');
+                    } else {
+                        phoneInput.setCustomValidity('');
+                    }
+                });
+
+                // Real-time validation feedback
+                phoneInput.addEventListener('input', function() {
+                    const phoneDigits = phoneInput.value.replace(/\D/g, '');
+                    if (phoneDigits.length === 11 && phoneDigits.startsWith('01')) {
+                        phoneInput.setCustomValidity('');
+                        phoneInput.classList.remove('invalid');
+                        phoneInput.classList.add('valid');
+                    } else {
+                        phoneInput.classList.remove('valid');
+                        if (phoneDigits.length > 0) {
+                            phoneInput.classList.add('invalid');
+                        }
+                    }
+                });
+            }
+
+            // Validate amount
+            const amountValue = parseFloat(amount);
+            if (isNaN(amountValue) || amountValue <= 0) {
+                payBtn.disabled = true;
+                payBtn.innerHTML = '<i class="bi bi-exclamation-triangle"></i> Invalid Amount';
+                payBtn.style.background = '#dc3545';
+            }
+
+            // Generate QR Code
+            const qrData = {
+                merchant: 'StudentBazaar',
+                amount: amountValue,
+                currency: 'EGP',
+                phone: '01000000000', // Default merchant phone
+                timestamp: new Date().toISOString()
+            };
+
+            // Generate QR code string (Vodafone Cash format)
+            const qrString = `VODAFONE_CASH:${qrData.merchant}:${qrData.amount}:${qrData.currency}:${Date.now()}`;
+            
+            if (typeof QRCode !== 'undefined') {
+                new QRCode(document.getElementById('qrcode'), {
+                    text: qrString,
+                    width: 200,
+                    height: 200,
+                    colorDark: '#000000',
+                    colorLight: '#ffffff',
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+            } else {
+                // Fallback if QRCode library not loaded
+                document.getElementById('qrcode').innerHTML = 
+                    '<div style="width:200px;height:200px;background:#f0f0f0;display:flex;align-items:center;justify-content:center;border-radius:8px;">' +
+                    '<i class="bi bi-qr-code" style="font-size:4rem;color:#999;"></i>' +
+                    '</div>';
+            }
+
+            // Form validation
+            form.addEventListener('submit', function(e) {
+                e.preventDefault(); // Prevent default HTML5 validation
+                
+                // Get phone value (already clean, no spaces)
+                const phoneValue = phoneInput.value.replace(/\D/g, '');
+                
+                // Clear any previous custom validation
+                phoneInput.setCustomValidity('');
+                
+                // Validate phone number
+                if (!phoneValue || phoneValue.length !== 11) {
+                    phoneInput.setCustomValidity('Please enter a valid 11-digit Vodafone Cash number');
+                    phoneInput.reportValidity();
+                    phoneInput.focus();
+                    phoneInput.classList.add('invalid');
+                    return false;
+                }
+
+                if (!phoneValue.startsWith('01')) {
+                    phoneInput.setCustomValidity('Vodafone Cash number must start with 01');
+                    phoneInput.reportValidity();
+                    phoneInput.focus();
+                    phoneInput.classList.add('invalid');
+                    return false;
+                }
+
+                // Ensure input value is clean (only digits)
+                phoneInput.value = phoneValue;
+
+                // Show loading state
+                payBtn.disabled = true;
+                payBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Processing...';
+                
+                // Submit form
+                form.submit();
+                return true;
             });
-        }
-    });
-</script>
-
+        });
+    </script>
+</body>
+</html>

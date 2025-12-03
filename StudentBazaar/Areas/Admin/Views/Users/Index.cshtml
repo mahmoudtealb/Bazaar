@@ -1,0 +1,102 @@
+@model List<StudentBazaar.Entities.Models.ApplicationUser>
+@{
+    ViewData["Title"] = "Users Management";
+    Layout = "_AdminLayout";
+}
+
+<div class="container-fluid">
+    <h1 class="h3 mb-4">Users Management</h1>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+
+    <!-- Search -->
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-8">
+                    <input type="text" name="search" class="form-control" placeholder="Search by name or email..." value="@ViewContext.HttpContext.Request.Query["search"]">
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary">Search</button>
+                </div>
+                <div class="col-md-2">
+                    <a asp-action="ExportCsv" class="btn btn-success">Export CSV</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Users Table -->
+    <div class="card shadow">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                           @*  <th>ID</th> *@
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Trust Score</th>
+                            <th>Verified</th>
+                            <th>Suspended</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var user in Model)
+                        {
+                            <tr>
+                                @* <td>@user.Id</td> *@
+                                <td>@user.FullName</td>
+                                <td>@user.Email</td>
+                                <td>@user.TrustScore</td>
+                                <td>
+                                    @if (user.IsVerified)
+                                    {
+                                        <span class="badge bg-success">Verified</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-warning">Not Verified</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (user.IsSuspended)
+                                    {
+                                        <span class="badge bg-danger">Suspended</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-success">Active</span>
+                                    }
+                                </td>
+                                <td>
+                                    <a asp-action="Details" asp-route-id="@user.Id" class="btn btn-sm btn-info">View</a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            @if (ViewBag.TotalPages > 1)
+            {
+                <nav>
+                    <ul class="pagination">
+                        @for (int i = 1; i <= ViewBag.TotalPages; i++)
+                        {
+                            <li class="page-item @(i == ViewBag.Page ? "active" : "")">
+                                <a class="page-link" href="?page=@i">@i</a>
+                            </li>
+                        }
+                    </ul>
+                </nav>
+            }
+        </div>
+    </div>
+</div>
+

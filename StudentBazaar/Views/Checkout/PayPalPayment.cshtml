@@ -1,100 +1,626 @@
 @{
     ViewData["Title"] = "PayPal Payment";
+    Layout = null;
+    var cartItems = ViewBag.CartItems as List<StudentBazaar.Web.Models.CartItemViewModel> ?? new List<StudentBazaar.Web.Models.CartItemViewModel>();
 }
 
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" />
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - StudentBazaar</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-<style>
-    .paypal-container {
-        max-width: 600px;
-        margin: 50px auto;
-        padding: 40px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        border-radius: 20px;
-        box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-        color: white;
-    }
-    .paypal-logo {
-        width: 120px;
-        margin-bottom: 30px;
-    }
-    .payment-card {
-        background: white;
-        border-radius: 15px;
-        padding: 30px;
-        color: #333;
-        margin-top: 20px;
-    }
-    .btn-paypal {
-        background: #0070ba;
-        color: white;
-        padding: 15px 40px;
-        border-radius: 30px;
-        border: none;
-        font-size: 18px;
-        font-weight: bold;
-        transition: all 0.3s;
-        width: 100%;
-    }
-    .btn-paypal:hover {
-        background: #005ea6;
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-    }
-</style>
+        body {
+            background: #f5f7fa;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            padding: 20px;
+        }
 
-<div class="container">
-    <div class="paypal-container text-center">
-        <svg class="paypal-logo" viewBox="0 0 283 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M283 32.5C283 50.45 268.45 64 250.5 64H60.95C54.95 64 50 59.05 50 53.05V10.95C50 4.95 54.95 0 60.95 0H236.85C254.8 0 269.35 14.55 269.35 32.5H283Z" fill="white"/>
-        </svg>
-        
-        <h2 class="mb-4">Complete Your Payment</h2>
-        
-        <div class="payment-card">
-            <h4 class="mb-3">Payment Details</h4>
-            <div class="d-flex justify-content-between mb-3 pb-3 border-bottom">
-                <span class="text-muted">Amount to Pay:</span>
-                <strong class="fs-4">$@ViewBag.Amount</strong>
+        .payment-wrapper {
+            max-width: 520px;
+            width: 100%;
+            animation: slideUp 0.4s ease-out;
+        }
+
+        @@keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .payment-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .payment-header {
+            background: #0070ba;
+            padding: 32px 24px;
+            text-align: center;
+            color: white;
+            position: relative;
+        }
+
+        .paypal-logo-container {
+            width: 60px;
+            height: 60px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+
+        .paypal-logo {
+            width: 40px;
+            height: 40px;
+            background: #0070ba;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 1.5rem;
+        }
+
+        .payment-header h1 {
+            font-size: 1.5rem;
+            font-weight: 400;
+            margin-bottom: 8px;
+            letter-spacing: -0.3px;
+        }
+
+        .payment-header p {
+            font-size: 0.875rem;
+            opacity: 0.9;
+            font-weight: 300;
+        }
+
+        .payment-content {
+            padding: 32px 24px;
+        }
+
+        .order-items-section {
+            margin-bottom: 24px;
+        }
+
+        .order-items-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .order-items-list {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 16px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .order-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .order-item:last-child {
+            border-bottom: none;
+        }
+
+        .order-item-image {
+            width: 50px;
+            height: 50px;
+            border-radius: 6px;
+            object-fit: cover;
+            background: #e9ecef;
+            flex-shrink: 0;
+        }
+
+        .order-item-details {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .order-item-name {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #1a1a1a;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .order-item-meta {
+            font-size: 0.75rem;
+            color: #6c757d;
+        }
+
+        .order-item-price {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #1a1a1a;
+            white-space: nowrap;
+        }
+
+        .amount-section {
+            text-align: center;
+            margin-bottom: 24px;
+            padding: 20px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 8px;
+        }
+
+        .amount-label {
+            font-size: 0.75rem;
+            color: #6c757d;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .amount-value {
+            font-size: 2rem;
+            font-weight: 400;
+            color: #1a1a1a;
+            margin: 0;
+            letter-spacing: -0.5px;
+        }
+
+        .amount-breakdown {
+            text-align: left;
+            margin-top: 15px;
+        }
+
+        .breakdown-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            font-size: 0.875rem;
+        }
+
+        .breakdown-label {
+            color: #6c757d;
+            font-weight: 500;
+        }
+
+        .breakdown-value {
+            color: #1a1a1a;
+            font-weight: 600;
+        }
+
+        .breakdown-divider {
+            height: 1px;
+            background: #e0e0e0;
+            margin: 12px 0;
+        }
+
+        .total-row {
+            margin-top: 8px;
+            padding-top: 12px;
+            border-top: 2px solid #e0e0e0;
+        }
+
+        .total-row .breakdown-label {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #1a1a1a;
+        }
+
+        .total-row .breakdown-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #0070ba;
+        }
+
+        .usd-amount {
+            font-size: 0.75rem;
+            color: #6c757d;
+            margin-top: 8px;
+            text-align: center;
+        }
+
+        .info-box {
+            background: #fff8e1;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .info-box i {
+            color: #f57c00;
+            font-size: 1.25rem;
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+
+        .info-box p {
+            color: #5d4037;
+            margin: 0;
+            font-size: 0.875rem;
+            line-height: 1.5;
+        }
+
+        .btn-paypal {
+            background: #0070ba;
+            color: white;
+            border: none;
+            border-radius: 24px;
+            padding: 14px 24px;
+            font-size: 1rem;
+            font-weight: 500;
+            width: 100%;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .btn-paypal:hover {
+            background: #005ea6;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 112, 186, 0.3);
+        }
+
+        .btn-paypal:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 6px rgba(0, 112, 186, 0.2);
+        }
+
+        .btn-paypal:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-paypal .paypal-icon {
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #0070ba;
+            font-weight: 700;
+            font-size: 0.875rem;
+        }
+
+        .btn-cancel {
+            background: transparent;
+            color: #6c757d;
+            border: none;
+            border-radius: 24px;
+            padding: 12px 24px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            width: 100%;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .btn-cancel:hover {
+            background: #f5f5f5;
+            color: #495057;
+        }
+
+        .security-footer {
+            text-align: center;
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .security-footer i {
+            color: #28a745;
+            font-size: 1.125rem;
+            margin-right: 6px;
+        }
+
+        .security-footer span {
+            color: #6c757d;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            color: white;
+        }
+
+        .loading-overlay.active {
+            display: flex;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @@keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            margin-top: 16px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        @@media (max-width: 576px) {
+            .payment-wrapper {
+                padding: 0;
+            }
+
+            .payment-header {
+                padding: 24px 20px;
+            }
+
+            .payment-content {
+                padding: 24px 20px;
+            }
+
+            .amount-value {
+                font-size: 1.75rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="payment-wrapper">
+        <div class="payment-container">
+            <div class="payment-header">
+                <div class="paypal-logo-container">
+                    <div class="paypal-logo">P</div>
+                </div>
+                <h1>Complete Your Payment</h1>
+                <p>Secure payment through PayPal</p>
             </div>
-            
-            <p class="text-muted small mb-4">
-                You will be redirected to PayPal to securely complete your payment.
-            </p>
-            
-            <form method="post" action="https://www.sandbox.paypal.com/cgi-bin/webscr" id="paypalForm">
-                <input type="hidden" name="cmd" value="_xclick">
-                <input type="hidden" name="business" value="@ViewBag.BusinessEmail">
-                <input type="hidden" name="item_name" value="Order Payment">
-                <input type="hidden" name="amount" value="@ViewBag.Amount">
-                <input type="hidden" name="currency_code" value="USD">
-                <input type="hidden" name="return" value="@ViewBag.ReturnUrl">
-                <input type="hidden" name="cancel_return" value="@ViewBag.CancelUrl">
-                <input type="hidden" name="notify_url" value="@ViewBag.ReturnUrl">
-                
-                <button type="submit" class="btn btn-paypal">
-                    <i class="bi bi-paypal me-2"></i>Pay with PayPal
-                </button>
-            </form>
-            
-            <a href="@ViewBag.CancelUrl" class="btn btn-link text-muted mt-3">
-                <i class="bi bi-x-circle me-1"></i>Cancel Payment
-            </a>
+
+            <div class="payment-content">
+                @if (cartItems.Any())
+                {
+                    <div class="order-items-section">
+                        <div class="order-items-title">
+                            <i class="bi bi-cart"></i>
+                            Order Items
+                        </div>
+                        <div class="order-items-list">
+                            @foreach (var item in cartItems)
+                            {
+                                <div class="order-item">
+                                    @if (!string.IsNullOrEmpty(item.ImageUrl))
+                                    {
+                                        <img src="@item.ImageUrl" alt="@item.ProductName" class="order-item-image" />
+                                    }
+                                    else
+                                    {
+                                        <div class="order-item-image" style="display: flex; align-items: center; justify-content: center;">
+                                            <i class="bi bi-image" style="color: #adb5bd;"></i>
+                                        </div>
+                                    }
+                                    <div class="order-item-details">
+                                        <div class="order-item-name">@item.ProductName</div>
+                                        <div class="order-item-meta">Qty: @item.Quantity × @item.Price.ToString("F2") EGP</div>
+                                    </div>
+                                    <div class="order-item-price">@((item.Price * item.Quantity).ToString("F2")) EGP</div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+
+                <div class="amount-section">
+                    <div class="amount-label">Amount to Pay</div>
+                    <div class="amount-breakdown">
+                        <div class="breakdown-row">
+                            <span class="breakdown-label">Subtotal:</span>
+                            <span class="breakdown-value" id="subtotalDisplay">@(ViewBag.Subtotal ?? "0.00") EGP</span>
+                        </div>
+                        <div class="breakdown-row">
+                            <span class="breakdown-label">Shipping:</span>
+                            <span class="breakdown-value" id="shippingDisplay">
+                                @{
+                                    var shippingValue = ViewBag.Shipping?.ToString() ?? "0.00";
+                                    decimal shipping = 0m;
+                                    decimal.TryParse(shippingValue, out shipping);
+                                }
+                                @if (shipping > 0)
+                                {
+                                    <span>@shipping.ToString("F2") EGP</span>
+                                }
+                                else
+                                {
+                                    <span style="color: #28a745; font-weight: 600;">FREE</span>
+                                }
+                            </span>
+                        </div>
+                        <div class="breakdown-divider"></div>
+                        <div class="breakdown-row total-row">
+                            <span class="breakdown-label">Total:</span>
+                            <span class="breakdown-value amount-value" id="amountDisplay">@(ViewBag.Amount != null && ViewBag.Amount != "0.00" ? ViewBag.Amount : "0.00") EGP</span>
+                        </div>
+                        <div class="usd-amount" id="usdAmount">≈ $<span id="usdValue">0.00</span></div>
+                    </div>
+                </div>
+
+                <div class="info-box">
+                    <i class="bi bi-info-circle"></i>
+                    <p>You will be redirected to PayPal's secure payment page to complete your transaction. Your payment information is protected by PayPal's security measures.</p>
+                </div>
+
+                <form method="post" action="https://www.sandbox.paypal.com/cgi-bin/webscr" id="paypalForm">
+                    <input type="hidden" name="cmd" value="_xclick">
+                    <input type="hidden" name="business" value="@(ViewBag.BusinessEmail ?? "sb-merchant@business.example.com")">
+                    <input type="hidden" name="item_name" value="StudentBazaar Order Payment">
+                    <input type="hidden" name="amount" id="paypalAmount" value="0.00">
+                    <input type="hidden" name="currency_code" value="USD">
+                    <input type="hidden" name="egp_amount" id="egpAmount" value="@(ViewBag.Amount != null && ViewBag.Amount != "0.00" ? ViewBag.Amount : "0.00")">
+                    <input type="hidden" name="return" value="@(ViewBag.ReturnUrl ?? $"{Context.Request.Scheme}://{Context.Request.Host}/Checkout/Success?paymentMethod=PayPal")">
+                    <input type="hidden" name="cancel_return" value="@(ViewBag.CancelUrl ?? $"{Context.Request.Scheme}://{Context.Request.Host}/Checkout/Cancel?paymentMethod=PayPal")">
+                    <input type="hidden" name="notify_url" value="@(ViewBag.ReturnUrl ?? $"{Context.Request.Scheme}://{Context.Request.Host}/Checkout/Success?paymentMethod=PayPal")">
+                    
+                    <button type="submit" class="btn-paypal" id="paypalBtn">
+                        <span class="paypal-icon">P</span>
+                        Pay with PayPal
+                    </button>
+                </form>
+
+                <a href="@(ViewBag.CancelUrl ?? $"{Context.Request.Scheme}://{Context.Request.Host}/Checkout/Cancel?paymentMethod=PayPal")" class="btn-cancel">
+                    <i class="bi bi-x"></i>
+                    Cancel Payment
+                </a>
+
+                <div class="security-footer">
+                    <i class="bi bi-shield-check"></i>
+                    <span>Secure Payment</span>
+                </div>
+            </div>
         </div>
     </div>
-</div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-    // Optional: Auto-submit form after 2 seconds
-    // document.addEventListener('DOMContentLoaded', function() {
-    //     setTimeout(function() {
-    //         var form = document.getElementById('paypalForm');
-    //         if (form) {
-    //             form.submit();
-    //         }
-    //     }, 2000);
-    // });
-</script>
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <p class="loading-text">Redirecting to PayPal...</p>
+    </div>
 
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('paypalForm');
+            const paypalBtn = document.getElementById('paypalBtn');
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const amountInput = document.getElementById('paypalAmount');
+            const amountValue = document.getElementById('amountDisplay');
+            
+            // Get EGP amount
+            const egpAmountInput = document.getElementById('egpAmount');
+            const usdValueSpan = document.getElementById('usdValue');
+            const usdAmountDiv = document.getElementById('usdAmount');
+            
+            let egpAmount = 0;
+            if (egpAmountInput) {
+                egpAmount = parseFloat(egpAmountInput.value);
+            } else if (amountValue) {
+                const displayText = amountValue.textContent.replace('EGP', '').trim();
+                egpAmount = parseFloat(displayText) || 0;
+            }
+
+            // Validate amount
+            if (isNaN(egpAmount) || egpAmount <= 0) {
+                paypalBtn.disabled = true;
+                paypalBtn.innerHTML = '<i class="bi bi-exclamation-triangle"></i> Invalid Amount';
+                paypalBtn.style.background = '#dc3545';
+                return;
+            }
+
+            // Convert EGP to USD (approximate rate: 1 USD = 30.5 EGP)
+            const exchangeRate = 30.5;
+            const usdAmount = egpAmount / exchangeRate;
+
+            // Update display
+            if (amountValue) {
+                amountValue.textContent = egpAmount.toFixed(2) + ' EGP';
+            }
+            
+            // Update USD amount display
+            if (usdValueSpan) {
+                usdValueSpan.textContent = usdAmount.toFixed(2);
+            }
+            
+            // Update PayPal amount (send USD to PayPal)
+            if (amountInput) {
+                amountInput.value = usdAmount.toFixed(2);
+            }
+
+            // Handle form submission
+            form.addEventListener('submit', function(e) {
+                // Get EGP amount and convert to USD
+                const currentEgpAmount = parseFloat(egpAmountInput ? egpAmountInput.value : 0);
+                const exchangeRate = 30.5;
+                const currentUsdAmount = currentEgpAmount / exchangeRate;
+                
+                if (isNaN(currentEgpAmount) || currentEgpAmount <= 0) {
+                    e.preventDefault();
+                    alert('Invalid payment amount. Please return to checkout.');
+                    return false;
+                }
+                
+                // Ensure PayPal receives USD amount
+                if (amountInput) {
+                    amountInput.value = currentUsdAmount.toFixed(2);
+                }
+
+                // Show loading overlay
+                loadingOverlay.classList.add('active');
+                
+                // Update button state
+                paypalBtn.disabled = true;
+                paypalBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Redirecting...';
+                
+                return true;
+            });
+        });
+    </script>
+</body>
+</html>

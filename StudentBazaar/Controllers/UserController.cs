@@ -1,8 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
-using StudentBazaar.Web.Models;
-using StudentBazaar.Web.Repositories;
+﻿
 
 namespace StudentBazaar.Web.Controllers
 {

@@ -1,0 +1,150 @@
+@model List<StudentBazaar.Entities.Models.College>
+@{
+    ViewData["Title"] = "Colleges Management";
+    Layout = "_AdminLayout";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">Colleges Management</h1>
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Create New
+        </a>
+    </div>
+
+    <partial name="_AdminAlerts" />
+
+    <!-- Search and Filters -->
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-5">
+                    <input type="text" name="search" class="form-control" placeholder="Search by college name..." value="@ViewBag.Search">
+                </div>
+                <div class="col-md-3">
+                    <select name="universityId" class="form-select">
+                        <option value="">All Universities</option>
+                        @foreach (var university in ViewBag.Universities as List<StudentBazaar.Entities.Models.University>)
+                        {
+                            <option value="@university.Id" selected="@(ViewBag.SelectedUniversityId != null && ViewBag.SelectedUniversityId.ToString() == university.Id.ToString())">
+                                @university.UniversityName
+                            </option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select name="pageSize" class="form-select" onchange="this.form.submit()">
+                        <option value="10" selected="@(ViewBag.PageSize == 10)">10 per page</option>
+                        <option value="20" selected="@(ViewBag.PageSize == 20)">20 per page</option>
+                        <option value="50" selected="@(ViewBag.PageSize == 50)">50 per page</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Colleges Table -->
+    <div class="card shadow">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">
+                Colleges (@ViewBag.TotalCount total)
+            </h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="table-light">
+                        <tr>
+                           @*  <th>ID</th> *@
+                            <th>College Name</th>
+                            <th>University</th>
+                            <th>Users</th>
+                            <th>Majors</th>
+                            <th>Created At</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.Any())
+                        {
+                            @foreach (var college in Model)
+                            {
+                                <tr>
+                                    @* <td>@college.Id</td> *@
+                                    <td><strong>@college.CollegeName</strong></td>
+                                    <td>
+                                        <span class="badge bg-primary">@(college.University?.UniversityName ?? "N/A")</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary">@(college.Users?.Count ?? 0)</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">@(college.Majors?.Count ?? 0)</span>
+                                    </td>
+                                    <td>@college.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a asp-action="Details" asp-route-id="@college.Id" class="btn btn-sm btn-info" title="View Details">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a asp-action="Edit" asp-route-id="@college.Id" class="btn btn-sm btn-warning" title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a asp-action="Delete" asp-route-id="@college.Id" class="btn btn-sm btn-danger" title="Delete">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="7" class="text-center text-muted py-4">
+                                    <i class="fas fa-inbox fa-2x mb-2"></i>
+                                    <p>No colleges found.</p>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            @if (ViewBag.TotalPages > 1)
+            {
+                <nav aria-label="Page navigation">
+                    <ul class="pagination justify-content-center">
+                        @if (ViewBag.Page > 1)
+                        {
+                            <li class="page-item">
+                                <a class="page-link" href="?page=@(ViewBag.Page - 1)&search=@ViewBag.Search&universityId=@ViewBag.SelectedUniversityId&pageSize=@ViewBag.PageSize">Previous</a>
+                            </li>
+                        }
+
+                        @for (int i = Math.Max(1, ViewBag.Page - 2); i <= Math.Min(ViewBag.TotalPages, ViewBag.Page + 2); i++)
+                        {
+                            <li class="page-item @(i == ViewBag.Page ? "active" : "")">
+                                <a class="page-link" href="?page=@i&search=@ViewBag.Search&universityId=@ViewBag.SelectedUniversityId&pageSize=@ViewBag.PageSize">@i</a>
+                            </li>
+                        }
+
+                        @if (ViewBag.Page < ViewBag.TotalPages)
+                        {
+                            <li class="page-item">
+                                <a class="page-link" href="?page=@(ViewBag.Page + 1)&search=@ViewBag.Search&universityId=@ViewBag.SelectedUniversityId&pageSize=@ViewBag.PageSize">Next</a>
+                            </li>
+                        }
+                    </ul>
+                </nav>
+            }
+        </div>
+    </div>
+</div>
+

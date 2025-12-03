@@ -1,4 +1,4 @@
-﻿@model StudentBazaar.Web.Models.College
+﻿@model StudentBazaar.Entities.Models.College
 
 <h2>Create College</h2>
 
@@ -14,8 +14,9 @@
 
     <div class="mb-3">
         <label asp-for="UniversityId" class="form-label">University</label>
-        <select asp-for="UniversityId" class="form-select" asp-items="@ViewBag.Universities">
+        <select asp-for="UniversityId" class="form-select" asp-items="@ViewBag.Universities" id="universitySelect">
             <option value="">-- Select University --</option>
+            <option value="other">Other...</option>
         </select>
         <span asp-validation-for="UniversityId" class="text-danger"></span>
     </div>
@@ -24,6 +25,147 @@
     <a asp-action="Index" class="btn btn-secondary">Back</a>
 </form>
 
+<!-- Modal for Adding New University -->
+<div class="modal fade" id="addUniversityModal" tabindex="-1" aria-labelledby="addUniversityModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addUniversityModalLabel">Add New University</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="newUniversityName" class="form-label">University Name *</label>
+                    <input type="text" class="form-control" id="newUniversityName" placeholder="Enter university name" />
+                    <div class="invalid-feedback" id="universityNameError" style="display: none;">
+                        Please enter a university name.
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="saveUniversityBtn">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const universitySelect = document.getElementById('universitySelect');
+            const universityModal = new bootstrap.Modal(document.getElementById('addUniversityModal'));
+            const universityNameInput = document.getElementById('newUniversityName');
+            const saveUniversityBtn = document.getElementById('saveUniversityBtn');
+            const universityNameError = document.getElementById('universityNameError');
+
+            if (!universitySelect || !universityModal || !universityNameInput || !saveUniversityBtn) return;
+
+            // Handle dropdown change
+            universitySelect.addEventListener('change', function () {
+                if (this.value === 'other') {
+                    this.value = '';
+                    universityModal.show();
+                }
+            });
+
+            // Handle save button click
+            saveUniversityBtn.addEventListener('click', function () {
+                const universityName = universityNameInput.value.trim();
+                
+                // Validate input
+                if (!universityName) {
+                    universityNameInput.classList.add('is-invalid');
+                    if (universityNameError) universityNameError.style.display = 'block';
+                    return;
+                }
+
+                // Remove validation error
+                universityNameInput.classList.remove('is-invalid');
+                if (universityNameError) universityNameError.style.display = 'none';
+
+                // Disable button during request
+                saveUniversityBtn.disabled = true;
+                saveUniversityBtn.textContent = 'Saving...';
+
+                // Get anti-forgery token
+                const token = $('input[name="__RequestVerificationToken"]').val();
+
+                // AJAX call to create university
+                $.ajax({
+                    url: '/University/CreateAjax',
+                    type: 'POST',
+                    headers: {
+                        'RequestVerificationToken': token
+                    },
+                    data: { name: universityName },
+                    success: function (response) {
+                        if (response && response.success && response.id && response.name) {
+                            // Remove "Other..." option if it exists
+                            const otherOption = universitySelect.querySelector('option[value="other"]');
+                            if (otherOption) {
+                                otherOption.remove();
+                            }
+
+                            // Add the new university option
+                            const newOption = document.createElement('option');
+                            newOption.value = response.id;
+                            newOption.textContent = response.name;
+                            newOption.selected = true;
+                            universitySelect.appendChild(newOption);
+
+                            // Re-add "Other..." option at the bottom
+                            const otherOptionNew = document.createElement('option');
+                            otherOptionNew.value = 'other';
+                            otherOptionNew.textContent = 'Other...';
+                            universitySelect.appendChild(otherOptionNew);
+
+                            // Close modal and clear input
+                            universityModal.hide();
+                            universityNameInput.value = '';
+                        } else {
+                            // Handle error response
+                            const errorMsg = (response && response.message) ? response.message : 'Error: Invalid response from server.';
+                            alert(errorMsg);
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        let errorMessage = 'An error occurred while saving the university.';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errorMessage = xhr.responseJSON.message;
+                        } else if (xhr.responseText) {
+                            try {
+                                const response = JSON.parse(xhr.responseText);
+                                if (response.message) {
+                                    errorMessage = response.message;
+                                }
+                            } catch (e) {
+                                // Use default error message
+                            }
+                        }
+                        alert(errorMessage);
+                    },
+                    complete: function () {
+                        // Re-enable button
+                        saveUniversityBtn.disabled = false;
+                        saveUniversityBtn.textContent = 'Save';
+                    }
+                });
+            });
+
+            // Clear validation on input
+            universityNameInput.addEventListener('input', function () {
+                this.classList.remove('is-invalid');
+                if (universityNameError) universityNameError.style.display = 'none';
+            });
+
+            // Clear input when modal is closed
+            document.getElementById('addUniversityModal').addEventListener('hidden.bs.modal', function () {
+                universityNameInput.value = '';
+                universityNameInput.classList.remove('is-invalid');
+                if (universityNameError) universityNameError.style.display = 'none';
+            });
+        });
+    </script>
 }

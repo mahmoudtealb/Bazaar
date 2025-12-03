@@ -1,64 +1,331 @@
-﻿ء@model IEnumerable<StudentBazaar.Web.Models.Order>
+@model IEnumerable<StudentBazaar.Entities.Models.Order>
 
 @{
     ViewData["Title"] = "Orders";
 }
 
-    <h2 class="mt-3">My Orders</h2>
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">@(User.IsInRole("Admin") ? "All Orders" : "My Orders")</h2>
+        @if (User.IsInRole("Admin"))
+        {
+            <a asp-action="Create" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>Create New Order
+            </a>
+        }
+    </div>
 
-@if (User.IsInRole("Admin"))
-{
-        <a asp-action="Create" class="btn btn-primary mb-3">Create New Order</a>
-}
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>@TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
 
-    <table class="table table-bordered table-striped">
-        <thead>
-            <tr>
-                <th>Listing</th>
-                <th>Buyer</th>
-                <th>Total Amount</th>
-                <th>Status</th>
-                <th>Payment</th>
-                <th>Order Date</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var order in Model)
-            {
-                <tr>
-                    <td>
-                        @(order.Listing?.Product?.Name ?? "N/A")
-                        -
-                        @order.Listing?.Price.ToString("0.00")
-                    </td>
-                    <td>@(order.Buyer?.FullName ?? "N/A")</td>
-                    <td>@order.TotalAmount.ToString("0.00")</td>
-                    <td>@order.Status</td>
-                    <td>@order.PaymentMethod</td>
-                    <td>@order.OrderDate.ToShortDateString()</td>
-                    <td>
-                        <a asp-action="Details"
-                           asp-route-id="@order.Id"
-                           class="btn btn-info btn-sm">
-                            Details
-                        </a>
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i>@TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
 
-                        @if (User.IsInRole("Admin"))
-                        {
-                            <a asp-action="Edit"
-                               asp-route-id="@order.Id"
-                               class="btn btn-warning btn-sm">
-                                Edit
-                            </a>
-                            <a asp-action="Delete"
-                               asp-route-id="@order.Id"
-                               class="btn btn-danger btn-sm">
-                                Delete
-                            </a>
-                        }
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
+    @if (!Model.Any())
+    {
+        <div class="card shadow-sm">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-shopping-bag fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">No orders found</h5>
+                <p class="text-muted">You haven't placed any orders yet.</p>
+                <a asp-controller="Product" asp-action="Index" class="btn btn-primary mt-3">
+                    <i class="fas fa-shopping-cart me-2"></i>Start Shopping
+                </a>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="card shadow-sm">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-4">
+                                    <i class="fas fa-box me-2 text-primary"></i>Product
+                                </th>
+                                @if (User.IsInRole("Admin"))
+                                {
+                                    <th>
+                                        <i class="fas fa-user me-2 text-primary"></i>Buyer
+                                    </th>
+                                }
+                                <th>
+                                    <i class="fas fa-tag me-2 text-info"></i>Price
+                                </th>
+                                <th>
+                                    <i class="fas fa-money-bill-wave me-2 text-success"></i>Total Amount
+                                </th>
+                                <th>
+                                    <i class="fas fa-info-circle me-2 text-info"></i>Status
+                                </th>
+                                <th>
+                                    <i class="fas fa-credit-card me-2 text-warning"></i>Payment Method
+                                </th>
+                                <th>
+                                    <i class="fas fa-calendar me-2 text-secondary"></i>Order Date
+                                </th>
+                                <th class="text-end pe-4">
+                                    <i class="fas fa-cog me-2 text-primary"></i>Actions
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var order in Model)
+                            {
+                                <tr class="align-middle">
+                                    <td class="ps-4">
+                                        @if (order.OrderItems != null && order.OrderItems.Any())
+                                        {
+                                            var firstItem = order.OrderItems.First();
+                                            <div class="d-flex align-items-center">
+                                                @if (firstItem.Product != null && firstItem.Product.Images != null && firstItem.Product.Images.Any())
+                                                {
+                                                    var mainImage = firstItem.Product.Images.FirstOrDefault(img => img.IsMainImage)
+                                                        ?? firstItem.Product.Images.First();
+                                                    <img src="@mainImage.ImageUrl" alt="@firstItem.ProductName"
+                                                         class="rounded me-3" style="width: 50px; height: 50px; object-fit: cover;">
+                                                }
+                                                <div>
+                                                    <strong class="text-dark">@firstItem.ProductName</strong>
+                                                    @if (order.OrderItems.Count > 1)
+                                                    {
+                                                        <br />
+                                                        <small class="text-muted">
+                                                            <i class="fas fa-plus-circle me-1"></i>@(order.OrderItems.Count - 1) more item(s)
+                                                        </small>
+                                                    }
+                                                </div>
+                                            </div>
+                                        }
+                                        else if (order.Listing?.Product != null)
+                                        {
+                                            <div class="d-flex align-items-center">
+                                                @if (order.Listing.Product.Images != null && order.Listing.Product.Images.Any())
+                                                {
+                                                    var mainImage = order.Listing.Product.Images.FirstOrDefault(img => img.IsMainImage)
+                                                        ?? order.Listing.Product.Images.First();
+                                                    <img src="@mainImage.ImageUrl" alt="@order.Listing.Product.Name"
+                                                         class="rounded me-3" style="width: 50px; height: 50px; object-fit: cover;">
+                                                }
+                                                <div>
+                                                    <strong class="text-dark">@order.Listing.Product.Name</strong>
+                                                </div>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">
+                                                <i class="fas fa-exclamation-triangle me-1"></i>No items
+                                            </span>
+                                        }
+                                    </td>
+                                    @if (User.IsInRole("Admin"))
+                                    {
+                                        <td>
+                                            <span class="text-dark">@(order.Buyer?.FullName ?? "N/A")</span>
+                                        </td>
+                                    }
+                                    <td>
+                                        @if (order.OrderItems != null && order.OrderItems.Any())
+                                        {
+                                            var firstItem = order.OrderItems.First();
+                                            <span class="text-dark fw-semibold">
+                                                @firstItem.Price.ToString("F2")
+                                            </span>
+                                            @if (order.OrderItems.Count > 1)
+                                            {
+                                                <br />
+                                                <small class="text-muted">(per item)</small>
+                                            }
+                                        }
+                                        else if (order.Listing != null)
+                                        {
+                                            <span class="text-dark fw-semibold">
+                                                @order.Listing.Price.ToString("F2")
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">-</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <strong class="text-success fs-6">
+                                            @order.TotalAmount.ToString("F2")
+                                        </strong>
+                                    </td>
+                                    <td>
+                                        @{
+                                            var statusClass = order.Status switch
+                                            {
+                                                StudentBazaar.Entities.Models.OrderStatus.Pending => "warning",
+                                                StudentBazaar.Entities.Models.OrderStatus.Confirmed => "info",
+                                                StudentBazaar.Entities.Models.OrderStatus.Shipped => "primary",
+                                                StudentBazaar.Entities.Models.OrderStatus.Delivered => "success",
+                                                StudentBazaar.Entities.Models.OrderStatus.Completed => "success",
+                                                StudentBazaar.Entities.Models.OrderStatus.Cancelled => "danger",
+                                                _ => "secondary"
+                                            };
+                                            var statusIcon = order.Status switch
+                                            {
+                                                StudentBazaar.Entities.Models.OrderStatus.Pending => "fa-clock",
+                                           //     StudentBazaar.Entities.Models.OrderStatus.Approved => "fa-check",
+                                                StudentBazaar.Entities.Models.OrderStatus.Shipped => "fa-truck",
+                                                StudentBazaar.Entities.Models.OrderStatus.Delivered => "fa-check-circle",
+                                                StudentBazaar.Entities.Models.OrderStatus.Completed => "fa-check-double",
+                                                StudentBazaar.Entities.Models.OrderStatus.Cancelled => "fa-times-circle",
+                                                _ => "fa-info"
+                                            };
+                                        }
+                                        <span class="badge bg-@statusClass px-3 py-2">
+                                            <i class="fas @statusIcon me-1"></i>@order.Status
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-light text-dark border">
+                                            <i class="fas fa-credit-card me-1"></i>@order.PaymentMethod
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">
+                                            <i class="fas fa-calendar-alt me-1"></i>@order.OrderDate.ToString("yyyy-MM-dd HH:mm")
+                                        </small>
+                                    </td>
+                                    <td class="text-end pe-4">
+                                        <div class="d-flex gap-2 justify-content-end">
+                                            <a asp-action="Details"
+                                               asp-route-id="@order.Id"
+                                               class="btn btn-sm btn-outline-primary rounded-pill px-3"
+                                               title="View Details">
+                                                <i class="fas fa-eye me-1"></i>Details
+                                            </a>
+                                            @if (User.IsInRole("Admin"))
+                                            {
+                                                <a asp-action="Edit"
+                                                   asp-route-id="@order.Id"
+                                                   class="btn btn-sm btn-outline-warning rounded-pill px-3"
+                                                   title="Edit Order">
+                                                    <i class="fas fa-edit me-1"></i>Edit
+                                                </a>
+                                                <a asp-action="Delete"
+                                                   asp-route-id="@order.Id"
+                                                   class="btn btn-sm btn-outline-danger rounded-pill px-3"
+                                                   title="Delete Order">
+                                                    <i class="fas fa-trash me-1"></i>Delete
+                                                </a>
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<style>
+    .table thead th {
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.5px;
+        border-bottom: 2px solid #dee2e6;
+        padding: 1rem 0.75rem;
+        background-color: #f8f9fa;
+    }
+
+    .table tbody tr {
+        transition: all 0.2s ease;
+        border-bottom: 1px solid #e9ecef;
+    }
+
+    .table tbody tr:hover {
+        background-color: #f8f9fa;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .table tbody td {
+        padding: 1.25rem 0.75rem;
+        vertical-align: middle;
+    }
+
+    .card {
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .card-body {
+        padding: 0;
+    }
+
+    .btn-outline-primary:hover {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-color: transparent;
+        color: white;
+    }
+
+    .btn-outline-warning:hover {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        border-color: transparent;
+        color: white;
+    }
+
+    .btn-outline-danger:hover {
+        background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        border-color: transparent;
+        color: white;
+    }
+
+    .badge {
+        font-weight: 500;
+        padding: 0.5em 0.75em;
+        font-size: 0.85rem;
+    }
+
+    .table img {
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        transition: transform 0.2s ease;
+    }
+
+    .table img:hover {
+        transform: scale(1.05);
+    }
+
+    .container-fluid {
+        max-width: 1400px;
+    }
+
+    h2 {
+        font-weight: 700;
+        color: #2c3e50;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        box-shadow: 0 4px 6px rgba(102, 126, 234, 0.3);
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(102, 126, 234, 0.4);
+    }
+</style>

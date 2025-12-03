@@ -1,0 +1,92 @@
+@model StudentBazaar.Entities.Models.Report
+@{
+    ViewData["Title"] = "Report Details";
+    Layout = "_AdminLayout";
+}
+
+<div class="container-fluid">
+    <h1 class="h3 mb-4">Report Details</h1>
+
+    <div class="card shadow">
+        <div class="card-body">
+            <dl class="row">
+                <dt class="col-sm-3">ID</dt>
+                <dd class="col-sm-9">@Model.Id</dd>
+
+                <dt class="col-sm-3">Reporter</dt>
+                <dd class="col-sm-9">@Model.Reporter?.FullName</dd>
+
+                <dt class="col-sm-3">Target Type</dt>
+                <dd class="col-sm-9">@Model.TargetType</dd>
+
+                <dt class="col-sm-3">Target ID</dt>
+                <dd class="col-sm-9">@Model.TargetId</dd>
+
+                <dt class="col-sm-3">Reason</dt>
+                <dd class="col-sm-9">@Model.Reason</dd>
+
+                <dt class="col-sm-3">Status</dt>
+                <dd class="col-sm-9">
+                    @if (Model.Resolved)
+                    {
+                        <span class="badge bg-success">Resolved</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-danger">Pending</span>
+                    }
+                </dd>
+
+                @if (Model.Resolved)
+                {
+                    <dt class="col-sm-3">Resolution</dt>
+                    <dd class="col-sm-9">@Model.Resolution</dd>
+
+                    <dt class="col-sm-3">Resolved By</dt>
+                    <dd class="col-sm-9">@Model.ResolvedBy?.FullName</dd>
+
+                    <dt class="col-sm-3">Resolved At</dt>
+                    <dd class="col-sm-9">@Model.ResolvedAt</dd>
+                }
+            </dl>
+
+            @if (!Model.Resolved)
+            {
+                <div class="mt-4">
+                    <form asp-action="Resolve" method="post" class="mb-3">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        <div class="mb-3">
+                            <label class="form-label">Resolution</label>
+                            <textarea name="resolution" class="form-control" rows="3" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-success">Resolve Report</button>
+                    </form>
+
+                    @if (Model.TargetType == "User" && Model.TargetId.HasValue)
+                    {
+                        <form asp-action="BlockUser" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="reportId" value="@Model.Id" />
+                            <input type="hidden" name="userId" value="@Model.TargetId.Value" />
+                            <button type="submit" class="btn btn-danger">Block User</button>
+                        </form>
+                    }
+
+                    @if (Model.TargetType == "Product" && Model.TargetId.HasValue)
+                    {
+                        <form asp-action="RemoveProduct" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="reportId" value="@Model.Id" />
+                            <input type="hidden" name="productId" value="@Model.TargetId.Value" />
+                            <button type="submit" class="btn btn-danger">Remove Product</button>
+                        </form>
+                    }
+                </div>
+            }
+
+            <a asp-action="Index" class="btn btn-primary">Back to List</a>
+        </div>
+    </div>
+</div>
+

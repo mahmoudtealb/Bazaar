@@ -1,0 +1,96 @@
+@model StudentBazaar.Entities.Models.ApplicationUser
+@{
+    ViewData["Title"] = "User Details";
+    Layout = "_AdminLayout";
+}
+
+<div class="container-fluid">
+    <h1 class="h3 mb-4">User Details</h1>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+
+    <div class="card shadow">
+        <div class="card-body">
+            <dl class="row">
+                @* <dt class="col-sm-3">ID</dt>
+                <dd class="col-sm-9">@Model.Id</dd> *@
+
+                <dt class="col-sm-3">Full Name</dt>
+                <dd class="col-sm-9">@Model.FullName</dd>
+
+                <dt class="col-sm-3">Email</dt>
+                <dd class="col-sm-9">@Model.Email</dd>
+
+                <dt class="col-sm-3">Trust Score</dt>
+                <dd class="col-sm-9">@Model.TrustScore</dd>
+
+                <dt class="col-sm-3">Verified</dt>
+                <dd class="col-sm-9">
+                    @if (Model.IsVerified)
+                    {
+                        <span class="badge bg-success">Verified</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-warning">Not Verified</span>
+                    }
+                </dd>
+
+                <dt class="col-sm-3">Suspended</dt>
+                <dd class="col-sm-9">
+                    @if (Model.IsSuspended)
+                    {
+                        <span class="badge bg-danger">Suspended</span>
+                        @if (Model.SuspendedUntil.HasValue)
+                        {
+                            <span>Until: @Model.SuspendedUntil.Value.ToString("yyyy-MM-dd")</span>
+                        }
+                    }
+                    else
+                    {
+                        <span class="badge bg-success">Active</span>
+                    }
+                </dd>
+
+                <dt class="col-sm-3">Roles</dt>
+                <dd class="col-sm-9">
+                    @foreach (var role in ViewBag.Roles as List<string>)
+                    {
+                        <span class="badge bg-primary">@role</span>
+                    }
+                </dd>
+            </dl>
+
+            <div class="mt-4">
+                @if (!Model.IsSuspended)
+                {
+                    <form asp-action="Suspend" method="post" class="d-inline">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        <input type="number" name="days" placeholder="Days" class="form-control d-inline w-auto" />
+                        <button type="submit" class="btn btn-danger">Suspend</button>
+                    </form>
+                }
+                else
+                {
+                    <form asp-action="Activate" method="post" class="d-inline">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        <button type="submit" class="btn btn-success">Activate</button>
+                    </form>
+                }
+                <form asp-action="UpdateTrustScore" method="post" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    <input type="number" name="score" min="0" max="100" value="@Model.TrustScore" class="form-control d-inline w-auto" />
+                    <button type="submit" class="btn btn-warning">Update Trust Score</button>
+                </form>
+                <a asp-action="Index" class="btn btn-primary">Back to List</a>
+            </div>
+        </div>
+    </div>
+</div>
+

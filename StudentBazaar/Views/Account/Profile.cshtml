@@ -1,0 +1,186 @@
+@model StudentBazaar.Web.ViewModels.ProfileViewModel
+@{
+    ViewData["Title"] = "My Profile";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <h2 class="mb-4">My Profile</h2>
+
+            @if (TempData["Success"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    @TempData["Success"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    @TempData["Error"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">Personal Information</h4>
+                </div>
+                <div class="card-body">
+                    <form asp-action="UpdateProfile" method="post" enctype="multipart/form-data" id="profileForm">
+                        @Html.AntiForgeryToken()
+
+                        <div class="row mb-3">
+                            <div class="col-md-12 text-center mb-3">
+                                @if (!string.IsNullOrEmpty(Model.ProfilePictureUrl))
+                                {
+                                    <img id="profilePreview" src="@Model.ProfilePictureUrl" alt="Profile Picture" 
+                                         class="rounded-circle" style="width: 150px; height: 150px; object-fit: cover; border: 3px solid #dee2e6;" />
+                                }
+                                else
+                                {
+                                    <img id="profilePreview" src="~/images/default-profile.png" alt="Profile Picture" 
+                                         class="rounded-circle" style="width: 150px; height: 150px; object-fit: cover; border: 3px solid #dee2e6; display: none;" 
+                                         onerror="this.style.display='none';" />
+                                    <div id="noImagePlaceholder" class="rounded-circle bg-secondary d-inline-flex align-items-center justify-content-center" 
+                                         style="width: 150px; height: 150px; color: white; font-size: 3rem;">
+                                        👤
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Full Name</label>
+                                <input type="text" name="fullName" class="form-control" value="@Model.FullName" required />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Email</label>
+                                <input type="email" name="email" class="form-control" value="@Model.Email" required />
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Phone Number</label>
+                                <input type="text" name="phoneNumber" class="form-control" value="@Model.PhoneNumber" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Address</label>
+                                <input type="text" name="address" class="form-control" value="@Model.Address" />
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">University</label>
+                                <select name="universityId" class="form-select" id="universitySelect">
+                                    <option value="">-- Select University --</option>
+                                    @foreach (var uni in Model.Universities)
+                                    {
+                                        <option value="@uni.Value" selected="@uni.Selected">@uni.Text</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">College</label>
+                                <select name="collegeId" class="form-select" id="collegeSelect">
+                                    <option value="">-- Select College --</option>
+                                    @foreach (var col in Model.Colleges)
+                                    {
+                                        <option value="@col.Value" selected="@col.Selected">@col.Text</option>
+                                    }
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Profile Picture</label>
+                            <input type="file" name="profilePicture" id="profilePictureInput" class="form-control" accept="image/*" />
+                            <small class="form-text text-muted">Upload a new profile picture (JPG, PNG, GIF, max 5MB)</small>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">Update Profile</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h4 class="mb-0">Change Password</h4>
+                </div>
+                <div class="card-body">
+                    <form asp-action="ChangePassword" method="post">
+                        @Html.AntiForgeryToken()
+
+                        <div class="mb-3">
+                            <label class="form-label">Current Password</label>
+                            <input type="password" name="currentPassword" class="form-control" required />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">New Password</label>
+                            <input type="password" name="newPassword" class="form-control" required />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Confirm New Password</label>
+                            <input type="password" name="confirmPassword" class="form-control" required />
+                        </div>
+
+                        <button type="submit" class="btn btn-warning">Change Password</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // AJAX call to load colleges when university changes
+        document.getElementById('universitySelect')?.addEventListener('change', function() {
+            const universityId = this.value;
+            const collegeSelect = document.getElementById('collegeSelect');
+            
+            collegeSelect.innerHTML = '<option value="">-- Select College --</option>';
+            
+            if (universityId) {
+                fetch(`/Account/GetColleges?universityId=${universityId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        data.forEach(college => {
+                            const option = document.createElement('option');
+                            option.value = college.id;
+                            option.textContent = college.collegeName;
+                            collegeSelect.appendChild(option);
+                        });
+                    });
+            }
+        });
+
+        // Profile picture preview
+        document.getElementById('profilePictureInput')?.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = document.getElementById('profilePreview');
+                    const placeholder = document.getElementById('noImagePlaceholder');
+                    if (preview) {
+                        preview.src = e.target.result;
+                        preview.style.display = 'block';
+                    }
+                    if (placeholder) {
+                        placeholder.style.display = 'none';
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    </script>
+}
+

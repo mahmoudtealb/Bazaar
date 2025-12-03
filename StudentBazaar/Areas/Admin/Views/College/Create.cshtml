@@ -1,0 +1,54 @@
+@model StudentBazaar.Entities.Models.College
+@{
+    ViewData["Title"] = "Create College";
+    Layout = "_AdminLayout";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">Create New College</h1>
+        <a asp-action="Index" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to List
+        </a>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-body">
+            <form asp-action="Create" method="post">
+                @Html.AntiForgeryToken()
+                
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                <div class="mb-3">
+                    <label asp-for="CollegeName" class="form-label">
+                        College Name <span class="text-danger">*</span>
+                    </label>
+                    <input asp-for="CollegeName" class="form-control" placeholder="Enter college name" />
+                    <span asp-validation-for="CollegeName" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="UniversityId" class="form-label">
+                        University <span class="text-danger">*</span>
+                    </label>
+                    <select asp-for="UniversityId" class="form-select" asp-items="ViewBag.UniversityId">
+                        <option value="">-- Select University --</option>
+                    </select>
+                    <span asp-validation-for="UniversityId" class="text-danger"></span>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Create
+                    </button>
+                    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
+

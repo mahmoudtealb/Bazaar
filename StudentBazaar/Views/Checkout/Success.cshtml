@@ -1,79 +1,218 @@
 ﻿@{
     ViewData["Title"] = "Payment Success";
+    Layout = null;
+    var paymentMethod = ViewBag.PaymentMethod as string ?? "VodafoneCash";
 }
 
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" />
-
-<style>
-    body {
-        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-        min-height: 100vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .success-container {
-        max-width: 600px;
-        margin: 50px auto;
-        padding: 50px;
-        background: white;
-        border-radius: 30px;
-        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-        text-align: center;
-    }
-
-    .success-icon {
-        font-size: 100px;
-        color: #38ef7d;
-        margin-bottom: 30px;
-        animation: scaleIn 0.5s ease-out;
-    }
-
-    @@keyframes scaleIn {
-        from {
-            transform: scale(0);
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - StudentBazaar</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        to {
-            transform: scale(1);
+
+        body {
+            min-height: 100vh;
+            background: radial-gradient(circle at top left, #00c6ff, #0072ff);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 30px 15px;
         }
-    }
 
-    .btn-home {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 15px 40px;
-        border-radius: 50px;
-        border: none;
-        font-size: 18px;
-        font-weight: bold;
-        margin-top: 30px;
-        transition: all 0.3s;
-        text-decoration: none;
-        display: inline-block;
-    }
+        .success-wrapper {
+            max-width: 480px;
+            width: 100%;
+        }
 
-    .btn-home:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
-        color: white;
-    }
-</style>
+        .success-card {
+            background: #fff;
+            border-radius: 32px;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.25);
+            padding: 50px 40px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
 
-<div class="success-container">
-    <div class="success-icon">
-        <i class="bi bi-check-circle-fill"></i>
+        .success-card::after {
+            content: '';
+            position: absolute;
+            width: 180px;
+            height: 180px;
+            background: rgba(0, 114, 255, 0.08);
+            border-radius: 50%;
+            top: -60px;
+            right: -60px;
+        }
+
+        .success-icon {
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            background: #e9f9f1;
+            color: #16c47f;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3.5rem;
+            margin: 0 auto 25px;
+            animation: pop 0.6s ease;
+            position: relative;
+            z-index: 2;
+        }
+
+        @@keyframes pop {
+            0% {
+                transform: scale(0.3);
+                opacity: 0;
+            }
+            60% {
+                transform: scale(1.1);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        h1 {
+            font-size: 2.1rem;
+            color: #1f2d3d;
+            margin-bottom: 10px;
+        }
+
+        .success-message {
+            color: #64748b;
+            font-size: 1rem;
+            margin-bottom: 25px;
+        }
+
+        .details-card {
+            background: #f8fafc;
+            border-radius: 20px;
+            padding: 20px;
+            text-align: left;
+            margin-bottom: 30px;
+        }
+
+        .details-card h4 {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #475569;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .details-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px dashed #e2e8f0;
+            font-size: 0.95rem;
+            color: #1f2d3d;
+        }
+
+        .details-item:last-child {
+            border-bottom: none;
+        }
+
+        .details-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            padding: 16px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 1rem;
+            border: none;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 20px 30px rgba(102, 126, 234, 0.35);
+            color: #fff;
+        }
+
+        .note-text {
+            color: #94a3b8;
+            font-size: 0.85rem;
+            margin-top: 15px;
+        }
+
+        @@media (max-width: 576px) {
+            .success-card {
+                padding: 40px 25px;
+            }
+
+            h1 {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="success-wrapper">
+        <div class="success-card">
+            <div class="success-icon">
+                <i class="bi bi-check-lg"></i>
+            </div>
+            <h1>Payment Successful!</h1>
+            <p class="success-message">Thank you for your purchase. We’ve sent the receipt to your email.</p>
+
+            <div class="details-card">
+                <h4>Payment Details</h4>
+                <div class="details-item">
+                    <span class="details-label">
+                        <i class="bi bi-credit-card"></i> Method
+                    </span>
+                    <strong>@paymentMethod</strong>
+                </div>
+                <div class="details-item">
+                    <span class="details-label">
+                        <i class="bi bi-calendar-event"></i> Date
+                    </span>
+                    <strong>@DateTime.Now.ToString("dd MMM yyyy")</strong>
+                </div>
+                <div class="details-item">
+                    <span class="details-label">
+                        <i class="bi bi-receipt"></i> Reference
+                    </span>
+                    <strong>#@Guid.NewGuid().ToString().Substring(0, 8).ToUpper()</strong>
+                </div>
+            </div>
+
+            <a href="@Url.Action("Index", "Product")" class="btn-primary">
+                <i class="bi bi-box-seam"></i>
+                Explore More Products
+            </a>
+            <p class="note-text">You can view your order details anytime from your dashboard.</p>
+        </div>
     </div>
-    <h1 class="mb-3">Payment Successful! 🎉</h1>
-    <p class="lead mb-3">Thank you for your purchase.</p>
-    @if (ViewBag.PaymentMethod != null && ViewBag.PaymentMethod != "Unknown")
-    {
-        <p class="text-muted">
-            <i class="bi bi-info-circle me-2"></i>
-            Payment method: <strong>@ViewBag.PaymentMethod</strong>
-        </p>
-    }
-    <a href="/Home" class="btn-home">
-        <i class="bi bi-house me-2"></i>Return to Home
-    </a>
-</div>
+</body>
+</html>

@@ -19,11 +19,17 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="wwwroot\images\products\" />
     <Folder Include="wwwroot\uploads\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\StudentBazaar.DataAccess\StudentBazaar.DataAccess.csproj" />
+    <ProjectReference Include="..\StudentBazaar.Entites\StudentBazaar.Entities.csproj" />
   </ItemGroup>
 
 </Project>

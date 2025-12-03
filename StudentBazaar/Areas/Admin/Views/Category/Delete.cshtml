@@ -1,0 +1,61 @@
+@model StudentBazaar.Entities.Models.ProductCategory
+@{
+    ViewData["Title"] = "Delete Category";
+    Layout = "_AdminLayout";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-danger">Delete Category</h1>
+        <a asp-action="Index" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to List
+        </a>
+    </div>
+
+    <div class="alert alert-warning">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        <strong>Warning!</strong> Are you sure you want to delete this category? This action cannot be undone.
+    </div>
+
+    <div class="card shadow">
+        <div class="card-body">
+            <h4 class="mb-4">Category Information</h4>
+            <dl class="row">
+                <dt class="col-sm-3">ID</dt>
+                <dd class="col-sm-9">@Model.Id</dd>
+
+                <dt class="col-sm-3">Category Name</dt>
+                <dd class="col-sm-9"><strong>@Model.CategoryName</strong></dd>
+
+                <dt class="col-sm-3">Products Count</dt>
+                <dd class="col-sm-9">
+                    @if (Model.Products != null && Model.Products.Any())
+                    {
+                        <span class="badge bg-danger">@Model.Products.Count product(s) - Cannot delete!</span>
+                        <p class="text-danger mt-2">This category has associated products. Please remove or reassign products before deleting.</p>
+                    }
+                    else
+                    {
+                        <span class="badge bg-success">0 products - Safe to delete</span>
+                    }
+                </dd>
+
+                <dt class="col-sm-3">Created At</dt>
+                <dd class="col-sm-9">@Model.CreatedAt.ToString("yyyy-MM-dd HH:mm")</dd>
+            </dl>
+
+            <form asp-action="Delete" method="post" class="mt-4">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="Id" />
+                
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-danger" @(Model.Products != null && Model.Products.Any() ? "disabled" : "")>
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+

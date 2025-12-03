@@ -51,6 +51,9 @@ builder.Services.AddScoped<IShoppingCartItemRepository, ShoppingCartItemReposito
 builder.Services.AddScoped<IUniversityRepository, UniversityRepository>();
 
 builder.Services.AddSignalR();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<StudentBazaar.Web.Services.IActivityLogService, StudentBazaar.Web.Services.ActivityLogService>();
+builder.Services.AddScoped<StudentBazaar.Web.Services.INotificationService, StudentBazaar.Web.Services.NotificationService>();
 
 var app = builder.Build();
 
@@ -75,12 +78,18 @@ app.UseAuthorization();
 // 6- Routing
 // ==============================
 
+// Area routing
+app.MapControllerRoute(
+    name: "areas",
+    pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}");
+
 // 🔥 أول صفحة → صفحة المنتجات
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
+    pattern: "{controller=Product}/{action=Index}/{id?}");
 
 app.MapHub<ChatHub>("/chathub");
+app.MapHub<AdminHub>("/adminhub");
 
 app.MapRazorPages();
 

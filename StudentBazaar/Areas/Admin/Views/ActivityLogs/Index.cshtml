@@ -1,0 +1,75 @@
+@model List<StudentBazaar.Entities.Models.ActivityLog>
+@{
+    ViewData["Title"] = "Activity Logs";
+    Layout = "_AdminLayout";
+}
+
+<div class="container-fluid">
+    <h1 class="h3 mb-4">Activity Logs</h1>
+
+    <!-- Filters -->
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <input type="text" name="action" class="form-control" placeholder="Filter by action..." value="@ViewContext.HttpContext.Request.Query["action"]">
+                </div>
+                <div class="col-md-2">
+                    <input type="number" name="userId" class="form-control" placeholder="User ID" value="@ViewContext.HttpContext.Request.Query["userId"]">
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary">Filter</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Logs Table -->
+    <div class="card shadow">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-sm">
+                    <thead>
+                        <tr>
+                           @*  <th>ID</th> *@
+                            <th>Action</th>
+                            <th>User</th>
+                            <th>Details</th>
+                            <th>Entity</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var log in Model)
+                        {
+                            <tr>
+                               @*  <td>@log.Id</td> *@
+                                <td>@log.Action</td>
+                                <td>@log.User?.FullName</td>
+                                <td>@(log.Details?.Length > 50 ? log.Details.Substring(0, 50) + "..." : log.Details)</td>
+                                <td>@log.EntityType #@log.EntityId</td>
+                                <td>@log.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            @if (ViewBag.TotalPages > 1)
+            {
+                <nav>
+                    <ul class="pagination">
+                        @for (int i = 1; i <= ViewBag.TotalPages; i++)
+                        {
+                            <li class="page-item @(i == ViewBag.Page ? "active" : "")">
+                                <a class="page-link" href="?page=@i">@i</a>
+                            </li>
+                        }
+                    </ul>
+                </nav>
+            }
+        </div>
+    </div>
+</div>
+

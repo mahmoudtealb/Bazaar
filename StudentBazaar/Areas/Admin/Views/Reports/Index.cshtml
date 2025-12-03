@@ -1,0 +1,85 @@
+@model List<StudentBazaar.Entities.Models.Report>
+@{
+    ViewData["Title"] = "Reports Management";
+    Layout = "_AdminLayout";
+}
+
+<div class="container-fluid">
+    <h1 class="h3 mb-4">Reports Management</h1>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+
+    <!-- Filters -->
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <select name="resolved" class="form-select">
+                        <option value="">All Reports</option>
+                        <option value="false" selected="@(ViewContext.HttpContext.Request.Query["resolved"] == "false")">Pending</option>
+                        <option value="true" selected="@(ViewContext.HttpContext.Request.Query["resolved"] == "true")">Resolved</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select name="targetType" class="form-select">
+                        <option value="">All Types</option>
+                        <option value="Product" selected="@(ViewContext.HttpContext.Request.Query["targetType"] == "Product")">Product</option>
+                        <option value="User" selected="@(ViewContext.HttpContext.Request.Query["targetType"] == "User")">User</option>
+                        <option value="Message" selected="@(ViewContext.HttpContext.Request.Query["targetType"] == "Message")">Message</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary">Filter</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Reports Table -->
+    <div class="card shadow">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Reporter</th>
+                            <th>Target Type</th>
+                            <th>Reason</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var report in Model)
+                        {
+                            <tr>
+                                <td>@report.Id</td>
+                                <td>@report.Reporter?.FullName</td>
+                                <td>@report.TargetType</td>
+                                <td>@report.Reason</td>
+                                <td>
+                                    @if (report.Resolved)
+                                    {
+                                        <span class="badge bg-success">Resolved</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger">Pending</span>
+                                    }
+                                </td>
+                                <td>
+                                    <a asp-action="Details" asp-route-id="@report.Id" class="btn btn-sm btn-info">View</a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+

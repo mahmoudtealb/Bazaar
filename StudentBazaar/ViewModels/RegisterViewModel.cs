@@ -1,6 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-using Microsoft.AspNetCore.Mvc.Rendering;
-
+﻿
 namespace StudentBazaar.Web.Models
 {
     public class RegisterViewModel

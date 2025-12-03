@@ -1,9 +1,4 @@
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using StudentBazaar.Web.Models;
-using StudentBazaar.Web.Repositories;
+
 
 namespace StudentBazaar.Web.Controllers
 {
@@ -12,15 +7,21 @@ namespace StudentBazaar.Web.Controllers
     {
         private readonly IGenericRepository<Order> _orderRepo;
         private readonly IGenericRepository<Listing> _listingRepo;
+        private readonly IGenericRepository<OrderItem> _orderItemRepo;
+        private readonly IGenericRepository<Product> _productRepo;
         private readonly UserManager<ApplicationUser> _userManager;
 
         public OrderController(
             IGenericRepository<Order> orderRepo,
             IGenericRepository<Listing> listingRepo,
+            IGenericRepository<OrderItem> orderItemRepo,
+            IGenericRepository<Product> productRepo,
             UserManager<ApplicationUser> userManager)
         {
             _orderRepo = orderRepo;
             _listingRepo = listingRepo;
+            _orderItemRepo = orderItemRepo;
+            _productRepo = productRepo;
             _userManager = userManager;
         }
 
@@ -39,16 +40,16 @@ namespace StudentBazaar.Web.Controllers
 
             if (User.IsInRole("Admin"))
             {
-                // ÇáÇÏãä íÔæÝ ßá ÇáÃæÑÏÑÒ
-                orders = await _orderRepo.GetAllAsync(includeWord: "Listing,Listing.Product,Buyer,Shipment");
+                // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+                orders = await _orderRepo.GetAllAsync(includeWord: "OrderItems,OrderItems.Product,OrderItems.Product.Images,Buyer,Shipment");
             }
             else
             {
-                // ÇáØÇáÈ íÔæÝ ÃæÑÏÑÇÊå ÈÓ
+                // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½
                 var currentUserId = GetCurrentUserId();
                 orders = await _orderRepo.GetAllAsync(
                     o => o.BuyerId == currentUserId,
-                    includeWord: "Listing,Listing.Product,Buyer,Shipment"
+                    includeWord: "OrderItems,OrderItems.Product,OrderItems.Product.Images,Buyer,Shipment"
                 );
             }
 
@@ -62,37 +63,29 @@ namespace StudentBazaar.Web.Controllers
         {
             var entity = await _orderRepo.GetFirstOrDefaultAsync(
                 o => o.Id == id,
-                includeWord: "Listing,Listing.Product,Buyer,Shipment"
+                includeWord: "OrderItems,OrderItems.Product,OrderItems.Product.Images,OrderItems.Product.Category,Listing,Listing.Product,Buyer,Shipment"
             );
 
             if (entity == null)
                 return NotFound();
 
-            // ÇáØÇáÈ ãÇ íÔæÝÔ ÃæÑÏÑ ÍÏ ÊÇäí
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
             if (!User.IsInRole("Admin") && entity.BuyerId != GetCurrentUserId())
                 return Forbid();
 
             return View(entity);
-            // áæ áÓå ãÇÚäÏßÔ View ááÜ Details ããßä ÊÚãá æÇÍÏ ÈÓíØ áÇÍÞÇð
+            // ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ View ï¿½ï¿½ï¿½ Details ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         }
 
         // ===============================
-        // 3) Create (Admin ÝÞØ - íÏæí)
+        // 3) Create (Admin ï¿½ï¿½ï¿½ - ï¿½ï¿½ï¿½ï¿½)
         // ===============================
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create()
         {
-            // DropDown ááÜ Listings
-            var listings = await _listingRepo.GetAllAsync(includeWord: "Product,Seller");
-            ViewBag.ListingList = listings
-                .Select(l => new SelectListItem
-                {
-                    Value = l.Id.ToString(),
-                    Text = $"{l.Product?.Name ?? "Product"} - {l.Price:0.00}"
-                })
-                .ToList();
+            // DropDown ï¿½ï¿½ï¿½ Listings
 
-            // DropDown ááãÓÊÎÏãíä (ããßä ÊßÊÝí Èßá ÇáãÓÊÎÏãíä)
+            // DropDown ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½)
             var users = _userManager.Users.ToList();
             ViewBag.BuyerList = users
                 .Select(u => new SelectListItem
@@ -112,7 +105,7 @@ namespace StudentBazaar.Web.Controllers
         {
             if (!ModelState.IsValid)
             {
-                // áÇÒã äÑÌÚ äãáí ÇáÜ ViewBags ÊÇäí
+                // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ViewBags ï¿½ï¿½ï¿½ï¿½
                 await FillDropDownsForCreateEdit(entity.ListingId, entity.BuyerId);
                 return View(entity);
             }
@@ -171,7 +164,7 @@ namespace StudentBazaar.Web.Controllers
         public async Task<IActionResult> Delete(int id)
         {
             var entity = await _orderRepo.GetFirstOrDefaultAsync(o => o.Id == id,
-                includeWord: "Listing,Buyer");
+                includeWord: "OrderItems,OrderItems.Product,Buyer");
             if (entity == null)
                 return NotFound();
 
@@ -193,7 +186,7 @@ namespace StudentBazaar.Web.Controllers
         }
 
         // ===============================
-        // 6) ÒÑÇÑ Buy ãä ÇáØÇáÈ
+        // 6) ï¿½ï¿½ï¿½ï¿½ Buy ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         // ===============================
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -209,20 +202,20 @@ namespace StudentBazaar.Web.Controllers
 
             var currentUserId = GetCurrentUserId();
 
-            // áæ ÚÇíÒ ÊãäÚ ÕÇÍÈ ÇáãäÊÌ íÔÊÑí ãä äÝÓå:
+            // ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½:
             if (listing.SellerId == currentUserId)
                 return BadRequest("You cannot buy your own listing.");
 
             var total = listing.Price;
-            var commission = Math.Round(total * 0.05m, 2);   // 5% ãËáÇð
+            var commission = Math.Round(total * 0.05m, 2);   // 5% ï¿½ï¿½ï¿½ï¿½ï¿½
 
             var order = new Order
             {
                 ListingId = listing.Id,
                 BuyerId = currentUserId,
                 OrderDate = DateTime.Now,
-                Status = Models.OrderStatus.Pending,
-                PaymentMethod = Models.PaymentMethod.CashOnDelivery,
+                Status = OrderStatus.Pending,
+                PaymentMethod = PaymentMethod.CashOnDelivery,
                 TotalAmount = total,
                 SiteCommission = commission,
                 CreatedAt = DateTime.Now
@@ -231,7 +224,38 @@ namespace StudentBazaar.Web.Controllers
             await _orderRepo.AddAsync(order);
             await _orderRepo.SaveAsync();
 
-            // ÊÞÏÑ åäÇ ÊÚÏøá ÍÇáÉ ÇáÅÚáÇä áæ ÍÇÈÈ (Sold ãËáÇð)
+            // Create OrderItem for this listing
+            var orderItem = new OrderItem
+            {
+                OrderId = order.Id,
+                ProductId = listing.ProductId,
+                ProductName = listing.Product?.Name ?? "Unknown Product",
+                Price = listing.Price, // Use Listing.Price (the actual selling price)
+                Quantity = 1,
+                Subtotal = listing.Price, // Price * 1
+                CreatedAt = DateTime.UtcNow
+            };
+
+            await _orderItemRepo.AddAsync(orderItem);
+
+            // Mark product as Sold
+            if (listing.Product != null)
+            {
+                listing.Product.IsSold = true;
+                await _productRepo.SaveAsync();
+            }
+
+            // Mark listing as Sold
+            listing.Status = ListingStatus.Sold;
+            await _listingRepo.SaveAsync();
+
+            // Save OrderItem
+            await _orderItemRepo.SaveAsync();
+
+            // Note: You'll need to inject IGenericRepository<OrderItem> to add the order item
+            // For now, this is a placeholder - the Buy method should be updated to use OrderItems
+
+            // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (Sold ï¿½ï¿½ï¿½ï¿½ï¿½)
             // listing.Status = ListingStatus.Sold;
             // await _listingRepo.SaveAsync();
 
@@ -239,7 +263,7 @@ namespace StudentBazaar.Web.Controllers
         }
 
         // ===============================
-        // Helper áãáÁ ÇáÜ DropDowns
+        // Helper ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ DropDowns
         // ===============================
         private async Task FillDropDownsForCreateEdit(int? selectedListingId = null, int? selectedBuyerId = null)
         {

@@ -131,4 +131,61 @@ namespace StudentBazaar.Web.Controllers
                 selectedId
             );
         }
-    }}
+
+        // POST: College/CreateAjax
+        [HttpPost]
+        [Route("College/CreateAjax")]
+        [IgnoreAntiforgeryToken]
+        public async Task<IActionResult> CreateAjax(string name, int? universityId = null)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                return Json(new { success = false, message = "College name is required." });
+            }
+
+            // Use provided universityId or get the first university as default
+            int finalUniversityId;
+            if (universityId.HasValue && universityId.Value > 0)
+            {
+                var university = await _universityRepo.GetFirstOrDefaultAsync(u => u.Id == universityId.Value);
+                if (university == null)
+                {
+                    return Json(new { success = false, message = "Invalid university selected." });
+                }
+                finalUniversityId = universityId.Value;
+            }
+            else
+            {
+                var firstUniversity = await _universityRepo.GetFirstOrDefaultAsync(u => true);
+                if (firstUniversity == null)
+                {
+                    return Json(new { success = false, message = "No university found. Please create a university first." });
+                }
+                finalUniversityId = firstUniversity.Id;
+            }
+
+            // Check if college with same name already exists in the same university
+            var existingCollege = await _repo.GetFirstOrDefaultAsync(c => 
+                c.CollegeName.ToLower() == name.Trim().ToLower() && 
+                c.UniversityId == finalUniversityId);
+            if (existingCollege != null)
+            {
+                return Json(new { success = false, message = "A college with this name already exists in this university." });
+            }
+
+            // Create new college
+            var newCollege = new College
+            {
+                CollegeName = name.Trim(),
+                UniversityId = finalUniversityId,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            await _repo.AddAsync(newCollege);
+            await _repo.SaveAsync();
+
+            // Return JSON with id and name
+            return Json(new { success = true, id = newCollege.Id, name = newCollege.CollegeName });
+        }
+    }
+}

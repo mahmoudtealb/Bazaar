@@ -1,114 +1,680 @@
 ﻿@model StudentBazaar.Web.ViewModels.ChatConversationViewModel
+@inject Microsoft.AspNetCore.Identity.UserManager<ApplicationUser> UserManager
+
 
 @{
     ViewData["Title"] = "المحادثة";
+    var currentUser = await UserManager.GetUserAsync(User);
+    var otherUser = Model.Messages?.FirstOrDefault(m => m.SenderId == Model.OtherUserId)?.Sender 
+                    ?? Model.Messages?.FirstOrDefault(m => m.ReceiverId == Model.OtherUserId)?.Receiver
+                    ?? await UserManager.FindByIdAsync(Model.OtherUserId.ToString());
+    var currentUserAvatar = !string.IsNullOrEmpty(currentUser?.ProfilePictureUrl) 
+                            ? currentUser.ProfilePictureUrl 
+                            : "https://bootdey.com/img/Content/avatar/avatar1.png";
+    var otherUserAvatar = !string.IsNullOrEmpty(otherUser?.ProfilePictureUrl) 
+                          ? otherUser.ProfilePictureUrl 
+                          : "https://bootdey.com/img/Content/avatar/avatar3.png";
 }
 
-<div class="container mt-4">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" />
 
-    <!-- عنوان الصفحة + مين مع مين -->
-    <div class="d-flex align-items-center mb-3">
-        <h3 class="me-2">💬 محادثة مع</h3>
-        <h3 class="text-primary">@Model.OtherUserName</h3>
-    </div>
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
 
-    <!-- معلومات البائع / المشتري -->
-    <div class="row mb-3">
-        <div class="col-md-6 text-start">
-            <div class="badge bg-secondary p-2">
-                👤 البائع: @Model.Product.Owner?.FullName
+    body {
+        background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
+        min-height: 100vh;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    }
+
+    .content {
+        padding: 20px;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    .chat-layout {
+        display: flex;
+        gap: 20px;
+        height: calc(100vh - 120px);
+        min-height: 600px;
+    }
+
+    /* Sidebar Styles */
+    .chat-sidebar {
+        width: 320px;
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    .sidebar-header {
+        padding: 20px;
+        border-bottom: 1px solid #e9ecef;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .sidebar-header h2 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .sidebar-search-container {
+        padding: 15px;
+        border-bottom: 1px solid #e9ecef;
+    }
+
+    .sidebar-search {
+        width: 100%;
+        padding: 12px 16px;
+        border-radius: 12px;
+        border: 2px solid #e9ecef;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+        background: #f8f9fa;
+    }
+
+    .sidebar-search:focus {
+        outline: none;
+        border-color: #667eea;
+        background: white;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .sidebar-list {
+        flex: 1;
+        overflow-y: auto;
+        padding: 10px;
+    }
+
+    .sidebar-item {
+        display: flex;
+        align-items: center;
+        padding: 14px;
+        border-radius: 12px;
+        background: #f8f9fa;
+        margin-bottom: 10px;
+        text-decoration: none;
+        color: #1a1a1a;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        position: relative;
+    }
+
+    .sidebar-item:hover {
+        background: #e9f1ff;
+        transform: translateX(4px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+    }
+
+    .sidebar-item.active {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+    }
+
+    .sidebar-item.active .sidebar-name {
+        color: white;
+        font-weight: 700;
+    }
+
+    .sidebar-item.active .sidebar-last {
+        color: rgba(255, 255, 255, 0.9);
+    }
+
+    .sidebar-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        margin-right: 12px;
+        object-fit: cover;
+        border: 2px solid #e9ecef;
+        flex-shrink: 0;
+    }
+
+    .sidebar-item.active .sidebar-avatar {
+        border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    .sidebar-text {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .sidebar-name {
+        font-weight: 600;
+        font-size: 0.95rem;
+        margin-bottom: 4px;
+        color: #1a1a1a;
+    }
+
+    .sidebar-last {
+        font-size: 0.85rem;
+        color: #6c757d;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 200px;
+    }
+
+    .sidebar-unread {
+        background: #dc3545;
+        color: white;
+        border-radius: 12px;
+        padding: 4px 8px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        min-width: 22px;
+        text-align: center;
+        margin-left: auto;
+    }
+
+    .sidebar-item.active .sidebar-unread {
+        background: rgba(255, 255, 255, 0.3);
+    }
+
+    .sidebar-empty {
+        text-align: center;
+        padding: 40px 20px;
+        color: #6c757d;
+    }
+
+    .sidebar-empty i {
+        font-size: 3rem;
+        margin-bottom: 15px;
+        opacity: 0.5;
+    }
+
+    /* Chat Main Area */
+    .chat-main {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        overflow: hidden;
+    }
+
+    /* Chat Header */
+    .chat-header {
+        padding: 20px 24px;
+        border-bottom: 1px solid #e9ecef;
+        background: white;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .chat-header-info {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        flex: 1;
+    }
+
+    .chat-header-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid #e9ecef;
+    }
+
+    .chat-header-details {
+        flex: 1;
+    }
+
+    .chat-header-name {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #1a1a1a;
+        margin-bottom: 4px;
+    }
+
+    .chat-header-product {
+        font-size: 0.85rem;
+        color: #6c757d;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .chat-header-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .btn-delete {
+        background: #dc3545;
+        color: white;
+        border: none;
+        border-radius: 10px;
+        padding: 10px 14px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.9rem;
+    }
+
+    .btn-delete:hover {
+        background: #c82333;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+    }
+
+    /* Messages Area */
+    .chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 24px;
+        background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .chat-message-left,
+    .chat-message-right {
+        display: flex;
+        gap: 12px;
+        max-width: 70%;
+        animation: slideIn 0.3s ease-out;
+    }
+
+    @@keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .chat-message-left {
+        align-self: flex-start;
+    }
+
+    .chat-message-right {
+        align-self: flex-end;
+        flex-direction: row-reverse;
+    }
+
+    .message-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+        flex-shrink: 0;
+        border: 2px solid #e9ecef;
+    }
+
+    .message-content-wrapper {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .message-bubble {
+        padding: 12px 16px;
+        border-radius: 18px;
+        word-wrap: break-word;
+        position: relative;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .chat-message-left .message-bubble {
+        background: white;
+        color: #1a1a1a;
+        border-bottom-left-radius: 4px;
+    }
+
+    .chat-message-right .message-bubble {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-bottom-right-radius: 4px;
+    }
+
+    .message-sender {
+        font-weight: 600;
+        font-size: 0.85rem;
+        margin-bottom: 4px;
+    }
+
+    .chat-message-left .message-sender {
+        color: #667eea;
+    }
+
+    .chat-message-right .message-sender {
+        color: rgba(255, 255, 255, 0.9);
+    }
+
+    .message-text {
+        font-size: 0.95rem;
+        line-height: 1.5;
+    }
+
+    .message-time {
+        font-size: 0.75rem;
+        color: #6c757d;
+        margin-top: 4px;
+        padding: 0 4px;
+    }
+
+    .chat-message-right .message-time {
+        text-align: right;
+        color: rgba(255, 255, 255, 0.7);
+    }
+
+    .empty-messages {
+        text-align: center;
+        padding: 60px 20px;
+        color: #6c757d;
+    }
+
+    .empty-messages i {
+        font-size: 4rem;
+        margin-bottom: 20px;
+        opacity: 0.3;
+    }
+
+    .empty-messages h4 {
+        font-size: 1.2rem;
+        margin-bottom: 10px;
+        color: #495057;
+    }
+
+    /* Message Input */
+    .chat-input-area {
+        padding: 20px 24px;
+        border-top: 1px solid #e9ecef;
+        background: white;
+    }
+
+    .input-group {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+    }
+
+    .message-input {
+        flex: 1;
+        padding: 14px 18px;
+        border: 2px solid #e9ecef;
+        border-radius: 24px;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+        background: #f8f9fa;
+    }
+
+    .message-input:focus {
+        outline: none;
+        border-color: #667eea;
+        background: white;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .btn-send {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 24px;
+        padding: 14px 28px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+
+    .btn-send:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-send:active {
+        transform: translateY(0);
+    }
+
+    .msg-error {
+        color: #dc3545;
+        font-size: 0.85rem;
+        margin-top: 8px;
+        display: block;
+    }
+
+    /* Empty State */
+    .empty-chat {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        text-align: center;
+        padding: 40px;
+        color: #6c757d;
+    }
+
+    .empty-chat i {
+        font-size: 5rem;
+        margin-bottom: 24px;
+        opacity: 0.2;
+        color: #6c757d;
+    }
+
+    .empty-chat h4 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1a1a1a;
+        margin-bottom: 12px;
+    }
+
+    .empty-chat p {
+        font-size: 1rem;
+        color: #6c757d;
+        margin: 0;
+    }
+
+    /* Scrollbar */
+    .chat-messages::-webkit-scrollbar,
+    .sidebar-list::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .chat-messages::-webkit-scrollbar-thumb,
+    .sidebar-list::-webkit-scrollbar-thumb {
+        background: #cbd5e0;
+        border-radius: 3px;
+    }
+
+    .chat-messages::-webkit-scrollbar-thumb:hover,
+    .sidebar-list::-webkit-scrollbar-thumb:hover {
+        background: #a0aec0;
+    }
+
+    /* Responsive */
+    @@media (max-width: 768px) {
+        .chat-layout {
+            flex-direction: column;
+            height: auto;
+        }
+
+        .chat-sidebar {
+            width: 100%;
+            max-height: 300px;
+        }
+
+        .chat-message-left,
+        .chat-message-right {
+            max-width: 85%;
+        }
+    }
+</style>
+
+<main class="content">
+    <div class="chat-layout">
+        <!-- Sidebar -->
+        <div class="chat-sidebar">
+            <div class="sidebar-header">
+                <h2>
+                    <i class="bi bi-chat-dots"></i>
+                    Messages
+                </h2>
+            </div>
+
+            <div class="sidebar-search-container">
+                <input class="sidebar-search" placeholder="Search conversations..." id="sidebarSearch" />
+            </div>
+
+            <div class="sidebar-list">
+                @if (Model.AllConversations != null && Model.AllConversations.Any())
+                {
+                    @foreach (var chat in Model.AllConversations)
+                    {
+                        <a asp-controller="Chat"
+                           asp-action="Open"
+                           asp-route-productId="@chat.ProductId"
+                           asp-route-otherUserId="@chat.OtherUserId"
+                           class="sidebar-item @(chat.IsActive ? "active" : "")">
+                            <img src="@chat.OtherUserImage" class="sidebar-avatar" alt="@chat.OtherUserName" onerror="this.src='https://bootdey.com/img/Content/avatar/avatar3.png'" />
+                            <div class="sidebar-text">
+                                <div class="sidebar-name">@chat.OtherUserName</div>
+                                <div class="sidebar-last">@chat.LastMessage</div>
+                            </div>
+                            @if (chat.UnreadCount > 0)
+                            {
+                                <span class="sidebar-unread">@chat.UnreadCount</span>
+                            }
+                        </a>
+                    }
+                }
+                else
+                {
+                    <div class="sidebar-empty">
+                        <i class="bi bi-inbox"></i>
+                        <p>No conversations yet</p>
+                    </div>
+                }
             </div>
         </div>
-        <div class="col-md-6 text-end">
-            <div class="badge bg-success p-2">
-                🙋 أنت (@(Model.IsSeller ? "البائع" : "المشتري"))
-            </div>
-        </div>
-    </div>
 
-    <!-- معلومات المنتج -->
-    <div class="card mb-4 shadow-sm">
-        <div class="card-body d-flex align-items-center justify-content-between">
-            <div>
-                <strong>المنتج:</strong> @Model.Product.Name
-            </div>
-            <span class="badge bg-info text-dark">
-                @Model.Product.Price.ToString("0.00") ريال
-            </span>
-        </div>
-    </div>
-
-    <!-- صندوق الشات -->
-    <div id="chat-box"
-         class="border rounded p-3 mb-3"
-         style="height: 400px; overflow-y: auto; background: #fafafa;">
-
-        @if (Model.Messages != null && Model.Messages.Any())
-        {
-            foreach (var msg in Model.Messages)
+        <!-- Chat Main Area -->
+        <div class="chat-main">
+            @if (Model.ProductId > 0 && Model.OtherUserId > 0)
             {
-                bool isMine = msg.SenderId == Model.CurrentUserId;
-
-                <div class="d-flex mb-2 @(isMine ? "justify-content-end" : "justify-content-start")">
-                    <div class="p-2 rounded chat-bubble @(isMine ? "chat-me" : "chat-other")">
-                        <div>@msg.Content</div>
-                        <div class="text-muted small mt-1" style="font-size:11px;">
-                            @msg.SentAt.ToLocalTime().ToString("yyyy/MM/dd - hh:mm tt")
+                <!-- Chat Header -->
+                <div class="chat-header">
+                    <div class="chat-header-info">
+                        <img src="@otherUserAvatar" class="chat-header-avatar" alt="@Model.OtherUserName" onerror="this.src='https://bootdey.com/img/Content/avatar/avatar3.png'" />
+                        <div class="chat-header-details">
+                            <div class="chat-header-name">@Model.OtherUserName</div>
+                            <div class="chat-header-product">
+                                <i class="bi bi-box-seam"></i>
+                                @Model.Product.Name - @Model.Product.Price.ToString("F2") EGP
+                            </div>
                         </div>
+                    </div>
+                    <div class="chat-header-actions">
+                        <form asp-action="DeleteConversation" method="post" class="d-inline" onsubmit="return confirm('هل أنت متأكد من حذف هذه المحادثة؟ سيتم حذف جميع الرسائل.');">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="productId" value="@Model.ProductId" />
+                            <input type="hidden" name="otherUserId" value="@Model.OtherUserId" />
+                            <button type="submit" class="btn-delete" title="حذف المحادثة">
+                                <i class="bi bi-trash"></i>
+                                Delete
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Messages Area -->
+                <div id="chat-box" class="chat-messages">
+                    @if (Model.Messages != null && Model.Messages.Any())
+                    {
+                        foreach (var msg in Model.Messages.OrderBy(m => m.SentAt))
+                        {
+                            bool isMine = msg.SenderId == Model.CurrentUserId;
+                            var senderAvatar = isMine ? currentUserAvatar : otherUserAvatar;
+                            var senderName = isMine ? "You" : Model.OtherUserName;
+
+                            <div class="chat-message-@(isMine ? "right" : "left")">
+                                <img src="@senderAvatar" class="message-avatar" alt="@senderName" onerror="this.src='https://bootdey.com/img/Content/avatar/avatar@(isMine ? "1" : "3").png'" />
+                                <div class="message-content-wrapper">
+                                    <div class="message-bubble">
+                                        <div class="message-sender">@senderName</div>
+                                        <div class="message-text">@msg.Content</div>
+                                    </div>
+                                    <div class="message-time">@msg.SentAt.ToLocalTime().ToString("h:mm tt")</div>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="empty-messages">
+                            <i class="bi bi-chat-left-text"></i>
+                            <h4>No messages yet</h4>
+                            <p>Start the conversation now 👋</p>
+                        </div>
+                    }
+                </div>
+
+                <!-- Message Input -->
+                <div class="chat-input-area">
+                    <form id="chatForm" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" id="ProductId" value="@Model.ProductId" />
+                        <input type="hidden" id="OtherUserId" value="@Model.OtherUserId" />
+                        <input type="hidden" id="ConversationKey" value="@Model.ConversationKey" />
+                        <input type="hidden" id="CurrentUserId" value="@Model.CurrentUserId" />
+
+                        <div class="input-group">
+                            <input type="text" id="NewMessage" name="NewMessage" class="message-input" placeholder="Type your message...">
+                            <button type="submit" class="btn-send">
+                                <i class="bi bi-send"></i>
+                                Send
+                            </button>
+                        </div>
+                        <span class="msg-error" id="msgError"></span>
+                    </form>
+                </div>
+            }
+            else
+            {
+                <div class="empty-chat">
+                    <div>
+                        <i class="bi bi-chat-left-dots"></i>
+                        <h4>Select a conversation</h4>
+                        <p>Choose a conversation from the list to start chatting</p>
                     </div>
                 </div>
             }
-        }
-        else
-        {
-            <div class="text-center text-muted mt-5">
-                لا توجد رسائل بعد، ابدأ المحادثة الآن 👋
-            </div>
-        }
-    </div>
-
-    <!-- إرسال رسالة -->
-    <form id="chatForm" method="post">
-        @Html.AntiForgeryToken()
-
-        <input type="hidden" id="ProductId" value="@Model.ProductId" />
-        <input type="hidden" id="OtherUserId" value="@Model.OtherUserId" />
-        <input type="hidden" id="ConversationKey" value="@Model.ConversationKey" />
-        <input type="hidden" id="CurrentUserId" value="@Model.CurrentUserId" />
-
-        <div class="input-group">
-            <textarea id="NewMessage"
-                      name="NewMessage"
-                      class="form-control"
-                      placeholder="اكتب رسالتك..."
-                      rows="2"></textarea>
-
-            <button type="submit" class="btn btn-primary">
-                إرسال
-            </button>
         </div>
-
-        <span class="text-danger" id="msgError"></span>
-    </form>
-</div>
+    </div>
+</main>
 
 @section Scripts {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
-
-    <style>
-        .chat-bubble {
-            max-width: 70%;
-            border: 1px solid #ddd;
-        }
-
-        .chat-me {
-            background: #d1ffd6;
-        }
-
-        .chat-other {
-            background: #e9ecef;
-        }
-    </style>
 
     <script>
         const chatBox = document.getElementById("chat-box");
@@ -116,77 +682,151 @@
         const msgInput = document.getElementById("NewMessage");
         const errSpan = document.getElementById("msgError");
 
-        const productId = parseInt(document.getElementById("ProductId").value);
-        const otherUserId = parseInt(document.getElementById("OtherUserId").value);
-        const currentUserId = parseInt(document.getElementById("CurrentUserId").value);
-        const convKey = document.getElementById("ConversationKey").value;
+        @if (Model.ProductId > 0 && Model.OtherUserId > 0)
+        {
+            <text>
+            const productId = parseInt(document.getElementById("ProductId").value);
+            const otherUserId = parseInt(document.getElementById("OtherUserId").value);
+            const currentUserId = parseInt(document.getElementById("CurrentUserId").value);
+            const convKey = document.getElementById("ConversationKey").value;
 
-        // ***** SignalR connection *****
-        const connection = new signalR.HubConnectionBuilder()
-            .withUrl("/chathub")
-            .build();
-
-        connection.on("ReceiveMessage", function (msg) {
-            // لو الرسالة لنفس المنتج ونفس المحادثة
-            if (msg.productId !== productId) return;
-
-            const isMine = msg.senderId === currentUserId;
-
-            const wrapper = document.createElement("div");
-            wrapper.className = "d-flex mb-2 " + (isMine ? "justify-content-end" : "justify-content-start");
-
-            const bubble = document.createElement("div");
-            bubble.className = "p-2 rounded chat-bubble " + (isMine ? "chat-me" : "chat-other");
-
-            bubble.innerHTML =
-                `<div>${msg.content}</div>
-                 <div class="text-muted small mt-1" style="font-size:11px;">
-                     ${msg.sentAt}
-                 </div>`;
-
-            wrapper.appendChild(bubble);
-            chatBox.appendChild(wrapper);
-            chatBox.scrollTop = chatBox.scrollHeight;
-        });
-
-        connection.start().then(function () {
-            connection.invoke("JoinConversation", convKey);
-            chatBox.scrollTop = chatBox.scrollHeight;
-        });
-
-        // ***** AJAX Send *****
-        form.addEventListener("submit", function (e) {
-            e.preventDefault();
-            errSpan.textContent = "";
-
-            const text = msgInput.value.trim();
-            if (!text) {
-                errSpan.textContent = "Message is required.";
-                return;
+            // Scroll to bottom on load
+            if (chatBox) {
+                chatBox.scrollTop = chatBox.scrollHeight;
             }
 
-            const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+            // SignalR connection
+            const connection = new signalR.HubConnectionBuilder()
+                .withUrl("/chathub")
+                .build();
 
-            fetch("@Url.Action("Send", "Chat")", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-                    "RequestVerificationToken": token
-                },
-                body: new URLSearchParams({
-                    ProductId: productId,
-                    OtherUserId: otherUserId,
-                    NewMessage: text
-                })
-            })
-                .then(r => r.json())
-                .then(data => {
-                    if (!data.success) {
-                        errSpan.textContent = data.error || "Error";
+            connection.on("ReceiveMessage", function (msg) {
+                if (msg.productId !== productId) return;
+
+                const isMine = msg.senderId === currentUserId;
+                const senderAvatar = isMine ? '@currentUserAvatar' : '@otherUserAvatar';
+                const senderName = isMine ? "You" : "@Model.OtherUserName";
+
+                const wrapper = document.createElement("div");
+                wrapper.className = `chat-message-${isMine ? "right" : "left"}`;
+
+                const avatar = document.createElement("img");
+                avatar.src = senderAvatar;
+                avatar.className = "message-avatar";
+                avatar.alt = senderName;
+                avatar.onerror = function() {
+                    this.src = `https://bootdey.com/img/Content/avatar/avatar${isMine ? '1' : '3'}.png`;
+                };
+
+                const contentWrapper = document.createElement("div");
+                contentWrapper.className = "message-content-wrapper";
+
+                const bubble = document.createElement("div");
+                bubble.className = "message-bubble";
+                bubble.innerHTML = `
+                    <div class="message-sender">${senderName}</div>
+                    <div class="message-text">${msg.content}</div>
+                `;
+
+                const time = document.createElement("div");
+                time.className = "message-time";
+                time.textContent = msg.sentAt;
+
+                contentWrapper.appendChild(bubble);
+                contentWrapper.appendChild(time);
+
+                wrapper.appendChild(avatar);
+                wrapper.appendChild(contentWrapper);
+
+                if (chatBox) {
+                    chatBox.appendChild(wrapper);
+                    chatBox.scrollTop = chatBox.scrollHeight;
+                }
+                
+                // If message is received (not sent by me), mark as read and refresh badge
+                if (!isMine && window.notificationSystem) {
+                    window.notificationSystem.markConversationAsRead(otherUserId);
+                }
+            });
+
+            connection.start().then(function () {
+                connection.invoke("JoinConversation", convKey);
+                if (chatBox) {
+                    chatBox.scrollTop = chatBox.scrollHeight;
+                }
+                
+                // Mark conversation as read when opened
+                if (window.notificationSystem && otherUserId) {
+                    window.notificationSystem.markConversationAsRead(otherUserId);
+                }
+            });
+
+            // AJAX Send
+            if (form) {
+                form.addEventListener("submit", function (e) {
+                    e.preventDefault();
+                    if (errSpan) errSpan.textContent = "";
+
+                    const text = msgInput.value.trim();
+                    if (!text) {
+                        if (errSpan) errSpan.textContent = "Message is required.";
                         return;
                     }
-                    msgInput.value = "";
+
+                    const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+
+                    fetch("@Url.Action("Send", "Chat")", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+                            "RequestVerificationToken": token
+                        },
+                        body: new URLSearchParams({
+                            ProductId: productId,
+                            OtherUserId: otherUserId,
+                            NewMessage: text
+                        })
+                    })
+                        .then(r => r.json())
+                        .then(data => {
+                            if (!data.success) {
+                                if (errSpan) errSpan.textContent = data.error || "Error";
+                                return;
+                            }
+                            if (msgInput) msgInput.value = "";
+                            setTimeout(() => window.location.reload(), 500);
+                        });
                 });
-        });
+            }
+
+            // Auto-scroll on new messages
+            const observer = new MutationObserver(function() {
+                if (chatBox) {
+                    chatBox.scrollTop = chatBox.scrollHeight;
+                }
+            });
+
+            if (chatBox) {
+                observer.observe(chatBox, { childList: true });
+            }
+            </text>
+        }
+
+        // Sidebar search functionality
+        const sidebarSearch = document.getElementById("sidebarSearch");
+        if (sidebarSearch) {
+            sidebarSearch.addEventListener("input", function(e) {
+                const searchTerm = e.target.value.toLowerCase();
+                const items = document.querySelectorAll(".sidebar-item");
+                items.forEach(item => {
+                    const name = item.querySelector(".sidebar-name")?.textContent.toLowerCase() || "";
+                    if (name.includes(searchTerm)) {
+                        item.style.display = "flex";
+                    } else {
+                        item.style.display = "none";
+                    }
+                });
+            });
+        }
     </script>
 }

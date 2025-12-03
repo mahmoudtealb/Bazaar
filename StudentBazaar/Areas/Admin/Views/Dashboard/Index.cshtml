@@ -1,0 +1,342 @@
+@model StudentBazaar.Web.ViewModels.AdminDashboardViewModel
+@{
+    ViewData["Title"] = "Admin Dashboard";
+    Layout = "_AdminLayout";
+}
+
+<style>
+    .stat-card-link {
+        text-decoration: none;
+        color: inherit;
+        display: block;
+    }
+    
+    .stat-card-link:hover .stat-card {
+        transform: translateY(-5px);
+        box-shadow: 0 0.25rem 2rem 0 rgba(58, 59, 69, 0.25);
+    }
+    
+    .stat-card-link .stat-card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+</style>
+
+<div class="container-fluid">
+    <h1 class="h3 mb-4">Dashboard Overview</h1>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+
+    <!-- Statistics Cards -->
+    <div class="row">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="stat-card primary">
+                <div class="stat-label">Total Users</div>
+                <div class="stat-value">@Model.TotalUsers</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="stat-card success">
+                <div class="stat-label">Total Products</div>
+                <div class="stat-value">@Model.TotalProducts</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="stat-card info">
+                <div class="stat-label">Total Orders</div>
+                <div class="stat-value">@Model.TotalOrders</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="stat-card warning">
+                <div class="stat-label">Total Revenue</div>
+                <div class="stat-value">@Model.TotalRevenue.ToString("C")</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <a asp-area="Admin" asp-controller="University" asp-action="Index" class="stat-card-link">
+                <div class="stat-card info">
+                    <div class="stat-label">Total Universities</div>
+                    <div class="stat-value">@ViewBag.TotalUniversities</div>
+                </div>
+            </a>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <a asp-area="Admin" asp-controller="College" asp-action="Index" class="stat-card-link">
+                <div class="stat-card warning">
+                    <div class="stat-label">Total Colleges</div>
+                    <div class="stat-value">@ViewBag.TotalColleges</div>
+                </div>
+            </a>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <a asp-area="Admin" asp-controller="Category" asp-action="Index" class="stat-card-link">
+                <div class="stat-card danger">
+                    <div class="stat-label">Total Categories</div>
+                    <div class="stat-value">@ViewBag.TotalCategories</div>
+                </div>
+            </a>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="stat-card success">
+                <div class="stat-label">Sold Products</div>
+                <div class="stat-value">@Model.TotalSold</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="stat-card primary">
+                <div class="stat-label">Total Messages</div>
+                <div class="stat-value">@Model.TotalMessages</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row">
+        <div class="col-xl-8 col-lg-7">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Monthly Revenue</h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="revenueChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-4 col-lg-5">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Top Categories</h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="categoryChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="row">
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Recent Products</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Price</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var product in Model.RecentProducts)
+                                {
+                                    <tr>
+                                        <td>@product.Name</td>
+                                        <td>@product.Price</td>
+                                        <td>
+                                            @if (product.IsApproved)
+                                            {
+                                                <span class="badge bg-success">Approved</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-warning">Pending</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Recent Orders</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                   @*  <th>Order ID</th> *@
+                                    <th>Buyer</th>
+                                    <th>Product</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var order in Model.RecentOrders)
+                                {
+                                    <tr>
+                                        @* <td>#@order.Id</td> *@
+                                        <td>@order.Buyer?.FullName</td>
+                                        <td>
+                                            @if (order.OrderItems != null && order.OrderItems.Any())
+                                            {
+                                                var firstItem = order.OrderItems.First();
+                                                <text>@firstItem.ProductName</text>
+                                                @if (order.OrderItems.Count > 1)
+                                                {
+                                                    <text> (+@(order.OrderItems.Count - 1) more)</text>
+                                                }
+                                            }
+                                            else if (order.Listing != null && order.Listing.Product != null)
+                                            {
+                                                <text>@order.Listing.Product.Name</text>
+                                            }
+                                            else
+                                            {
+                                                <text>No items</text>
+                                            }
+                                        </td>
+
+                                        <td>@order.TotalAmount</td>
+                                        <td><span class="badge bg-info">@order.Status</span></td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Monthly Revenue Chart - Real Data
+        const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+        
+        // Get month labels (last 12 months)
+        const monthLabels = [];
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        for (let i = 11; i >= 0; i--) {
+            const date = new Date();
+            date.setMonth(date.getMonth() - i);
+            monthLabels.push(monthNames[date.getMonth()]);
+        }
+        
+        // Get revenue data from ViewBag
+        @{
+            var monthlyRevenueList = ViewBag.MonthlyRevenue as List<decimal> ?? new List<decimal>();
+            var monthlyRevenueJson = Newtonsoft.Json.JsonConvert.SerializeObject(monthlyRevenueList);
+        }
+        const monthlyRevenueData = @Html.Raw(monthlyRevenueJson);
+        
+        new Chart(revenueCtx, {
+            type: 'line',
+            data: {
+                labels: monthLabels,
+                datasets: [{
+                    label: 'Revenue (EGP)',
+                    data: monthlyRevenueData,
+                    borderColor: 'rgb(78, 115, 223)',
+                    backgroundColor: 'rgba(78, 115, 223, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return 'Revenue: ' + context.parsed.y.toFixed(2) + ' EGP';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return value.toFixed(0) + ' EGP';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Top Categories Chart - Real Data
+        const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+        
+        // Get category data from ViewBag
+        @{
+            var categoryLabelsList = ViewBag.TopCategoriesLabels as List<string> ?? new List<string>();
+            var categoryDataList = ViewBag.TopCategoriesData as List<int> ?? new List<int>();
+            var categoryLabelsJson = Newtonsoft.Json.JsonConvert.SerializeObject(categoryLabelsList);
+            var categoryDataJson = Newtonsoft.Json.JsonConvert.SerializeObject(categoryDataList);
+        }
+        const categoryLabels = @Html.Raw(categoryLabelsJson);
+        const categoryData = @Html.Raw(categoryDataJson);
+        
+        // Generate colors dynamically
+        const categoryColors = [
+            'rgb(78, 115, 223)',   // primary blue
+            'rgb(28, 200, 138)',   // success green
+            'rgb(54, 185, 204)',   // info cyan
+            'rgb(246, 194, 62)',   // warning yellow
+            'rgb(231, 74, 59)',    // danger red
+            'rgb(133, 135, 150)',  // secondary gray
+            'rgb(255, 159, 64)',   // orange
+            'rgb(153, 102, 255)',  // purple
+            'rgb(255, 99, 132)',   // pink
+            'rgb(75, 192, 192)'     // teal
+        ];
+        
+        new Chart(categoryCtx, {
+            type: 'doughnut',
+            data: {
+                labels: categoryLabels,
+                datasets: [{
+                    data: categoryData,
+                    backgroundColor: categoryColors.slice(0, categoryLabels.length)
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'right'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.parsed || 0;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = ((value / total) * 100).toFixed(1);
+                                return label + ': ' + value + ' products (' + percentage + '%)';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+}

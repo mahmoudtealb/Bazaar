@@ -20,8 +20,9 @@
             <!-- Category -->
             <div class="mb-3">
                 <label asp-for="Product.CategoryId" class="form-label">Category *</label>
-                <select asp-for="Product.CategoryId" class="form-select" asp-items="Model.Categories">
+                <select asp-for="Product.CategoryId" class="form-select" asp-items="Model.Categories" id="categorySelect">
                     <option value="">-- Select Category --</option>
+                    <option value="other">Other...</option>
                 </select>
                 <span asp-validation-for="Product.CategoryId" class="text-danger"></span>
             </div>
@@ -55,6 +56,31 @@
                 <div id="imagePreview" class="d-flex flex-wrap gap-2">
                     <p class="text-muted small">Selected images will appear here</p>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for Adding New Category -->
+<div class="modal fade" id="addCategoryModal" tabindex="-1" aria-labelledby="addCategoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addCategoryModalLabel">Add New Category</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="newCategoryName" class="form-label">Category Name *</label>
+                    <input type="text" class="form-control" id="newCategoryName" placeholder="Enter category name" />
+                    <div class="invalid-feedback" id="categoryNameError" style="display: none;">
+                        Please enter a category name.
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="saveCategoryBtn">Save</button>
             </div>
         </div>
     </div>
@@ -95,6 +121,125 @@
                     }
                 });
             }
+
+            // Generic function to handle "Other..." selection for any dropdown
+            function setupDropdownHandler(selectId, modalId, inputId, saveBtnId, errorId, endpoint, entityName) {
+                const select = document.getElementById(selectId);
+                const modal = new bootstrap.Modal(document.getElementById(modalId));
+                const input = document.getElementById(inputId);
+                const saveBtn = document.getElementById(saveBtnId);
+                const error = document.getElementById(errorId);
+
+                if (!select || !modal || !input || !saveBtn) return;
+
+                // Handle dropdown change
+                select.addEventListener('change', function () {
+                    if (this.value === 'other') {
+                        this.value = '';
+                        modal.show();
+                    }
+                });
+
+                // Handle save button click
+                saveBtn.addEventListener('click', function () {
+                    const name = input.value.trim();
+                    
+                    // Validate input
+                    if (!name) {
+                        input.classList.add('is-invalid');
+                        if (error) error.style.display = 'block';
+                        return;
+                    }
+
+                    // Remove validation error
+                    input.classList.remove('is-invalid');
+                    if (error) error.style.display = 'none';
+
+                    // Disable button during request
+                    saveBtn.disabled = true;
+                    saveBtn.textContent = 'Saving...';
+
+                    // Get anti-forgery token
+                    const token = $('input[name="__RequestVerificationToken"]').val();
+
+                    // AJAX call to create entity
+                    $.ajax({
+                        url: endpoint,
+                        type: 'POST',
+                        headers: {
+                            'RequestVerificationToken': token
+                        },
+                        data: { name: name },
+                        success: function (response) {
+                            if (response && response.success && response.id && response.name) {
+                                // Remove "Other..." option if it exists
+                                const otherOption = select.querySelector('option[value="other"]');
+                                if (otherOption) {
+                                    otherOption.remove();
+                                }
+
+                                // Add the new option
+                                const newOption = document.createElement('option');
+                                newOption.value = response.id;
+                                newOption.textContent = response.name;
+                                newOption.selected = true;
+                                select.appendChild(newOption);
+
+                                // Re-add "Other..." option at the bottom
+                                const otherOptionNew = document.createElement('option');
+                                otherOptionNew.value = 'other';
+                                otherOptionNew.textContent = 'Other...';
+                                select.appendChild(otherOptionNew);
+
+                                // Close modal and clear input
+                                modal.hide();
+                                input.value = '';
+                            } else {
+                                // Handle error response
+                                const errorMsg = (response && response.message) ? response.message : `Error: Invalid response from server.`;
+                                alert(errorMsg);
+                            }
+                        },
+                        error: function (xhr, status, error) {
+                            let errorMessage = `An error occurred while saving the ${entityName}.`;
+                            if (xhr.responseJSON && xhr.responseJSON.message) {
+                                errorMessage = xhr.responseJSON.message;
+                            } else if (xhr.responseText) {
+                                try {
+                                    const response = JSON.parse(xhr.responseText);
+                                    if (response.message) {
+                                        errorMessage = response.message;
+                                    }
+                                } catch (e) {
+                                    // Use default error message
+                                }
+                            }
+                            alert(errorMessage);
+                        },
+                        complete: function () {
+                            // Re-enable button
+                            saveBtn.disabled = false;
+                            saveBtn.textContent = 'Save';
+                        }
+                    });
+                });
+
+                // Clear validation on input
+                input.addEventListener('input', function () {
+                    this.classList.remove('is-invalid');
+                    if (error) error.style.display = 'none';
+                });
+
+                // Clear input when modal is closed
+                document.getElementById(modalId).addEventListener('hidden.bs.modal', function () {
+                    input.value = '';
+                    input.classList.remove('is-invalid');
+                    if (error) error.style.display = 'none';
+                });
+            }
+
+            // Setup handler for Category dropdown
+            setupDropdownHandler('categorySelect', 'addCategoryModal', 'newCategoryName', 'saveCategoryBtn', 'categoryNameError', '/Category/CreateAjax', 'category');
         });
     </script>
 }

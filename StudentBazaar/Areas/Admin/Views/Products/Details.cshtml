@@ -1,0 +1,114 @@
+@model StudentBazaar.Entities.Models.Product
+@{
+    ViewData["Title"] = "Product Details";
+    Layout = "_AdminLayout";
+}
+
+<div class="container-fluid">
+    <h1 class="h3 mb-4">Product Details</h1>
+
+    <div class="card shadow">
+        <div class="card-body">
+            <dl class="row">
+               @*  <dt class="col-sm-3">ID</dt>
+                <dd class="col-sm-9">@Model.Id</dd> *@
+
+                <dt class="col-sm-3">Name</dt>
+                <dd class="col-sm-9">@Model.Name</dd>
+
+                <dt class="col-sm-3">Category</dt>
+                <dd class="col-sm-9">@Model.Category?.CategoryName</dd>
+
+                <dt class="col-sm-3">Price</dt>
+                <dd class="col-sm-9">@Model.Price</dd>
+
+                <dt class="col-sm-3">Owner</dt>
+                <dd class="col-sm-9">@Model.Owner?.FullName</dd>
+
+                <dt class="col-sm-3">Status</dt>
+                <dd class="col-sm-9">
+                    @if (Model.IsApproved)
+                    {
+                        <span class="badge bg-success">Approved</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-warning">Pending</span>
+                    }
+                    @if (Model.IsSold)
+                    {
+                        <span class="badge bg-danger">Sold</span>
+                    }
+                    @if (Model.IsFeatured)
+                    {
+                        <span class="badge bg-info">Featured</span>
+                    }
+                </dd>
+
+                <dt class="col-sm-3">Created At</dt>
+                <dd class="col-sm-9">@Model.CreatedAt</dd>
+
+                <dt class="col-sm-3">Product Images</dt>
+                <dd class="col-sm-9">
+                    @if (Model.Images != null && Model.Images.Any())
+                    {
+                        <div class="row">
+                            @foreach (var image in Model.Images)
+                            {
+                                <div class="col-md-3 mb-3">
+                                    <div class="card">
+                                        <img src="@image.ImageUrl" alt="@Model.Name" class="card-img-top" style="height: 200px; object-fit: cover;">
+                                        <div class="card-body p-2">
+                                            @if (image.IsMainImage)
+                                            {
+                                                <span class="badge bg-primary">Main Image</span>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <span class="text-muted">No images available</span>
+                    }
+                </dd>
+            </dl>
+
+            <div class="mt-4">
+                @if (!Model.IsApproved)
+                {
+                    <form asp-action="Approve" method="post" class="d-inline">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        <button type="submit" class="btn btn-success">Approve</button>
+                    </form>
+                }
+                <form asp-action="MakeFeatured" method="post" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    <button type="submit" class="btn btn-warning">@(Model.IsFeatured ? "Unfeature" : "Feature")</button>
+                </form>
+                @if (Model.IsSold)
+                {
+                    <form asp-action="MarkAsUnsold" method="post" class="d-inline">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        <button type="submit" class="btn btn-success">Mark as Unsold</button>
+                    </form>
+                }
+                else
+                {
+                    <form asp-action="MarkAsSold" method="post" class="d-inline">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        <button type="submit" class="btn btn-secondary">Mark as Sold</button>
+                    </form>
+                }
+                <a asp-action="Index" class="btn btn-primary">Back to List</a>
+            </div>
+        </div>
+    </div>
+</div>
+

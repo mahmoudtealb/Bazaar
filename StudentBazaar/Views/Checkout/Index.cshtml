@@ -4,322 +4,877 @@
     ViewData["Title"] = "Checkout";
 }
 
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" />
 
 <style>
     :root {
-        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        --success-gradient: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-        --danger-gradient: linear-gradient(135deg, #e10000 0%, #ff6b6b 100%);
-        --shadow: 0 10px 40px rgba(0,0,0,0.1);
-        --shadow-hover: 0 15px 50px rgba(0,0,0,0.15);
+        --primary-color: #667eea;
+        --primary-dark: #5568d3;
+        --success-color: #38ef7d;
+        --danger-color: #ff6b6b;
+        --text-dark: #2c3e50;
+        --text-muted: #6c757d;
+        --border-color: #e0e0e0;
+        --bg-light: #f8f9fa;
+        --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+        --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+        --shadow-lg: 0 8px 24px rgba(0,0,0,0.16);
     }
 
     body {
-        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
         min-height: 100vh;
+        padding: 30px 0;
+    }
+
+    .checkout-wrapper {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 15px;
     }
 
     .checkout-header {
-        background: var(--primary-gradient);
-        color: white;
-        padding: 40px 20px;
-        border-radius: 20px 20px 0 0;
-        margin-bottom: 0;
-        box-shadow: var(--shadow);
+        text-align: center;
+        margin-bottom: 40px;
+    }
+
+    .checkout-header h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--text-dark);
+        margin-bottom: 10px;
+    }
+
+    .checkout-header p {
+        color: var(--text-muted);
+        font-size: 1.1rem;
     }
 
     .checkout-container {
-        max-width: 900px;
-        margin: 30px auto;
+        display: grid;
+        grid-template-columns: 1fr 400px;
+        gap: 30px;
+        margin-bottom: 30px;
     }
 
-    .checkout-card {
+    .form-section {
         background: white;
-        border-radius: 20px;
-        box-shadow: var(--shadow);
-        overflow: hidden;
-        transition: transform 0.3s, box-shadow 0.3s;
+        border-radius: 16px;
+        padding: 30px;
+        box-shadow: var(--shadow-md);
+        margin-bottom: 25px;
+        transition: transform 0.2s, box-shadow 0.2s;
     }
 
-    .checkout-card:hover {
-        transform: translateY(-5px);
-        box-shadow: var(--shadow-hover);
+    .form-section:hover {
+        box-shadow: var(--shadow-lg);
     }
 
-    .cart-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 20px;
-        margin: 0;
+    .section-title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: var(--text-dark);
+        margin-bottom: 25px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid var(--bg-light);
+        display: flex;
+        align-items: center;
+        gap: 10px;
     }
 
-    .cart-table {
-        margin: 0;
+    .section-title i {
+        color: var(--primary-color);
+        font-size: 1.4rem;
     }
 
-    .cart-table thead {
-        background: #f8f9fa;
-    }
-
-    .cart-table tbody tr {
-        border-bottom: 1px solid #f0f0f0;
-        transition: background 0.2s;
-    }
-
-    .cart-table tbody tr:hover {
-        background: #f8f9fa;
-    }
-
-    .product-name {
+    .form-label {
         font-weight: 600;
-        color: #333;
+        color: var(--text-dark);
+        margin-bottom: 8px;
+        font-size: 0.95rem;
     }
 
-    .summary-card {
-        background: linear-gradient(135deg, #f5f7fa 0%, #ffffff 100%);
-        border-left: 4px solid #667eea;
-        padding: 25px;
-        border-radius: 15px;
+    .form-control,
+    .form-select {
+        border: 2px solid var(--border-color);
+        border-radius: 10px;
+        padding: 12px 16px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        background-color: white;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.15);
+        outline: none;
+    }
+
+    .form-control::placeholder {
+        color: #adb5bd;
+    }
+
+    .payment-methods {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
         margin-top: 20px;
     }
 
-    .summary-row {
+    .payment-option {
+        position: relative;
+        cursor: pointer;
+    }
+
+    .payment-option input[type="radio"] {
+        position: absolute;
+        opacity: 0;
+        cursor: pointer;
+    }
+
+    .payment-card {
+        border: 2px solid var(--border-color);
+        border-radius: 12px;
+        padding: 20px;
+        text-align: center;
+        transition: all 0.3s ease;
+        background: white;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    .payment-card:hover {
+        border-color: var(--primary-color);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .payment-option input[type="radio"]:checked + .payment-card {
+        border-color: var(--primary-color);
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+    }
+
+    .payment-card i {
+        font-size: 2.5rem;
+        color: var(--primary-color);
+        margin-bottom: 8px;
+    }
+
+    .payment-card label {
+        font-weight: 600;
+        color: var(--text-dark);
+        margin: 0;
+        cursor: pointer;
+        font-size: 0.95rem;
+    }
+
+    .payment-card .payment-desc {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        margin-top: 5px;
+    }
+
+    .order-summary {
+        background: white;
+        border-radius: 16px;
+        padding: 30px;
+        box-shadow: var(--shadow-md);
+        position: sticky;
+        top: 20px;
+        height: fit-content;
+    }
+
+    .summary-header {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: var(--text-dark);
+        margin-bottom: 25px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid var(--bg-light);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .summary-header i {
+        color: var(--primary-color);
+        font-size: 1.4rem;
+    }
+
+    .summary-item {
         display: flex;
         justify-content: space-between;
-        padding: 10px 0;
-        border-bottom: 1px solid #e0e0e0;
+        align-items: center;
+        padding: 12px 0;
+        border-bottom: 1px solid var(--bg-light);
     }
 
-    .summary-row:last-child {
+    .summary-item:last-child {
         border-bottom: none;
-        font-size: 1.3em;
-        font-weight: bold;
-        color: #667eea;
         margin-top: 10px;
-        padding-top: 15px;
+        padding-top: 20px;
+        border-top: 2px solid var(--border-color);
     }
 
-    .payment-select-card {
-        background: white;
-        border-radius: 15px;
-        padding: 25px;
-        margin-top: 20px;
-        border: 2px solid #e0e0e0;
-        transition: border-color 0.3s;
+    .summary-item-label {
+        color: var(--text-muted);
+        font-size: 0.95rem;
     }
 
-    .payment-select-card:focus-within {
-        border-color: #667eea;
+    .summary-item-value {
+        font-weight: 600;
+        color: var(--text-dark);
+        font-size: 1rem;
     }
 
-    .form-select {
-        padding: 15px;
-        border-radius: 10px;
-        border: 2px solid #e0e0e0;
-        font-size: 16px;
-        transition: all 0.3s;
+    .summary-item:last-child .summary-item-value {
+        font-size: 1.4rem;
+        color: var(--primary-color);
+        font-weight: 700;
     }
 
-    .form-select:focus {
-        border-color: #667eea;
-        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    .cart-items-list {
+        margin-bottom: 20px;
     }
 
-    .btn-checkout {
-        background: var(--success-gradient);
+    .cart-item-summary {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 15px 0;
+        border-bottom: 1px solid var(--bg-light);
+    }
+
+    .cart-item-summary:last-child {
+        border-bottom: none;
+    }
+
+    .cart-item-image {
+        width: 60px;
+        height: 60px;
+        border-radius: 8px;
+        object-fit: cover;
+        background: var(--bg-light);
+    }
+
+    .cart-item-details {
+        flex: 1;
+    }
+
+    .cart-item-name {
+        font-weight: 600;
+        color: var(--text-dark);
+        font-size: 0.95rem;
+        margin-bottom: 5px;
+    }
+
+    .cart-item-meta {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+    }
+
+    .cart-item-price {
+        font-weight: 700;
+        color: var(--text-dark);
+        font-size: 1rem;
+    }
+
+    .btn-complete-payment {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
         color: white;
-        padding: 18px 40px;
-        border-radius: 50px;
         border: none;
-        font-size: 18px;
-        font-weight: bold;
+        border-radius: 12px;
+        padding: 16px 32px;
+        font-size: 1.1rem;
+        font-weight: 700;
         width: 100%;
-        margin-top: 20px;
-        transition: all 0.3s;
-        box-shadow: 0 5px 15px rgba(56, 239, 125, 0.3);
+        margin-top: 25px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
     }
 
-    .btn-checkout:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 8px 25px rgba(56, 239, 125, 0.4);
+    .btn-complete-payment:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
         color: white;
+    }
+
+    .btn-complete-payment:active {
+        transform: translateY(0);
     }
 
     .alert {
-        border-radius: 15px;
+        border-radius: 12px;
         border: none;
-        padding: 20px;
+        padding: 18px 20px;
         margin-bottom: 25px;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-    }
-
-    .alert-info {
-        background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
-        color: #1565c0;
+        box-shadow: var(--shadow-sm);
     }
 
     .alert-warning {
-        background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
-        color: #e65100;
+        background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+        color: #856404;
+        border-left: 4px solid #ffc107;
     }
 
     .alert-danger {
         background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
         color: #c62828;
+        border-left: 4px solid #dc3545;
     }
 
-    .free-shipping {
-        color: #38ef7d;
-        font-weight: bold;
-        font-size: 1.1em;
+    .alert-info {
+        background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+        color: #1565c0;
+        border-left: 4px solid #2196f3;
     }
 
-    .payment-method-icon {
-        font-size: 1.2em;
-        margin-right: 8px;
+    .text-danger {
+        color: var(--danger-color) !important;
+        font-size: 0.875rem;
+        margin-top: 5px;
+    }
+
+    .shipping-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+    }
+
+    .shipping-grid .form-group:last-child {
+        grid-column: 1 / -1;
+    }
+
+    @@media (max-width: 992px) {
+        .checkout-container {
+            grid-template-columns: 1fr;
+        }
+
+        .order-summary {
+            position: relative;
+            top: 0;
+        }
+
+        .shipping-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .shipping-grid .form-group:last-child {
+            grid-column: 1;
+        }
     }
 
     @@media (max-width: 768px) {
-        .checkout-container {
-            margin: 15px;
+        .checkout-wrapper {
+            padding: 0 10px;
         }
-        
-        .checkout-header {
-            padding: 30px 15px;
+
+        .checkout-header h1 {
+            font-size: 2rem;
         }
+
+        .form-section,
+        .order-summary {
+            padding: 20px;
+        }
+
+        .payment-methods {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .required-field::after {
+        content: " *";
+        color: var(--danger-color);
+    }
+
+    .shipping-options {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        margin-top: 10px;
+    }
+
+    .shipping-option {
+        position: relative;
+    }
+
+    .shipping-option input[type="radio"] {
+        position: absolute;
+        opacity: 0;
+        cursor: pointer;
+    }
+
+    .shipping-card {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        border: 2px solid var(--border-color);
+        border-radius: 12px;
+        padding: 20px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background: white;
+    }
+
+    .shipping-card:hover {
+        border-color: var(--primary-color);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .shipping-option input[type="radio"]:checked + .shipping-card {
+        border-color: var(--primary-color);
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .shipping-card i {
+        font-size: 2rem;
+        color: var(--primary-color);
+    }
+
+    .shipping-card > div {
+        flex: 1;
+    }
+
+    .shipping-card strong {
+        display: block;
+        color: var(--text-dark);
+        font-size: 1rem;
+        margin-bottom: 5px;
+    }
+
+    .shipping-desc {
+        display: block;
+        color: var(--text-muted);
+        font-size: 0.85rem;
+    }
+
+    .shipping-price {
+        font-weight: 700;
+        color: var(--primary-color);
+        font-size: 1.1rem;
     }
 </style>
 
-<div class="checkout-container">
-    <div class="checkout-card">
-        <!-- HEADER -->
-        <div class="checkout-header text-center">
-            <h1 class="fw-bold mb-2"><i class="bi bi-cart-check me-2"></i>Checkout</h1>
-            <p class="mb-0">Review your items before completing your payment</p>
+<div class="checkout-wrapper">
+    <div class="checkout-header">
+        <h1><i class="bi bi-cart-check"></i> Checkout</h1>
+        <p>Complete your order by filling in the information below</p>
+    </div>
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <strong><i class="bi bi-exclamation-triangle me-2"></i>Error!</strong> @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
+    }
 
-        <div class="p-4">
+    @if (TempData["Info"] != null)
+    {
+        <div class="alert alert-info alert-dismissible fade show" role="alert">
+            <strong><i class="bi bi-info-circle me-2"></i>Info:</strong> @TempData["Info"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
 
-            <!-- ERROR MESSAGES -->
-            @if (TempData["Error"] != null)
-            {
-                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    <strong><i class="bi bi-exclamation-triangle me-2"></i>Error!</strong> @TempData["Error"]
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    @if (ViewBag.StripeConfigured == false)
+    {
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            <strong><i class="bi bi-exclamation-triangle me-2"></i>Notice:</strong> Credit/Debit Card payment (Stripe) is currently unavailable. Please use an alternative payment method.
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <form asp-action="CompletePayment" method="post">
+        @Html.AntiForgeryToken()
+        <div class="checkout-container">
+            <!-- Left Column: Forms -->
+            <div class="checkout-forms">
+                <!-- Customer Information -->
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <i class="bi bi-person"></i>
+                        Customer Information
+                    </h3>
+
+                    <div class="form-group">
+                        <label asp-for="FullName" class="form-label required-field">Full Name</label>
+                        <input asp-for="FullName" class="form-control" placeholder="Enter your full name" />
+                        <span asp-validation-for="FullName" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="PhoneNumber" class="form-label required-field">Phone Number</label>
+                        <input asp-for="PhoneNumber" class="form-control" type="tel" placeholder="Enter your phone number" />
+                        <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="EmailAddress" class="form-label required-field">Email Address</label>
+                        <input asp-for="EmailAddress" class="form-control" type="email" placeholder="Enter your email address" />
+                        <span asp-validation-for="EmailAddress" class="text-danger"></span>
+                    </div>
                 </div>
-            }
 
-            @if (TempData["Info"] != null)
-            {
-                <div class="alert alert-info alert-dismissible fade show" role="alert">
-                    <strong><i class="bi bi-info-circle me-2"></i>Info:</strong> @TempData["Info"]
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            }
+                <!-- Shipping Information -->
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <i class="bi bi-truck"></i>
+                        Shipping Information
+                    </h3>
 
-            @if (ViewBag.StripeConfigured == false)
-            {
-                <div class="alert alert-warning alert-dismissible fade show" role="alert">
-                    <strong><i class="bi bi-exclamation-triangle me-2"></i>Notice:</strong> Credit/Debit Card payment (Stripe) is currently unavailable. Please use an alternative payment method.
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            }
-
-            <!-- CART ITEMS -->
-            <div class="mb-4" style="border-radius: 15px; overflow: hidden; background: white; box-shadow: var(--shadow);">
-                <div class="cart-header">
-                    <h5 class="mb-0"><i class="bi bi-cart3 me-2"></i>Your Cart</h5>
-                </div>
-                <div class="p-0">
-                    @if (Model.CartItems.Any())
-                    {
-                        <table class="table cart-table align-middle mb-0">
-                            <thead>
-                                <tr>
-                                    <th class="ps-4">Product</th>
-                                    <th class="text-center">Qty</th>
-                                    <th class="text-end">Price</th>
-                                    <th class="text-end pe-4">Total</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var item in Model.CartItems)
-                                {
-                                    <tr>
-                                        <td class="product-name ps-4">@item.ProductName</td>
-                                        <td class="text-center">
-                                            <span class="badge bg-secondary rounded-pill">@item.Quantity</span>
-                                        </td>
-                                        <td class="text-end">$@item.Price.ToString("F2")</td>
-                                        <td class="text-end fw-bold pe-4">$@((item.Price * item.Quantity).ToString("F2"))</td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    }
-                    else
-                    {
-                        <div class="p-4 text-center text-muted">
-                            <i class="bi bi-cart-x" style="font-size: 3em;"></i>
-                            <p class="mt-3">Your cart is empty.</p>
+                    <div class="form-group">
+                        <label class="form-label required-field">Shipping Option</label>
+                        <div class="shipping-options">
+                            <div class="shipping-option">
+                                <input type="radio" asp-for="ShippingOption" value="Free" id="shipping-free" checked />
+                                <label for="shipping-free" class="shipping-card">
+                                    <i class="bi bi-truck"></i>
+                                    <div>
+                                        <strong>Free Shipping</strong>
+                                        <span class="shipping-desc">Standard delivery (5-7 days)</span>
+                                    </div>
+                                    <span class="shipping-price">0 EGP</span>
+                                </label>
+                            </div>
+                            <div class="shipping-option">
+                                <input type="radio" asp-for="ShippingOption" value="Express" id="shipping-express" />
+                                <label for="shipping-express" class="shipping-card">
+                                    <i class="bi bi-lightning-charge"></i>
+                                    <div>
+                                        <strong>Express Shipping</strong>
+                                        <span class="shipping-desc">Fast delivery (2-3 days)</span>
+                                    </div>
+                                    <span class="shipping-price">50 EGP</span>
+                                </label>
+                            </div>
                         </div>
-                    }
+                        <span asp-validation-for="ShippingOption" class="text-danger"></span>
+                    </div>
+
+                    <div class="shipping-grid">
+                        <div class="form-group">
+                            <label asp-for="Country" class="form-label required-field">Country</label>
+                            <input asp-for="Country" class="form-control" placeholder="Enter country" />
+                            <span asp-validation-for="Country" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label asp-for="StateProvince" class="form-label required-field">State / Province</label>
+                            <input asp-for="StateProvince" class="form-control" placeholder="Enter state or province" />
+                            <span asp-validation-for="StateProvince" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label asp-for="City" class="form-label required-field">City</label>
+                            <input asp-for="City" class="form-control" placeholder="Enter city" />
+                            <span asp-validation-for="City" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label asp-for="FullAddress" class="form-label required-field">Full Address</label>
+                            <textarea asp-for="FullAddress" class="form-control" rows="3" placeholder="Enter your complete address (street, building, apartment, etc.)"></textarea>
+                            <span asp-validation-for="FullAddress" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment Method -->
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <i class="bi bi-credit-card"></i>
+                        Payment Method
+                    </h3>
+
+                    <div class="payment-methods">
+                        <div class="payment-option">
+                            <input type="radio" asp-for="SelectedPaymentMethod" value="CashOnDelivery" id="payment-cod" />
+                            <label for="payment-cod" class="payment-card">
+                                <i class="bi bi-cash-coin"></i>
+                                <label for="payment-cod">Cash on Delivery</label>
+                                <span class="payment-desc">Pay when you receive</span>
+                            </label>
+                        </div>
+
+                        @if (ViewBag.StripeConfigured == true)
+                        {
+                            <div class="payment-option">
+                                <input type="radio" asp-for="SelectedPaymentMethod" value="Card" id="payment-card" />
+                                <label for="payment-card" class="payment-card">
+                                    <i class="bi bi-credit-card-2-front"></i>
+                                    <label for="payment-card">Credit/Debit Card</label>
+                                    <span class="payment-desc">Stripe Secure Payment</span>
+                                </label>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="payment-option" style="opacity: 0.6; cursor: not-allowed;">
+                                <input type="radio" asp-for="SelectedPaymentMethod" value="Card" id="payment-card" disabled />
+                                <label for="payment-card" class="payment-card">
+                                    <i class="bi bi-credit-card-2-front"></i>
+                                    <label for="payment-card">Credit/Debit Card</label>
+                                    <span class="payment-desc">Not Available</span>
+                                </label>
+                            </div>
+                        }
+
+                        <div class="payment-option">
+                            <input type="radio" asp-for="SelectedPaymentMethod" value="PayPal" id="payment-paypal" />
+                            <label for="payment-paypal" class="payment-card">
+                                <i class="bi bi-paypal"></i>
+                                <label for="payment-paypal">PayPal</label>
+                                <span class="payment-desc">Pay with PayPal</span>
+                            </label>
+                        </div>
+
+                        <div class="payment-option">
+                            <input type="radio" asp-for="SelectedPaymentMethod" value="VodafoneCash" id="payment-vodafone" />
+                            <label for="payment-vodafone" class="payment-card">
+                                <i class="bi bi-phone"></i>
+                                <label for="payment-vodafone">Mobile Wallets</label>
+                                <span class="payment-desc">Vodafone Cash</span>
+                            </label>
+                        </div>
+
+                        <div class="payment-option">
+                            <input type="radio" asp-for="SelectedPaymentMethod" value="BankTransfer" id="payment-bank" />
+                            <label for="payment-bank" class="payment-card">
+                                <i class="bi bi-bank"></i>
+                                <label for="payment-bank">Bank Transfer</label>
+                                <span class="payment-desc">Direct bank transfer</span>
+                            </label>
+                        </div>
+                    </div>
+                    <span asp-validation-for="SelectedPaymentMethod" class="text-danger"></span>
                 </div>
             </div>
 
-            <!-- SUMMARY & PAYMENT -->
-            <div class="summary-card">
-                <h5 class="mb-4"><i class="bi bi-receipt me-2"></i>Order Summary</h5>
-                
-                <div class="summary-row">
-                    <span><i class="bi bi-cart me-2 text-muted"></i>Subtotal</span>
-                    <strong>$@Model.Subtotal.ToString("F2")</strong>
-                </div>
-                <div class="summary-row">
-                    <span><i class="bi bi-truck me-2 text-muted"></i>Shipping</span>
-                    <strong class="free-shipping"><i class="bi bi-check-circle me-1"></i>FREE</strong>
-                </div>
-                <div class="summary-row">
-                    <span><i class="bi bi-currency-dollar me-2"></i>Total</span>
-                    <strong>$@Model.Total.ToString("F2")</strong>
-                </div>
-            </div>
+            <!-- Right Column: Order Summary -->
+            <div class="order-summary">
+                <h3 class="summary-header">
+                    <i class="bi bi-receipt"></i>
+                    Order Summary
+                </h3>
 
-            <div class="payment-select-card">
-                <form asp-action="CompletePayment" method="post">
-                    <div class="mb-3">
-                        <label class="form-label fw-bold mb-3">
-                            <i class="bi bi-credit-card me-2"></i>Select Payment Method:
-                        </label>
-                        <select asp-for="SelectedPaymentMethod" class="form-select">
-                            @if (ViewBag.StripeConfigured == true)
+                <div class="cart-items-list">
+                    @foreach (var item in Model.CartItems)
+                    {
+                        <div class="cart-item-summary">
+                            @if (!string.IsNullOrEmpty(item.ImageUrl))
                             {
-                                <option value="Card"><i class="bi bi-credit-card"></i> Credit/Debit Card (Stripe)</option>
+                                <img src="@item.ImageUrl" alt="@item.ProductName" class="cart-item-image" />
                             }
                             else
                             {
-                                <option value="Card" disabled><i class="bi bi-credit-card"></i> Credit/Debit Card (Stripe) - Not Available</option>
+                                <div class="cart-item-image d-flex align-items-center justify-content-center">
+                                    <i class="bi bi-image text-muted"></i>
+                                </div>
                             }
-                            <option value="PayPal"><i class="bi bi-paypal"></i> PayPal</option>
-                            <option value="VodafoneCash"><i class="bi bi-phone"></i> Vodafone Cash</option>
-                        </select>
-                        @if (ViewBag.StripeConfigured == false)
-                        {
-                            <small class="form-text text-muted mt-2">
-                                <i class="bi bi-info-circle me-1"></i>Stripe payment gateway is not configured. Please use PayPal or Vodafone Cash.
-                            </small>
-                        }
-                    </div>
-                    <button type="submit" class="btn btn-checkout">
-                        <i class="bi bi-lock-fill me-2"></i>Complete Payment
-                    </button>
-                </form>
-            </div>
+                            <div class="cart-item-details">
+                                <div class="cart-item-name">@item.ProductName</div>
+                                <div class="cart-item-meta">Qty: @item.Quantity × @item.Price.ToString("F2") EGP</div>
+                            </div>
+                            <div class="cart-item-price">@((item.Price * item.Quantity).ToString("F2")) EGP</div>
+                        </div>
+                    }
+                </div>
 
+                <div class="summary-item">
+                    <span class="summary-item-label">Subtotal</span>
+                    <span class="summary-item-value">@Model.Subtotal.ToString("F2") EGP</span>
+                </div>
+
+                <div class="summary-item">
+                    <span class="summary-item-label">Shipping</span>
+                    <span class="summary-item-value" id="shippingDisplay">
+                        @if (Model.Shipping == 0)
+                        {
+                            <span style="color: var(--success-color);">
+                                <i class="bi bi-check-circle me-1"></i>FREE
+                            </span>
+                        }
+                        else
+                        {
+                            <span>@Model.Shipping.ToString("F2") EGP</span>
+                        }
+                    </span>
+                </div>
+
+                <div class="summary-item">
+                    <span class="summary-item-label">Tax</span>
+                    <span class="summary-item-value">@Model.Tax.ToString("F2") EGP</span>
+                </div>
+
+                <div class="summary-item">
+                    <span class="summary-item-label">Total</span>
+                    <span class="summary-item-value" id="totalDisplay">@Model.Total.ToString("F2") EGP</span>
+                </div>
+
+                <button type="submit" class="btn-complete-payment">
+                    <i class="bi bi-lock-fill"></i>
+                    Complete Payment
+                </button>
+            </div>
         </div>
-    </div>
+    </form>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Handle payment method selection - make cards clickable
+            const paymentOptions = document.querySelectorAll('.payment-option');
+            
+            paymentOptions.forEach(function(option) {
+                const input = option.querySelector('input[type="radio"]');
+                const card = option.querySelector('.payment-card');
+                
+                if (!input || !card) return;
+                
+                // Make the entire card clickable
+                card.style.cursor = input.disabled ? 'not-allowed' : 'pointer';
+                
+                if (!input.disabled) {
+                    card.addEventListener('click', function(e) {
+                        // Prevent double-click issues
+                        e.preventDefault();
+                        e.stopPropagation();
+                        
+                        // Check the radio button
+                        input.checked = true;
+                        
+                        // Remove selection from other options
+                        document.querySelectorAll('input[name="SelectedPaymentMethod"]').forEach(function(otherInput) {
+                            if (otherInput !== input && !otherInput.disabled) {
+                                otherInput.checked = false;
+                            }
+                        });
+                        
+                        // Update visual state
+                        updatePaymentSelection();
+                    });
+                }
+            });
+
+            // Handle direct radio button clicks
+            const paymentInputs = document.querySelectorAll('input[name="SelectedPaymentMethod"]');
+            paymentInputs.forEach(function(input) {
+                input.addEventListener('change', function() {
+                    updatePaymentSelection();
+                });
+            });
+
+            // Function to update visual state of payment options
+            function updatePaymentSelection() {
+                paymentOptions.forEach(function(option) {
+                    const input = option.querySelector('input[type="radio"]');
+                    const card = option.querySelector('.payment-card');
+                    
+                    if (input && card) {
+                        if (input.checked && !input.disabled) {
+                            card.style.borderColor = 'var(--primary-color)';
+                            card.style.background = 'linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)';
+                            card.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.2)';
+                        } else {
+                            card.style.borderColor = '';
+                            card.style.background = '';
+                            card.style.boxShadow = '';
+                        }
+                    }
+                });
+            }
+
+            // Form validation before submit
+            const checkoutForm = document.querySelector('form[asp-action="CompletePayment"]');
+            if (checkoutForm) {
+                checkoutForm.addEventListener('submit', function(e) {
+                    const selectedPayment = document.querySelector('input[name="SelectedPaymentMethod"]:checked:not([disabled])');
+                    
+                    if (!selectedPayment) {
+                        e.preventDefault();
+                        const errorMsg = document.querySelector('span[asp-validation-for="SelectedPaymentMethod"]');
+                        if (errorMsg) {
+                            errorMsg.textContent = 'Please select a payment method';
+                            errorMsg.style.display = 'block';
+                        } else {
+                            alert('Please select a payment method');
+                        }
+                        return false;
+                    }
+
+                    // Show loading state
+                    const submitBtn = checkoutForm.querySelector('button[type="submit"]');
+                    if (submitBtn) {
+                        submitBtn.disabled = true;
+                        submitBtn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Processing...';
+                    }
+                });
+            }
+
+            // Initialize visual state
+            updatePaymentSelection();
+
+            // Handle shipping option changes
+            const shippingInputs = document.querySelectorAll('input[name="ShippingOption"]');
+            const subtotalValue = parseFloat('@Model.Subtotal');
+            const taxValue = parseFloat('@Model.Tax');
+            const shippingDisplay = document.getElementById('shippingDisplay');
+            const totalDisplay = document.getElementById('totalDisplay');
+
+            function updateShippingTotal() {
+                const selectedShipping = document.querySelector('input[name="ShippingOption"]:checked');
+                let shippingCost = 0;
+                let shippingMethod = '';
+                
+                if (selectedShipping) {
+                    shippingCost = selectedShipping.value === "Express" ? 50 : 0;
+                    shippingMethod = selectedShipping.value === "Express" ? "Express Shipping" : "Free Shipping";
+                }
+
+                // Update shipping display in Order Summary
+                if (shippingDisplay) {
+                    if (shippingCost === 0) {
+                        shippingDisplay.innerHTML = '<span style="color: var(--success-color);"><i class="bi bi-check-circle me-1"></i>FREE</span>';
+                    } else {
+                        shippingDisplay.innerHTML = '<span>' + shippingCost.toFixed(2) + ' EGP</span>';
+                    }
+                }
+
+
+                // Update total
+                const total = subtotalValue + shippingCost + taxValue;
+                if (totalDisplay) {
+                    totalDisplay.textContent = total.toFixed(2) + ' EGP';
+                }
+            }
+
+            shippingInputs.forEach(function(input) {
+                input.addEventListener('change', function() {
+                    updateShippingTotal();
+                });
+            });
+
+            // Initialize shipping total
+            updateShippingTotal();
+        });
+    </script>
+}

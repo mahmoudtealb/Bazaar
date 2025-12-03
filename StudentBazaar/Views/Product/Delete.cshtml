@@ -1,4 +1,4 @@
-﻿@model StudentBazaar.Web.Models.Product
+﻿@model StudentBazaar.Entities.Models.Product
 @{
     ViewData["Title"] = "Delete Product";
 }
@@ -12,7 +12,7 @@
 <div class="card p-3 mb-3">
     <h4>@Model.Name</h4>
     <p><strong>Category:</strong> @Model.Category?.CategoryName ?? "N/A"</p>
-    <p><strong>Price:</strong> @Model.Price.ToString("C")</p>
+    <p><strong>Price:</strong> @Model.Price</p>
     <p><strong>Images:</strong> @(Model.Images?.Count ?? 0)</p>
 </div>
 

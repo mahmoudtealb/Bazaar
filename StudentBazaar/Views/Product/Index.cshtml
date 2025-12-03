@@ -1,147 +1,199 @@
-﻿@model IEnumerable<StudentBazaar.Web.Models.Product>
+@model IEnumerable<StudentBazaar.Entities.Models.Product>
 
 @{
-    ViewData["Title"] = "Shop Products";
+    ViewData["Title"] = "Products for Buy";
 }
 
-<div class="container py-4">
+<div class="container py-5">
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <!-- ===================================================== -->
+    <!--                         HEADER                        -->
+    <!-- ===================================================== -->
+    <div class="bg-white p-4 rounded-4 shadow-sm mb-4 d-flex justify-content-between align-items-center">
         <div>
-            <h2 class="fw-bold mb-1">Shop Products</h2>
-            <p class="text-muted mb-0">
-                تصفّح أدوات و مستلزمات الطلاب المستعملة و الجديدة.
-            </p>
+            <h2 class="fw-bold mb-1 text-primary">Products for Buy</h2>
+            <p class="text-muted mb-0">Explore items available from other sellers.</p>
         </div>
 
         @if (User.Identity?.IsAuthenticated ?? false)
         {
-            <a asp-action="Create" class="btn btn-success">
-                + Sell an Item
+            <a asp-action="Create" class="btn btn-primary btn-lg rounded-pill px-4 shadow-sm">
+                <i class="bi bi-plus-circle me-1"></i> Sell an Item
             </a>
         }
     </div>
 
+    <!-- ===================================================== -->
+    <!--                   SEARCH & FILTER                     -->
+    <!-- ===================================================== -->
+    <div class="bg-white p-4 rounded-4 shadow-sm mb-4">
+        <form asp-action="Index" method="get">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Search Product</label>
+                    <input type="text" name="q" class="form-control form-control-lg rounded-pill"
+                           placeholder="🔍 Enter product name" value="@ViewBag.CurrentQuery" />
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">College</label>
+                    <select name="collegeId" class="form-select form-select-lg rounded-pill">
+                        <option value="">All Colleges</option>
+                        @foreach (var c in (IEnumerable<StudentBazaar.Entities.Models.College>)ViewBag.Colleges)
+                        {
+                            var selected = (ViewBag.CurrentCollegeId != null && (int)ViewBag.CurrentCollegeId == c.Id)
+                            ? "selected" : "";
+
+                            <option value="@c.Id" selected="@selected">@c.CollegeName</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary btn-lg w-100 rounded-pill shadow-sm">
+                        Search
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- ===================================================== -->
+    <!--                     EMPTY MESSAGE                     -->
+    <!-- ===================================================== -->
     @if (!Model.Any())
     {
-        <div class="alert alert-info text-center">
-            لا توجد منتجات حالياً.
+        <div class="alert alert-info text-center py-5 rounded-4 shadow-sm">
+            <h5 class="fw-bold mb-2">لا توجد منتجات حالياً</h5>
             @if (User.Identity?.IsAuthenticated ?? false)
             {
-                <span>ابدأ و <a asp-action="Create">أضف أول منتج</a> 🎯</span>
+                <p class="mb-0">ابدأ و <a asp-action="Create" class="fw-bold">أضف أول منتج</a> 🎯</p>
             }
             else
             {
-                <span>
-                    سجّل دخولك عشان تقدر تعرض منتجاتك أو تشتري.
-                    <a asp-controller="Account" asp-action="Login">Login</a>
-                </span>
+                <p class="mb-0">
+                    سجّل دخولك للشراء أو البيع
+                    <a asp-controller="Account" asp-action="Login" class="fw-bold">Login</a>
+                </p>
             }
         </div>
     }
     else
     {
-        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
-
+        <!-- ===================================================== -->
+        <!--                     PRODUCT GRID                      -->
+        <!-- ===================================================== -->
+        <div class="row g-4">
             @foreach (var item in Model)
             {
-                var mainImage = item.Images?.FirstOrDefault(img => img.IsMainImage)
-                ?? item.Images?.FirstOrDefault();
+                var mainImg = item.Images?.FirstOrDefault(i => i.IsMainImage) ?? item.Images?.FirstOrDefault();
+                var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
 
-                var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
                 bool canManage = User.IsInRole("Admin") ||
-                (currentUserId != null &&
-                item.OwnerId.HasValue &&
-                item.OwnerId.Value.ToString() == currentUserId);
+                (item.OwnerId != null && item.OwnerId.ToString() == userId);
 
-                <div class="col">
-                    <div class="card h-100 border-0 shadow-sm product-card">
+                <div class="col-md-6 col-lg-4 col-xl-3">
+                    <div class="product-card shadow-sm rounded-4 overflow-hidden bg-white h-100">
 
-                        <a asp-action="Details" asp-route-id="@item.Id"
-                           class="text-decoration-none text-dark">
-                            <div class="ratio ratio-4x3">
-                                @if (mainImage != null)
+                        <!-- Product Image -->
+                        <a asp-action="Details" asp-route-id="@item.Id">
+                            <div class="product-image-wrapper">
+                                @if (mainImg != null)
                                 {
-                                    <img src="@mainImage.ImageUrl"
-                                         class="card-img-top img-fluid"
-                                         style="object-fit: cover;"
-                                         alt="@item.Name"
-                                         onerror="this.src='/images/placeholder.png'; this.onerror=null;" />
+                                    <img src="@mainImg.ImageUrl" class="product-image"
+                                         alt="@item.Name" onerror="this.src='/images/placeholder.png'" />
                                 }
                                 else
                                 {
-                                    <div class="d-flex justify-content-center align-items-center bg-light">
-                                        <span class="text-muted">No image</span>
-                                    </div>
+                                    <div class="product-image-empty">No Image</div>
                                 }
-                            </div>
-
-                            <div class="card-body">
-                                <h5 class="card-title mb-1 fw-semibold">@item.Name</h5>
-                                <p class="text-muted mb-1">
-                                    @item.Category?.CategoryName
-                                </p>
-                                <p class="mb-0 fw-bold text-success">
-                                    @item.Price.ToString("C")
-                                </p>
                             </div>
                         </a>
 
-                        <!-- ========================= -->
-                        <!--        ACTION BUTTONS     -->
-                        <!-- ========================= -->
+                        <!-- Product Body -->
+                        <div class="p-3">
+                            <h5 class="fw-bold mb-1 text-dark">@item.Name</h5>
+                            <p class="text-muted mb-1">@item.Category?.CategoryName</p>
+                            <p class="fw-bold text-success fs-5">@item.Price</p>
+                        </div>
 
-                        <div class="card-footer bg-white border-0 d-flex justify-content-between align-items-center pt-0 pb-3 px-3">
-                            <a asp-action="Details"
-                               asp-route-id="@item.Id"
-                               class="btn btn-outline-secondary btn-sm">
+                        <!-- Buttons -->
+                        <div class="px-3 pb-3 d-flex justify-content-between">
+
+                            <a asp-action="Details" asp-route-id="@item.Id"
+                               class="btn btn-outline-secondary btn-sm rounded-pill px-3">
                                 View
                             </a>
 
                             @if (canManage)
                             {
-                                <div class="btn-group btn-group-sm">
-                                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-outline-warning">Edit</a>
-                                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-outline-danger">Delete</a>
+                                <div class="btn-group">
+                                    <a asp-action="Edit" asp-route-id="@item.Id"
+                                       class="btn btn-outline-warning btn-sm rounded-pill">Edit</a>
+
+                                    <a asp-action="Delete" asp-route-id="@item.Id"
+                                       class="btn btn-outline-danger btn-sm rounded-pill">Delete</a>
                                 </div>
                             }
                             else if (User.Identity?.IsAuthenticated ?? false)
                             {
-                                <a asp-controller="Chat"
-                                   asp-action="WithSeller"
-                                   asp-route-productId="@item.Id"
-                                   class="btn btn-sm btn-warning">
-                                    🛍 Buy / Contact
-                                </a>
-                            }
-                            else
-                            {
-                                <a asp-controller="Account" asp-action="Login"
-                                   class="btn btn-sm btn-outline-primary">
-                                    Login to buy
-                                </a>
+                                <div class="btn-group">
+                                    <a asp-controller="Chat" asp-action="WithSeller"
+                                       asp-route-productId="@item.Id"
+                                       class="btn btn-warning btn-sm rounded-pill">Contact</a>
+
+                                    <form asp-controller="Cart" asp-action="AddProductToCart" method="post">
+                                        <input type="hidden" name="productId" value="@item.Id" />
+                                        <input type="hidden" name="quantity" value="1" />
+                                        <button type="submit"
+                                                class="btn btn-success btn-sm rounded-pill px-3">
+                                            Add
+                                        </button>
+                                    </form>
+                                </div>
                             }
                         </div>
-
                     </div>
                 </div>
             }
-
         </div>
     }
 </div>
 
-@section Scripts {
-    <style>
-        .product-card {
-            border-radius: 18px;
-            overflow: hidden;
-            transition: transform .15s ease, box-shadow .15s ease;
+<style>
+    .product-card {
+        transition: .2s ease;
+    }
+
+        .product-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.12);
         }
 
-            .product-card:hover {
-                transform: translateY(-4px);
-                box-shadow: 0 12px 25px rgba(0,0,0,0.08);
-            }
-    </style>
-}
+    .product-image-wrapper {
+        height: 220px;
+        overflow: hidden;
+    }
+
+    .product-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: .25s ease;
+    }
+
+        .product-image:hover {
+            transform: scale(1.05);
+        }
+
+    .product-image-empty {
+        background: #f8f9fa;
+        color: #999;
+        height: 220px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 1.1rem;
+        font-weight: 500;
+    }
+</style>

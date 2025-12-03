@@ -1,4 +1,6 @@
-﻿namespace StudentBazaar.Web.Controllers
+﻿
+
+namespace StudentBazaar.Web.Controllers
 {
     public class ProductCategoryController : Controller
     {
@@ -96,6 +98,38 @@
             _repo.Remove(entity);
             await _repo.SaveAsync();
             return RedirectToAction(nameof(Index));
+        }
+
+        // POST: Category/CreateAjax
+        [HttpPost]
+        [Route("Category/CreateAjax")]
+        [IgnoreAntiforgeryToken]
+        public async Task<IActionResult> CreateAjax(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                return Json(new { success = false, message = "Category name is required." });
+            }
+
+            // Check if category with same name already exists
+            var existingCategory = await _repo.GetFirstOrDefaultAsync(c => c.CategoryName.ToLower() == name.Trim().ToLower());
+            if (existingCategory != null)
+            {
+                return Json(new { success = false, message = "A category with this name already exists." });
+            }
+
+            // Create new category
+            var newCategory = new ProductCategory
+            {
+                CategoryName = name.Trim(),
+                CreatedAt = DateTime.UtcNow
+            };
+
+            await _repo.AddAsync(newCategory);
+            await _repo.SaveAsync();
+
+            // Return JSON with id and name
+            return Json(new { success = true, id = newCategory.Id, name = newCategory.CategoryName });
         }
     }
 }

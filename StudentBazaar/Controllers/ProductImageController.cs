@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using StudentBazaar.Web.Models;
+﻿
 
 namespace StudentBazaar.Web.Controllers
 {

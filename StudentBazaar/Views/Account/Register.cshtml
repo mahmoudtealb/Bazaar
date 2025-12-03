@@ -45,18 +45,21 @@
 
                     <!-- University -->
                     <div class="mb-3">
-                        <label asp-for="UniversityId" class="form-label"></label>
+                        <label for="UniversityId" class="form-label">University Name</label>
                         <select asp-for="UniversityId" asp-items="Model.Universities" class="form-select" id="UniversitySelect">
                             <option value="">-- Select University --</option>
+                            <option value="other">Other...</option>
                         </select>
-                        <span asp-validation-for="UniversityId" class="text-danger"></span>
+                        <span asp-validation-for="UniversityId" class="text-danger text-capitalize"></span>
                     </div>
+
 
                     <!-- College -->
                     <div class="mb-3">
-                        <label asp-for="CollegeId" class="form-label"></label>
+                        <label for="CollegeId" class="form-label">College Name</label>
                         <select asp-for="CollegeId" asp-items="Model.Colleges" class="form-select" id="CollegeSelect">
                             <option value="">-- Select College --</option>
+                            <option value="other">Other...</option>
                         </select>
                         <span asp-validation-for="CollegeId" class="text-danger"></span>
                     </div>
@@ -84,26 +87,282 @@
     </div>
 </div>
 
+<!-- Modal for Adding New University -->
+<div class="modal fade" id="addUniversityModal" tabindex="-1" aria-labelledby="addUniversityModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addUniversityModalLabel">Add New University</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="newUniversityName" class="form-label">University Name *</label>
+                    <input type="text" class="form-control" id="newUniversityName" placeholder="Enter university name" />
+                    <div class="invalid-feedback" id="universityNameError" style="display: none;">
+                        Please enter a university name.
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="saveUniversityBtn">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for Adding New College -->
+<div class="modal fade" id="addCollegeModal" tabindex="-1" aria-labelledby="addCollegeModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addCollegeModalLabel">Add New College</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="newCollegeName" class="form-label">College Name *</label>
+                    <input type="text" class="form-control" id="newCollegeName" placeholder="Enter college name" />
+                    <div class="invalid-feedback" id="collegeNameError" style="display: none;">
+                        Please enter a college name.
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="saveCollegeBtn">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
 
     <script>
         $(document).ready(function () {
-            $('#UniversitySelect').change(function () {
+            const universitySelect = $('#UniversitySelect');
+            const collegeSelect = $('#CollegeSelect');
+            const universityModal = new bootstrap.Modal(document.getElementById('addUniversityModal'));
+            const collegeModal = new bootstrap.Modal(document.getElementById('addCollegeModal'));
+            const newUniversityNameInput = $('#newUniversityName');
+            const newCollegeNameInput = $('#newCollegeName');
+            const saveUniversityBtn = $('#saveUniversityBtn');
+            const saveCollegeBtn = $('#saveCollegeBtn');
+            const universityNameError = $('#universityNameError');
+            const collegeNameError = $('#collegeNameError');
+
+            // Handle University dropdown change
+            universitySelect.change(function () {
                 var universityId = $(this).val();
-                $('#CollegeSelect').html('<option>Loading...</option>');
+                
+                // Handle "Other..." option
+                if (universityId === 'other') {
+                    $(this).val('');
+                    universityModal.show();
+                    return;
+                }
+
+                // Load colleges for selected university
+                collegeSelect.html('<option>Loading...</option>');
 
                 if (universityId) {
                     $.getJSON('@Url.Action("GetColleges", "Account")?universityId=' + universityId, function (data) {
-                        var items = '<option value="">-- Select College --</option>';
+                        var items = '<option value="">-- Select College --</option><option value="other">Other...</option>';
                         $.each(data, function (i, college) {
                             items += '<option value="' + college.id + '">' + college.collegeName + '</option>';
                         });
-                        $('#CollegeSelect').html(items);
+                        collegeSelect.html(items);
                     });
                 } else {
-                    $('#CollegeSelect').html('<option value="">-- Select College --</option>');
+                    collegeSelect.html('<option value="">-- Select College --</option><option value="other">Other...</option>');
                 }
+            });
+
+            // Handle College dropdown change for "Other..." option
+            collegeSelect.change(function () {
+                var collegeId = $(this).val();
+                if (collegeId === 'other') {
+                    // Check if a university is selected
+                    var selectedUniversityId = universitySelect.val();
+                    if (!selectedUniversityId || selectedUniversityId === '') {
+                        alert('Please select a university first.');
+                        $(this).val('');
+                        return;
+                    }
+                    $(this).val('');
+                    collegeModal.show();
+                }
+            });
+
+            // Save University button handler
+            saveUniversityBtn.click(function () {
+                const universityName = newUniversityNameInput.val().trim();
+                
+                if (!universityName) {
+                    newUniversityNameInput.addClass('is-invalid');
+                    universityNameError.show();
+                    return;
+                }
+
+                newUniversityNameInput.removeClass('is-invalid');
+                universityNameError.hide();
+
+                saveUniversityBtn.prop('disabled', true).text('Saving...');
+
+                const token = $('input[name="__RequestVerificationToken"]').val();
+
+                $.ajax({
+                    url: '/University/CreateAjax',
+                    type: 'POST',
+                    headers: {
+                        'RequestVerificationToken': token
+                    },
+                    data: { name: universityName },
+                    success: function (response) {
+                        if (response && response.success && response.id && response.name) {
+                            // Remove "Other..." option if it exists
+                            universitySelect.find('option[value="other"]').remove();
+
+                            // Add the new university option
+                            const newOption = $('<option></option>')
+                                .attr('value', response.id)
+                                .text(response.name)
+                                .prop('selected', true);
+                            universitySelect.append(newOption);
+
+                            // Re-add "Other..." option at the bottom
+                            universitySelect.append('<option value="other">Other...</option>');
+
+                            // Trigger change to load colleges for the new university
+                            universitySelect.trigger('change');
+
+                            // Close modal and clear input
+                            universityModal.hide();
+                            newUniversityNameInput.val('');
+                        } else {
+                            const errorMsg = (response && response.message) ? response.message : 'Error: Invalid response from server.';
+                            alert(errorMsg);
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        let errorMessage = 'An error occurred while saving the university.';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errorMessage = xhr.responseJSON.message;
+                        } else if (xhr.responseText) {
+                            try {
+                                const response = JSON.parse(xhr.responseText);
+                                if (response.message) {
+                                    errorMessage = response.message;
+                                }
+                            } catch (e) {
+                                // Use default error message
+                            }
+                        }
+                        alert(errorMessage);
+                    },
+                    complete: function () {
+                        saveUniversityBtn.prop('disabled', false).text('Save');
+                    }
+                });
+            });
+
+            // Save College button handler
+            saveCollegeBtn.click(function () {
+                const collegeName = newCollegeNameInput.val().trim();
+                const selectedUniversityId = universitySelect.val();
+                
+                if (!collegeName) {
+                    newCollegeNameInput.addClass('is-invalid');
+                    collegeNameError.show();
+                    return;
+                }
+
+                if (!selectedUniversityId || selectedUniversityId === '') {
+                    alert('Please select a university first.');
+                    return;
+                }
+
+                newCollegeNameInput.removeClass('is-invalid');
+                collegeNameError.hide();
+
+                saveCollegeBtn.prop('disabled', true).text('Saving...');
+
+                const token = $('input[name="__RequestVerificationToken"]').val();
+
+                $.ajax({
+                    url: '/College/CreateAjax',
+                    type: 'POST',
+                    headers: {
+                        'RequestVerificationToken': token
+                    },
+                    data: { name: collegeName, universityId: selectedUniversityId },
+                    success: function (response) {
+                        if (response && response.success && response.id && response.name) {
+                            // Remove "Other..." option if it exists
+                            collegeSelect.find('option[value="other"]').remove();
+
+                            // Add the new college option
+                            const newOption = $('<option></option>')
+                                .attr('value', response.id)
+                                .text(response.name)
+                                .prop('selected', true);
+                            collegeSelect.append(newOption);
+
+                            // Re-add "Other..." option at the bottom
+                            collegeSelect.append('<option value="other">Other...</option>');
+
+                            // Close modal and clear input
+                            collegeModal.hide();
+                            newCollegeNameInput.val('');
+                        } else {
+                            const errorMsg = (response && response.message) ? response.message : 'Error: Invalid response from server.';
+                            alert(errorMsg);
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        let errorMessage = 'An error occurred while saving the college.';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errorMessage = xhr.responseJSON.message;
+                        } else if (xhr.responseText) {
+                            try {
+                                const response = JSON.parse(xhr.responseText);
+                                if (response.message) {
+                                    errorMessage = response.message;
+                                }
+                            } catch (e) {
+                                // Use default error message
+                            }
+                        }
+                        alert(errorMessage);
+                    },
+                    complete: function () {
+                        saveCollegeBtn.prop('disabled', false).text('Save');
+                    }
+                });
+            });
+
+            // Clear validation on input
+            newUniversityNameInput.on('input', function () {
+                $(this).removeClass('is-invalid');
+                universityNameError.hide();
+            });
+
+            newCollegeNameInput.on('input', function () {
+                $(this).removeClass('is-invalid');
+                collegeNameError.hide();
+            });
+
+            // Clear input when modals are closed
+            $('#addUniversityModal').on('hidden.bs.modal', function () {
+                newUniversityNameInput.val('').removeClass('is-invalid');
+                universityNameError.hide();
+            });
+
+            $('#addCollegeModal').on('hidden.bs.modal', function () {
+                newCollegeNameInput.val('').removeClass('is-invalid');
+                collegeNameError.hide();
             });
         });
     </script>
