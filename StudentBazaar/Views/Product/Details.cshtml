@@ -1,10 +1,35 @@
 @model StudentBazaar.Entities.Models.Product
 @inject Microsoft.AspNetCore.Identity.UserManager<ApplicationUser> UserManager
+@using StudentBazaar.Entities.Models
 @{
     ViewData["Title"] = "Product Details";
+    var averageRating = ViewBag.AverageRating as double? ?? 0;
+    var totalRatings = ViewBag.TotalRatings as int? ?? 0;
+    var userRating = ViewBag.UserRating as Rating;
+    
+    bool canRate = false;
+    if (User.Identity?.IsAuthenticated ?? false)
+    {
+        var userIdStr = UserManager.GetUserId(User);
+        if (!string.IsNullOrEmpty(userIdStr))
+        {
+            var currentUserId = int.Parse(userIdStr);
+            canRate = ViewBag.CanManage != true && (!Model.OwnerId.HasValue || Model.OwnerId.Value != currentUserId);
+        }
+    }
 }
 
-<h2 class="mt-3">Product Details</h2>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0">
+        <i class="bi bi-box-seam me-2"></i>Product Details
+    </h2>
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a asp-action="Index">Products</a></li>
+            <li class="breadcrumb-item active">Details</li>
+        </ol>
+    </nav>
+</div>
 
 @if (TempData["Success"] != null)
 {
@@ -30,51 +55,102 @@
     </div>
 }
 
-<div class="row">
+<div class="row g-4">
     <!-- Product Information -->
     <div class="col-md-8">
         <div class="card">
             <div class="card-header">
-                <h4 class="mb-0">@Model.Name</h4>
+                <h4 class="mb-0">
+                    <i class="bi bi-info-circle me-2"></i>@Model.Name
+                </h4>
             </div>
             <div class="card-body">
-                <dl class="row">
-                    <dt class="col-sm-3">Name:</dt>
+                <dl class="row g-3">
+                    <dt class="col-sm-3 d-flex align-items-center">
+                        <i class="bi bi-tag me-2 text-primary"></i>Name:
+                    </dt>
                     <dd class="col-sm-9">@Model.Name</dd>
 
                     @if (Model.Category != null)
                     {
-                        <dt class="col-sm-3">Category:</dt>
+                        <dt class="col-sm-3 d-flex align-items-center">
+                            <i class="bi bi-grid me-2 text-primary"></i>Category:
+                        </dt>
                         <dd class="col-sm-9">@Model.Category.CategoryName</dd>
                     }
 
-                    <dt class="col-sm-3">Price:</dt>
+                    <dt class="col-sm-3 d-flex align-items-center">
+                        <i class="bi bi-currency-dollar me-2 text-success"></i>Price:
+                    </dt>
                     <dd class="col-sm-9">
-                        <strong class="text-success fs-5">@Model.Price</strong>
+                        <strong class="text-success fs-4">
+                            @Model.Price EGP
+                        </strong>
                     </dd>
 
-                    <dt class="col-sm-3">Created At:</dt>
+                    <dt class="col-sm-3 d-flex align-items-center">
+                        <i class="bi bi-calendar me-2 text-primary"></i>Created At:
+                    </dt>
                     <dd class="col-sm-9">@Model.CreatedAt.ToString("yyyy-MM-dd HH:mm")</dd>
 
                     @if (Model.UpdatedAt.HasValue)
                     {
-                        <dt class="col-sm-3">Updated At:</dt>
+                        <dt class="col-sm-3 d-flex align-items-center">
+                            <i class="bi bi-calendar-check me-2 text-primary"></i>Updated At:
+                        </dt>
                         <dd class="col-sm-9">@Model.UpdatedAt.Value.ToString("yyyy-MM-dd HH:mm")</dd>
                     }
 
-                    <dt class="col-sm-3">Images Count:</dt>
+                    <dt class="col-sm-3 d-flex align-items-center">
+                        <i class="bi bi-images me-2 text-primary"></i>Images Count:
+                    </dt>
                     <dd class="col-sm-9">
-                        <span class="badge bg-info">@(Model.Images?.Count ?? 0)</span>
+                        <span class="badge bg-info">
+                            <i class="bi bi-images me-1"></i>@(Model.Images?.Count ?? 0)
+                        </span>
                     </dd>
 
-                    <dt class="col-sm-3">Listings Count:</dt>
+                    <dt class="col-sm-3 d-flex align-items-center">
+                        <i class="bi bi-list-ul me-2 text-primary"></i>Listings Count:
+                    </dt>
                     <dd class="col-sm-9">
-                        <span class="badge bg-secondary">@(Model.Listings?.Count ?? 0)</span>
+                        <span class="badge bg-secondary">
+                            <i class="bi bi-list-ul me-1"></i>@(Model.Listings?.Count ?? 0)
+                        </span>
                     </dd>
 
-                    <dt class="col-sm-3">Ratings Count:</dt>
+                    <dt class="col-sm-3 d-flex align-items-center">
+                        <i class="bi bi-star me-2 text-warning"></i>Average Rating:
+                    </dt>
                     <dd class="col-sm-9">
-                        <span class="badge bg-warning text-dark">@(Model.Ratings?.Count ?? 0)</span>
+                        @if (totalRatings > 0)
+                        {
+                            <div class="d-flex align-items-center">
+                                <span class="text-warning me-2">
+                                    @for (int i = 1; i <= 5; i++)
+                                    {
+                                        if (i <= Math.Round(averageRating))
+                                        {
+                                            <i class="bi bi-star-fill"></i>
+                                        }
+                                        else if (i - 0.5 <= averageRating)
+                                        {
+                                            <i class="bi bi-star-half"></i>
+                                        }
+                                        else
+                                        {
+                                            <i class="bi bi-star"></i>
+                                        }
+                                    }
+                                </span>
+                                <strong class="ms-2">@averageRating.ToString("F1")</strong>
+                                <span class="text-muted ms-2">(@totalRatings @(totalRatings == 1 ? "rating" : "ratings"))</span>
+                            </div>
+                        }
+                        else
+                        {
+                            <span class="text-muted">No ratings yet</span>
+                        }
                     </dd>
                 </dl>
             </div>
@@ -151,3 +227,415 @@
         }
     }
 </div>
+
+<!-- Ratings Section -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-star"></i> Ratings & Reviews
+                    @if (Model.Ratings != null && Model.Ratings.Any())
+                    {
+                        <span class="badge bg-primary ms-2">@Model.Ratings.Count</span>
+                    }
+                </h5>
+            </div>
+            <div class="card-body">
+                <!-- Add Rating Form (for authenticated users who can rate) -->
+                @if (canRate)
+                {
+                    <div class="mb-4 p-3 bg-light rounded">
+                        <h6>@(userRating != null ? "Update Your Rating" : "Add Your Rating")</h6>
+                        <form asp-controller="Rating" asp-action="Create" method="post" id="ratingForm">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="productId" value="@Model.Id" />
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Rating <span class="text-danger">*</span></label>
+                                <div class="star-rating" id="starRating">
+                                    @for (int i = 1; i <= 5; i++)
+                                    {
+                                        <input type="radio" name="stars" value="@i" id="star@i" @(userRating != null && userRating.Stars == i ? "checked" : "") required />
+                                        <label for="star@i" class="star-label" data-rating="@i" title="@i star@(i > 1 ? "s" : "")">
+                                            <i class="bi bi-star"></i>
+                                        </label>
+                                    }
+                                </div>
+                                <div class="rating-text mt-2">
+                                    <span id="ratingText" class="text-muted">@(userRating != null ? $"You rated this {userRating.Stars} star{(userRating.Stars > 1 ? "s" : "")}" : "Click to rate")</span>
+                                </div>
+                                <span id="starsError" class="text-danger" style="display: none;">Please select a rating</span>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="comment" class="form-label">Comment (Optional)</label>
+                                <textarea class="form-control" name="comment" id="comment" rows="3" placeholder="Share your experience with this product...">@(userRating?.Comment)</textarea>
+                            </div>
+
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary" id="submitRatingBtn">
+                                    <i class="bi bi-star-fill"></i> @(userRating != null ? "Update Rating" : "Submit Rating")
+                                </button>
+                                @if (userRating != null)
+                                {
+                                    <form asp-controller="Rating" asp-action="Delete" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete your rating?');">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="ratingId" value="@userRating.Id" />
+                                        <input type="hidden" name="productId" value="@Model.Id" />
+                                        <button type="submit" class="btn btn-danger">
+                                            <i class="bi bi-trash"></i> Delete Rating
+                                        </button>
+                                    </form>
+                                }
+                            </div>
+                        </form>
+                    </div>
+                }
+
+                <!-- Display Ratings -->
+                @if (Model.Ratings != null && Model.Ratings.Any())
+                {
+                    <div class="ratings-list">
+                        @foreach (var rating in Model.Ratings.OrderByDescending(r => r.CreatedAt))
+                        {
+                            var isCurrentUserRating = User.Identity?.IsAuthenticated ?? false && 
+                                                      userRating != null && 
+                                                      userRating.Id == rating.Id;
+                            
+                            <div class="rating-item border-bottom pb-3 mb-3">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <strong class="me-2">@(rating.User?.FullName ?? "Anonymous")</strong>
+                                            <div class="text-warning">
+                                                @for (int i = 1; i <= 5; i++)
+                                                {
+                                                    if (i <= rating.Stars)
+                                                    {
+                                                        <i class="bi bi-star-fill"></i>
+                                                    }
+                                                    else
+                                                    {
+                                                        <i class="bi bi-star"></i>
+                                                    }
+                                                }
+                                            </div>
+                                            <span class="text-muted ms-2 small">@rating.CreatedAt.ToString("MMM dd, yyyy")</span>
+                                            @if (isCurrentUserRating)
+                                            {
+                                                <span class="badge bg-info ms-2">Your Rating</span>
+                                            }
+                                        </div>
+                                        @if (!string.IsNullOrEmpty(rating.Comment))
+                                        {
+                                            <p class="mb-0">@rating.Comment</p>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted text-center py-4">No ratings yet. Be the first to rate this product!</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .star-rating {
+        display: flex;
+        flex-direction: row;
+        justify-content: flex-start;
+        gap: 8px;
+        font-size: 2rem;
+        direction: ltr;
+        align-items: center;
+    }
+
+    .star-rating input[type="radio"] {
+        position: absolute;
+        opacity: 0;
+        width: 0;
+        height: 0;
+        margin: 0;
+        padding: 0;
+    }
+
+    .star-rating label {
+        color: #ddd;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: inline-block;
+        padding: 0;
+        margin: 0;
+        line-height: 1;
+        position: relative;
+        user-select: none;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+    }
+
+    .star-rating label:hover {
+        color: #ffc107;
+        transform: scale(1.1);
+    }
+
+    .star-rating label i {
+        transition: all 0.2s ease;
+        display: inline-block;
+        font-size: 2rem;
+    }
+
+    .star-rating label:hover i {
+        transform: scale(1.15);
+    }
+
+    .star-rating label.active {
+        color: #ffc107;
+    }
+
+    .star-rating label.active i {
+        color: #ffc107;
+    }
+
+    .rating-text {
+        font-size: 0.95rem;
+        min-height: 24px;
+        font-weight: 500;
+        margin-top: 8px;
+    }
+
+    .ratings-list .rating-item:last-child {
+        border-bottom: none !important;
+    }
+
+    /* Product card rating display */
+    .product-rating {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.9rem;
+        margin-bottom: 8px;
+    }
+
+    .product-rating .stars {
+        color: #ffc107;
+        display: flex;
+        gap: 2px;
+        font-size: 0.95rem;
+    }
+
+    .product-rating .rating-value {
+        color: #2d3748;
+        font-weight: 600;
+        font-size: 0.95rem;
+    }
+
+    .product-rating .rating-count {
+        color: #718096;
+        font-size: 0.85rem;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const starRating = document.getElementById('starRating');
+        if (!starRating) return;
+        
+        const ratingText = document.getElementById('ratingText');
+        if (!ratingText) return;
+        
+        const starInputs = starRating.querySelectorAll('input[type="radio"]');
+        const starLabels = starRating.querySelectorAll('label');
+        
+        let currentRating = 0;
+        const checkedInput = starRating.querySelector('input[type="radio"]:checked');
+        if (checkedInput) {
+            currentRating = parseInt(checkedInput.value);
+        }
+
+        function updateStarsDisplay(rating) {
+            currentRating = rating;
+            
+            // First, uncheck all radio buttons
+            starInputs.forEach(input => {
+                input.checked = false;
+            });
+            
+            // Then check the selected one and update display
+            starLabels.forEach((label) => {
+                const labelRating = parseInt(label.getAttribute('data-rating'));
+                const starIcon = label.querySelector('i');
+                const input = document.getElementById('star' + labelRating);
+                
+                if (labelRating <= rating) {
+                    label.classList.add('active');
+                    label.style.color = '#ffc107';
+                    if (starIcon) {
+                        starIcon.classList.remove('bi-star');
+                        starIcon.classList.add('bi-star-fill');
+                        starIcon.style.color = '#ffc107';
+                    }
+                    // Check the radio button that matches the rating
+                    if (input && labelRating === rating) {
+                        input.checked = true;
+                    }
+                } else {
+                    label.classList.remove('active');
+                    label.style.color = '#ddd';
+                    if (starIcon) {
+                        starIcon.classList.remove('bi-star-fill');
+                        starIcon.classList.add('bi-star');
+                        starIcon.style.color = '#ddd';
+                    }
+                }
+            });
+        }
+
+        function highlightStarsOnHover(rating) {
+            starLabels.forEach((label) => {
+                const labelRating = parseInt(label.getAttribute('data-rating'));
+                const starIcon = label.querySelector('i');
+                
+                if (labelRating <= rating) {
+                    label.style.color = '#ffc107';
+                    if (starIcon) {
+                        starIcon.classList.remove('bi-star');
+                        starIcon.classList.add('bi-star-fill');
+                        starIcon.style.color = '#ffc107';
+                    }
+                } else {
+                    label.style.color = '#ddd';
+                    if (starIcon) {
+                        starIcon.classList.remove('bi-star-fill');
+                        starIcon.classList.add('bi-star');
+                        starIcon.style.color = '#ddd';
+                    }
+                }
+            });
+        }
+
+        function resetStars() {
+            updateStarsDisplay(currentRating);
+        }
+
+        // Click on label to select rating
+        starLabels.forEach((label) => {
+            label.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const rating = parseInt(this.getAttribute('data-rating'));
+                const input = document.getElementById('star' + rating);
+                
+                // Uncheck all first
+                starInputs.forEach(inp => {
+                    inp.checked = false;
+                });
+                
+                // Set the radio button as checked
+                if (input) {
+                    input.checked = true;
+                    currentRating = rating;
+                    
+                    // Update display
+                    updateStarsDisplay(rating);
+                    
+                    // Trigger change event to update text
+                    const event = new Event('change', { bubbles: true });
+                    input.dispatchEvent(event);
+                }
+                
+                const ratingMessages = {
+                    1: 'Poor - 1 star',
+                    2: 'Fair - 2 stars',
+                    3: 'Good - 3 stars',
+                    4: 'Very Good - 4 stars',
+                    5: 'Excellent - 5 stars'
+                };
+                ratingText.textContent = ratingMessages[rating] || 'Click to rate';
+                ratingText.classList.remove('text-muted');
+                ratingText.classList.add('text-warning', 'fw-bold');
+                
+                // Hide error message
+                const starsError = document.getElementById('starsError');
+                if (starsError) {
+                    starsError.style.display = 'none';
+                }
+            });
+        });
+
+        // Update text when radio is selected
+        starInputs.forEach(input => {
+            input.addEventListener('change', function() {
+                const rating = parseInt(this.value);
+                currentRating = rating;
+                const ratingMessages = {
+                    1: 'Poor - 1 star',
+                    2: 'Fair - 2 stars',
+                    3: 'Good - 3 stars',
+                    4: 'Very Good - 4 stars',
+                    5: 'Excellent - 5 stars'
+                };
+                ratingText.textContent = ratingMessages[rating] || 'Click to rate';
+                ratingText.classList.remove('text-muted');
+                ratingText.classList.add('text-warning', 'fw-bold');
+                updateStarsDisplay(rating);
+            });
+        });
+
+        // Hover effect for stars
+        starLabels.forEach((label) => {
+            label.addEventListener('mouseenter', function() {
+                const rating = parseInt(this.getAttribute('data-rating'));
+                highlightStarsOnHover(rating);
+            });
+        });
+
+        starRating.addEventListener('mouseleave', function() {
+            resetStars();
+        });
+
+        // Form submission validation
+        const ratingForm = document.getElementById('ratingForm');
+        if (ratingForm) {
+            ratingForm.addEventListener('submit', function(e) {
+                const checkedInput = starRating.querySelector('input[type="radio"]:checked');
+                if (!checkedInput) {
+                    e.preventDefault();
+                    const starsError = document.getElementById('starsError');
+                    if (starsError) {
+                        starsError.style.display = 'block';
+                    }
+                    ratingText.textContent = 'Please select a rating';
+                    ratingText.classList.remove('text-muted');
+                    ratingText.classList.add('text-danger', 'fw-bold');
+                    return false;
+                }
+            });
+        }
+
+        // Initialize on page load
+        if (currentRating > 0) {
+            updateStarsDisplay(currentRating);
+            const ratingMessages = {
+                1: 'Poor - 1 star',
+                2: 'Fair - 2 stars',
+                3: 'Good - 3 stars',
+                4: 'Very Good - 4 stars',
+                5: 'Excellent - 5 stars'
+            };
+            ratingText.textContent = ratingMessages[currentRating] || 'Click to rate';
+            ratingText.classList.remove('text-muted');
+            ratingText.classList.add('text-warning', 'fw-bold');
+        } else {
+            resetStars();
+        }
+    });
+</script>

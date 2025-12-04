@@ -63,7 +63,7 @@ namespace StudentBazaar.Web.Controllers
         {
             var entity = await _orderRepo.GetFirstOrDefaultAsync(
                 o => o.Id == id,
-                includeWord: "OrderItems,OrderItems.Product,OrderItems.Product.Images,OrderItems.Product.Category,Listing,Listing.Product,Buyer,Shipment"
+                includeWord: "OrderItems,OrderItems.Product,OrderItems.Product.Images,OrderItems.Product.Category,OrderItems.Product.Ratings,OrderItems.Product.Ratings.User,Listing,Listing.Product,Buyer,Shipment"
             );
 
             if (entity == null)
@@ -73,8 +73,19 @@ namespace StudentBazaar.Web.Controllers
             if (!User.IsInRole("Admin") && entity.BuyerId != GetCurrentUserId())
                 return Forbid();
 
+            // Check if user can rate products (Order must be Delivered or Completed)
+            if (User.Identity?.IsAuthenticated ?? false)
+            {
+                var currentUserId = GetCurrentUserId();
+                ViewBag.CanRate = (entity.Status == OrderStatus.Delivered || entity.Status == OrderStatus.Completed) 
+                                   && entity.BuyerId == currentUserId;
+            }
+            else
+            {
+                ViewBag.CanRate = false;
+            }
+
             return View(entity);
-            // �� ��� ������� View ��� Details ���� ���� ���� ���� ������
         }
 
         // ===============================
@@ -252,12 +263,21 @@ namespace StudentBazaar.Web.Controllers
             // Save OrderItem
             await _orderItemRepo.SaveAsync();
 
-            // Note: You'll need to inject IGenericRepository<OrderItem> to add the order item
-            // For now, this is a placeholder - the Buy method should be updated to use OrderItems
-
-            // ���� ��� ����� ���� ������� �� ���� (Sold �����)
-            // listing.Status = ListingStatus.Sold;
-            // await _listingRepo.SaveAsync();
+            // Send notification to admins about new order
+            try
+            {
+                var notificationService = HttpContext.RequestServices.GetRequiredService<StudentBazaar.Web.Services.INotificationService>();
+                await notificationService.BroadcastToAdminsAsync(
+                    "New Order",
+                    $"New order #{order.Id} has been placed",
+                    "Success",
+                    $"/Admin/Orders/Details/{order.Id}"
+                );
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error sending notification: {ex.Message}");
+            }
 
             return RedirectToAction(nameof(Index));
         }

@@ -55,7 +55,6 @@ namespace StudentBazaar.Web.Models
         public string SelectedPaymentMethod { get; set; } = string.Empty;
 
         public decimal Subtotal { get; set; }
-        public decimal Tax { get; set; }
         public decimal Shipping { get; set; }
         public decimal ShippingCost { get; set; } = 0; // Cost for paid shipping
         public decimal Total { get; set; }

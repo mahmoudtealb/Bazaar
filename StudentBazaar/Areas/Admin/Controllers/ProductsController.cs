@@ -87,32 +87,6 @@ namespace StudentBazaar.Web.Areas.Admin.Controllers
             product.IsApproved = true;
             product.ApprovedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
-
-            // Mark related notifications as read for all admins
-            var productLinkUrl = $"/Admin/Products/Details/{id}";
-            var relatedNotifications = await _context.Notifications
-                .Where(n => n.LinkUrl == productLinkUrl && !n.IsRead && n.Title == "New Product")
-                .ToListAsync();
-
-            if (relatedNotifications.Any())
-            {
-                foreach (var notification in relatedNotifications)
-                {
-                    notification.IsRead = true;
-                    notification.ReadAt = DateTime.UtcNow;
-                }
-                await _context.SaveChangesAsync();
-            }
-
-            // Notify all admins that product was approved (this will trigger badge update)
-            await _hubContext.Clients.Group("Admins").SendAsync("ProductApproved", id);
-            
-            // Also send AdminNotification to trigger immediate badge refresh
-            await _hubContext.Clients.Group("Admins").SendAsync("AdminNotification", new { 
-                title = "Product Approved", 
-                message = $"Product '{product.Name}' has been approved", 
-                type = "Success" 
-            });
             TempData["Success"] = $"Product '{product.Name}' approved successfully. It is now visible to all users.";
 
             if (!string.IsNullOrEmpty(returnUrl))

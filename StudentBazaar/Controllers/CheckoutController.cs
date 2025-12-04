@@ -83,7 +83,6 @@ namespace StudentBazaar.Web.Controllers
                 Subtotal = subtotal,
                 Shipping = shipping,
                 ShippingOption = "Free",
-                Tax = 0,
                 Total = subtotal + shipping
             };
 
@@ -131,7 +130,6 @@ namespace StudentBazaar.Web.Controllers
                     model.Subtotal = subtotal;
                     model.Shipping = shipping;
                     model.ShippingCost = shipping;
-                    model.Tax = 0;
                     model.Total = subtotal + shipping;
                 }
 
@@ -165,6 +163,7 @@ namespace StudentBazaar.Web.Controllers
                 TempData["PayPalAmount"] = totalAmount.ToString("F2");
                 TempData["PayPalSubtotal"] = model.Subtotal.ToString("F2");
                 TempData["PayPalShipping"] = model.Shipping.ToString("F2");
+                TempData["PayPalShippingOption"] = model.ShippingOption; // Save shipping option
                 TempData["PayPalReturnUrl"] = returnUrl;
                 TempData["PayPalCancelUrl"] = cancelUrl;
                 return RedirectToAction("PayPalPayment");
@@ -178,12 +177,14 @@ namespace StudentBazaar.Web.Controllers
                 TempData["VodafoneCashAmount"] = amount;
                 TempData["VodafoneCashSubtotal"] = model.Subtotal.ToString("F2");
                 TempData["VodafoneCashShipping"] = model.Shipping.ToString("F2");
+                TempData["VodafoneCashShippingOption"] = model.ShippingOption; // Save shipping option
                 TempData["VodafoneCashItems"] = items;
                 
                 // Keep TempData for next request
                 TempData.Keep("VodafoneCashAmount");
                 TempData.Keep("VodafoneCashSubtotal");
                 TempData.Keep("VodafoneCashShipping");
+                TempData.Keep("VodafoneCashShippingOption");
                 TempData.Keep("VodafoneCashItems");
                 
                 return RedirectToAction("VodafoneCashPayment");
@@ -191,7 +192,7 @@ namespace StudentBazaar.Web.Controllers
             else if (model.SelectedPaymentMethod == "CashOnDelivery")
             {
                 // Create order for Cash on Delivery
-                var orderId = await CreateOrderFromCart(PaymentMethod.CashOnDelivery);
+                var orderId = await CreateOrderFromCart(PaymentMethod.CashOnDelivery, model.Shipping);
                 if (orderId.HasValue)
                 {
                     return RedirectToAction("Success", new { paymentMethod = "CashOnDelivery", orderId = orderId.Value });
@@ -205,7 +206,7 @@ namespace StudentBazaar.Web.Controllers
             else if (model.SelectedPaymentMethod == "BankTransfer")
             {
                 // Create order for Bank Transfer
-                var orderId = await CreateOrderFromCart(PaymentMethod.BankTransfer);
+                var orderId = await CreateOrderFromCart(PaymentMethod.BankTransfer, model.Shipping);
                 if (orderId.HasValue)
                 {
                     return RedirectToAction("Success", new { paymentMethod = "BankTransfer", orderId = orderId.Value });
@@ -257,9 +258,16 @@ namespace StudentBazaar.Web.Controllers
             var amount = TempData["PayPalAmount"]?.ToString();
             var subtotal = TempData["PayPalSubtotal"]?.ToString();
             var shipping = TempData["PayPalShipping"]?.ToString();
+            var shippingOption = TempData["PayPalShippingOption"]?.ToString() ?? "Free";
             var returnUrl = TempData["PayPalReturnUrl"]?.ToString();
             var cancelUrl = TempData["PayPalCancelUrl"]?.ToString();
             List<CartItemViewModel> cartItemsList = new List<CartItemViewModel>();
+
+            // Keep TempData for next request
+            TempData.Keep("PayPalAmount");
+            TempData.Keep("PayPalSubtotal");
+            TempData.Keep("PayPalShipping");
+            TempData.Keep("PayPalShippingOption");
 
             // If amount is not in TempData, calculate it from cart
             if (string.IsNullOrEmpty(amount) || amount == "0.00")
@@ -273,9 +281,12 @@ namespace StudentBazaar.Web.Controllers
                         includeWord: "Listing,Listing.Product,Listing.Product.Images");
                     
                     var cartTotal = cartItems.Sum(i => (i.Listing?.Price ?? 0) * i.Quantity);
-                    amount = cartTotal.ToString("F2");
+                    var shippingCost = shippingOption == "Express" ? 50m : 0m;
+                    var total = cartTotal + shippingCost;
+                    
+                    amount = total.ToString("F2");
                     subtotal = cartTotal.ToString("F2");
-                    shipping = "0.00";
+                    shipping = shippingCost.ToString("F2");
 
                     // Build cart items list
                     cartItemsList = cartItems.Select(i => new CartItemViewModel
@@ -325,8 +336,16 @@ namespace StudentBazaar.Web.Controllers
             var amount = TempData["VodafoneCashAmount"]?.ToString();
             var subtotal = TempData["VodafoneCashSubtotal"]?.ToString();
             var shipping = TempData["VodafoneCashShipping"]?.ToString();
+            var shippingOption = TempData["VodafoneCashShippingOption"]?.ToString() ?? "Free";
             var items = TempData["VodafoneCashItems"]?.ToString() ?? "";
             List<CartItemViewModel> cartItemsList = new List<CartItemViewModel>();
+
+            // Keep TempData for next request (in case of redirect back)
+            TempData.Keep("VodafoneCashAmount");
+            TempData.Keep("VodafoneCashSubtotal");
+            TempData.Keep("VodafoneCashShipping");
+            TempData.Keep("VodafoneCashShippingOption");
+            TempData.Keep("VodafoneCashItems");
 
             // If amount is not in TempData, calculate it from cart
             if (string.IsNullOrEmpty(amount) || amount == "0.00")
@@ -340,9 +359,12 @@ namespace StudentBazaar.Web.Controllers
                         includeWord: "Listing,Listing.Product,Listing.Product.Images,Listing.Product.Category");
                     
                     var cartTotal = cartItems.Sum(i => (i.Listing?.Price ?? 0) * i.Quantity);
-                    amount = cartTotal.ToString("F2");
+                    var shippingCost = shippingOption == "Express" ? 50m : 0m;
+                    var total = cartTotal + shippingCost;
+                    
+                    amount = total.ToString("F2");
                     subtotal = cartTotal.ToString("F2");
-                    shipping = "0.00";
+                    shipping = shippingCost.ToString("F2");
 
                     // Build cart items list
                     cartItemsList = cartItems.Select(i => new CartItemViewModel
@@ -396,8 +418,13 @@ namespace StudentBazaar.Web.Controllers
             // For now, simulate successful payment
             _logger.LogInformation("Vodafone Cash payment initiated for phone: {PhoneNumber}", phoneNumber);
 
+            // Get shipping cost from TempData
+            var shippingValue = TempData["VodafoneCashShipping"]?.ToString() ?? "0.00";
+            decimal shippingCost = 0m;
+            decimal.TryParse(shippingValue, out shippingCost);
+
             // Create order for Vodafone Cash payment
-            var orderId = await CreateOrderFromCart(PaymentMethod.VodafoneCash);
+            var orderId = await CreateOrderFromCart(PaymentMethod.VodafoneCash, shippingCost);
             if (orderId.HasValue)
             {
                 return RedirectToAction("Success", new { paymentMethod = "VodafoneCash", orderId = orderId.Value });
@@ -410,7 +437,7 @@ namespace StudentBazaar.Web.Controllers
         }
 
         // Helper method to create order from cart
-        private async Task<int?> CreateOrderFromCart(PaymentMethod paymentMethod)
+        private async Task<int?> CreateOrderFromCart(PaymentMethod paymentMethod, decimal shippingCost = 0m)
         {
             try
             {
@@ -446,9 +473,10 @@ namespace StudentBazaar.Web.Controllers
                     }
                 }
 
-                // Calculate total amount
-                var totalAmount = itemsList.Sum(i => (i.Listing?.Price ?? 0) * i.Quantity);
-                var commission = Math.Round(totalAmount * 0.05m, 2); // 5% commission
+                // Calculate subtotal and total amount (including shipping)
+                var subtotal = itemsList.Sum(i => (i.Listing?.Price ?? 0) * i.Quantity);
+                var totalAmount = subtotal + shippingCost; // Add shipping to total
+                var commission = Math.Round(subtotal * 0.05m, 2); // 5% commission on subtotal
 
                 // Get the first listing for the Order (for backward compatibility)
                 var firstListing = itemsList.FirstOrDefault()?.Listing;
@@ -525,7 +553,7 @@ namespace StudentBazaar.Web.Controllers
                     var notificationService = HttpContext.RequestServices.GetRequiredService<StudentBazaar.Web.Services.INotificationService>();
                     await notificationService.BroadcastToAdminsAsync(
                         "New Order",
-                        "New Order",
+                        $"New order #{order.Id} has been placed",
                         "Success",
                         $"/Admin/Orders/Details/{order.Id}"
                     );

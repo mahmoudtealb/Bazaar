@@ -6,7 +6,6 @@ using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using StudentBazaar.DataAccess;
 
-
 #nullable disable
 
 namespace StudentBazaar.Web.Migrations
@@ -156,7 +155,7 @@ namespace StudentBazaar.Web.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("StudentBazaar.Web.Models.ActivityLog", b =>
+            modelBuilder.Entity("StudentBazaar.Entities.Models.ActivityLog", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -202,7 +201,7 @@ namespace StudentBazaar.Web.Migrations
                     b.ToTable("ActivityLogs");
                 });
 
-            modelBuilder.Entity("StudentBazaar.Web.Models.ApplicationUser", b =>
+            modelBuilder.Entity("StudentBazaar.Entities.Models.ApplicationUser", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -217,6 +216,16 @@ namespace StudentBazaar.Web.Migrations
                         .IsRequired()
                         .HasMaxLength(250)
                         .HasColumnType("nvarchar(250)");
+
+                    b.Property<string>("BlockReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime?>("BlockedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("BlockedByUserId")
+                        .HasColumnType("int");
 
                     b.Property<int?>("CollegeId")
                         .HasColumnType("int");
@@ -239,6 +248,9 @@ namespace StudentBazaar.Web.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool>("IsBlocked")
+                        .HasColumnType("bit");
 
                     b.Property<bool>("IsSuspended")
                         .HasColumnType("bit");
@@ -313,7 +325,7 @@ namespace StudentBazaar.Web.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
-            modelBuilder.Entity("StudentBazaar.Web.Models.Cart", b =>
+            modelBuilder.Entity("StudentBazaar.Entities.Models.Cart", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -358,7 +370,7 @@ namespace StudentBazaar.Web.Migrations
                     b.ToTable("Carts");
                 });
 
-            modelBuilder.Entity("StudentBazaar.Web.Models.ChatMessage", b =>
+            modelBuilder.Entity("StudentBazaar.Entities.Models.ChatMessage", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -403,7 +415,7 @@ namespace StudentBazaar.Web.Migrations
                     b.ToTable("ChatMessages");
                 });
 
-            modelBuilder.Entity("StudentBazaar.Web.Models.College", b =>
+            modelBuilder.Entity("StudentBazaar.Entities.Models.College", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -435,7 +447,7 @@ namespace StudentBazaar.Web.Migrations
                     b.ToTable("Colleges");
                 });
 
-            modelBuilder.Entity("StudentBazaar.Web.Models.Listing", b =>
+            modelBuilder.Entity("StudentBazaar.Entities.Models.Listing", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -484,7 +496,7 @@ namespace StudentBazaar.Web.Migrations
                     b.ToTable("Listings");
                 });
 
-            modelBuilder.Entity("StudentBazaar.Web.Models.Major", b =>
+            modelBuilder.Entity("StudentBazaar.Entities.Models.Major", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -513,7 +525,7 @@ namespace StudentBazaar.Web.Migrations
                     b.ToTable("Majors");
                 });
 
-            modelBuilder.Entity("StudentBazaar.Web.Models.Notification", b =>
+            modelBuilder.Entity("StudentBazaar.Entities.Models.Notification", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -561,7 +573,7 @@ namespace StudentBazaar.Web.Migrations
                     b.ToTable("Notifications");
                 });
 
-            modelBuilder.Entity("StudentBazaar.Web.Models.Order", b =>
+            modelBuilder.Entity("StudentBazaar.Entities.Models.Order", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -605,7 +617,7 @@ namespace StudentBazaar.Web.Migrations
                     b.ToTable("Orders");
                 });
 
-            modelBuilder.Entity("StudentBazaar.Web.Models.OrderItem", b =>
+            modelBuilder.Entity("StudentBazaar.Entities.Models.OrderItem", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -653,7 +665,7 @@ namespace StudentBazaar.Web.Migrations
                     b.ToTable("OrderItems");
                 });
 
-            modelBuilder.Entity("StudentBazaar.Web.Models.Product", b =>
+            modelBuilder.Entity("StudentBazaar.Entities.Models.Product", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -676,6 +688,9 @@ namespace StudentBazaar.Web.Migrations
                     b.Property<bool>("IsFeatured")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("IsForRent")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("IsSold")
                         .HasColumnType("bit");
 
@@ -688,6 +703,9 @@ namespace StudentBazaar.Web.Migrations
                         .HasColumnType("int");
 
                     b.Property<decimal>("Price")
+                        .HasColumnType("decimal(18, 2)");
+
+                    b.Property<decimal?>("PricePerDay")
                         .HasColumnType("decimal(18, 2)");
 
                     b.Property<string>("SellerId")
@@ -706,7 +724,7 @@ namespace StudentBazaar.Web.Migrations
                     b.ToTable("Products");
                 });
 
-            modelBuilder.Entity("StudentBazaar.Web.Models.ProductCategory", b =>
+            modelBuilder.Entity("StudentBazaar.Entities.Models.ProductCategory", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -733,7 +751,7 @@ namespace StudentBazaar.Web.Migrations
                     b.ToTable("ProductCategories");
                 });
 
-            modelBuilder.Entity("StudentBazaar.Web.Models.ProductImage", b =>
+            modelBuilder.Entity("StudentBazaar.Entities.Models.ProductImage", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -765,7 +783,7 @@ namespace StudentBazaar.Web.Migrations
                     b.ToTable("ProductImages");
                 });
 
-            modelBuilder.Entity("StudentBazaar.Web.Models.Rating", b =>
+            modelBuilder.Entity("StudentBazaar.Entities.Models.Rating", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -801,7 +819,7 @@ namespace StudentBazaar.Web.Migrations
                     b.ToTable("Ratings");
                 });
 
-            modelBuilder.Entity("StudentBazaar.Web.Models.Report", b =>
+            modelBuilder.Entity("StudentBazaar.Entities.Models.Report", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -853,7 +871,7 @@ namespace StudentBazaar.Web.Migrations
                     b.ToTable("Reports");
                 });
 
-            modelBuilder.Entity("StudentBazaar.Web.Models.Shipment", b =>
+            modelBuilder.Entity("StudentBazaar.Entities.Models.Shipment", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -894,7 +912,7 @@ namespace StudentBazaar.Web.Migrations
                     b.ToTable("Shipments");
                 });
 
-            modelBuilder.Entity("StudentBazaar.Web.Models.ShoppingCartItem", b =>
+            modelBuilder.Entity("StudentBazaar.Entities.Models.ShoppingCartItem", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -926,7 +944,7 @@ namespace StudentBazaar.Web.Migrations
                     b.ToTable("ShoppingCartItems");
                 });
 
-            modelBuilder.Entity("StudentBazaar.Web.Models.StudentVerification", b =>
+            modelBuilder.Entity("StudentBazaar.Entities.Models.StudentVerification", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -977,7 +995,7 @@ namespace StudentBazaar.Web.Migrations
                     b.ToTable("StudentVerifications");
                 });
 
-            modelBuilder.Entity("StudentBazaar.Web.Models.Transaction", b =>
+            modelBuilder.Entity("StudentBazaar.Entities.Models.Transaction", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -1025,7 +1043,7 @@ namespace StudentBazaar.Web.Migrations
                     b.ToTable("Transactions");
                 });
 
-            modelBuilder.Entity("StudentBazaar.Web.Models.University", b =>
+            modelBuilder.Entity("StudentBazaar.Entities.Models.University", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -1068,7 +1086,7 @@ namespace StudentBazaar.Web.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<int>", b =>
                 {
-                    b.HasOne("StudentBazaar.Web.Models.ApplicationUser", null)
+                    b.HasOne("StudentBazaar.Entities.Models.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1077,7 +1095,7 @@ namespace StudentBazaar.Web.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<int>", b =>
                 {
-                    b.HasOne("StudentBazaar.Web.Models.ApplicationUser", null)
+                    b.HasOne("StudentBazaar.Entities.Models.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1092,7 +1110,7 @@ namespace StudentBazaar.Web.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("StudentBazaar.Web.Models.ApplicationUser", null)
+                    b.HasOne("StudentBazaar.Entities.Models.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1101,16 +1119,16 @@ namespace StudentBazaar.Web.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<int>", b =>
                 {
-                    b.HasOne("StudentBazaar.Web.Models.ApplicationUser", null)
+                    b.HasOne("StudentBazaar.Entities.Models.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("StudentBazaar.Web.Models.ActivityLog", b =>
+            modelBuilder.Entity("StudentBazaar.Entities.Models.ActivityLog", b =>
                 {
-                    b.HasOne("StudentBazaar.Web.Models.ApplicationUser", "User")
+                    b.HasOne("StudentBazaar.Entities.Models.ApplicationUser", "User")
                         .WithMany("ActivityLogs")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict);
@@ -1118,14 +1136,14 @@ namespace StudentBazaar.Web.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("StudentBazaar.Web.Models.ApplicationUser", b =>
+            modelBuilder.Entity("StudentBazaar.Entities.Models.ApplicationUser", b =>
                 {
-                    b.HasOne("StudentBazaar.Web.Models.College", "College")
+                    b.HasOne("StudentBazaar.Entities.Models.College", "College")
                         .WithMany("Users")
                         .HasForeignKey("CollegeId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("StudentBazaar.Web.Models.University", "University")
+                    b.HasOne("StudentBazaar.Entities.Models.University", "University")
                         .WithMany("Users")
                         .HasForeignKey("UniversityId")
                         .OnDelete(DeleteBehavior.Restrict);
@@ -1135,23 +1153,23 @@ namespace StudentBazaar.Web.Migrations
                     b.Navigation("University");
                 });
 
-            modelBuilder.Entity("StudentBazaar.Web.Models.Cart", b =>
+            modelBuilder.Entity("StudentBazaar.Entities.Models.Cart", b =>
                 {
-                    b.HasOne("StudentBazaar.Web.Models.ApplicationUser", null)
+                    b.HasOne("StudentBazaar.Entities.Models.ApplicationUser", null)
                         .WithMany("Carts")
                         .HasForeignKey("ApplicationUserId");
 
-                    b.HasOne("StudentBazaar.Web.Models.Product", "Product")
+                    b.HasOne("StudentBazaar.Entities.Models.Product", "Product")
                         .WithMany()
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("StudentBazaar.Web.Models.Product", null)
+                    b.HasOne("StudentBazaar.Entities.Models.Product", null)
                         .WithMany("Carts")
                         .HasForeignKey("ProductId1");
 
-                    b.HasOne("StudentBazaar.Web.Models.ApplicationUser", "User")
+                    b.HasOne("StudentBazaar.Entities.Models.ApplicationUser", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1162,20 +1180,20 @@ namespace StudentBazaar.Web.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("StudentBazaar.Web.Models.ChatMessage", b =>
+            modelBuilder.Entity("StudentBazaar.Entities.Models.ChatMessage", b =>
                 {
-                    b.HasOne("StudentBazaar.Web.Models.Product", "Product")
+                    b.HasOne("StudentBazaar.Entities.Models.Product", "Product")
                         .WithMany()
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade);
 
-                    b.HasOne("StudentBazaar.Web.Models.ApplicationUser", "Receiver")
+                    b.HasOne("StudentBazaar.Entities.Models.ApplicationUser", "Receiver")
                         .WithMany("MessagesReceived")
                         .HasForeignKey("ReceiverId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("StudentBazaar.Web.Models.ApplicationUser", "Sender")
+                    b.HasOne("StudentBazaar.Entities.Models.ApplicationUser", "Sender")
                         .WithMany("MessagesSent")
                         .HasForeignKey("SenderId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -1188,9 +1206,9 @@ namespace StudentBazaar.Web.Migrations
                     b.Navigation("Sender");
                 });
 
-            modelBuilder.Entity("StudentBazaar.Web.Models.College", b =>
+            modelBuilder.Entity("StudentBazaar.Entities.Models.College", b =>
                 {
-                    b.HasOne("StudentBazaar.Web.Models.University", "University")
+                    b.HasOne("StudentBazaar.Entities.Models.University", "University")
                         .WithMany("Colleges")
                         .HasForeignKey("UniversityId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1199,15 +1217,15 @@ namespace StudentBazaar.Web.Migrations
                     b.Navigation("University");
                 });
 
-            modelBuilder.Entity("StudentBazaar.Web.Models.Listing", b =>
+            modelBuilder.Entity("StudentBazaar.Entities.Models.Listing", b =>
                 {
-                    b.HasOne("StudentBazaar.Web.Models.Product", "Product")
+                    b.HasOne("StudentBazaar.Entities.Models.Product", "Product")
                         .WithMany("Listings")
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("StudentBazaar.Web.Models.ApplicationUser", "Seller")
+                    b.HasOne("StudentBazaar.Entities.Models.ApplicationUser", "Seller")
                         .WithMany("ListingsPosted")
                         .HasForeignKey("SellerId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -1218,9 +1236,9 @@ namespace StudentBazaar.Web.Migrations
                     b.Navigation("Seller");
                 });
 
-            modelBuilder.Entity("StudentBazaar.Web.Models.Major", b =>
+            modelBuilder.Entity("StudentBazaar.Entities.Models.Major", b =>
                 {
-                    b.HasOne("StudentBazaar.Web.Models.College", "College")
+                    b.HasOne("StudentBazaar.Entities.Models.College", "College")
                         .WithMany("Majors")
                         .HasForeignKey("CollegeId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1229,9 +1247,9 @@ namespace StudentBazaar.Web.Migrations
                     b.Navigation("College");
                 });
 
-            modelBuilder.Entity("StudentBazaar.Web.Models.Notification", b =>
+            modelBuilder.Entity("StudentBazaar.Entities.Models.Notification", b =>
                 {
-                    b.HasOne("StudentBazaar.Web.Models.ApplicationUser", "User")
+                    b.HasOne("StudentBazaar.Entities.Models.ApplicationUser", "User")
                         .WithMany("Notifications")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1240,15 +1258,15 @@ namespace StudentBazaar.Web.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("StudentBazaar.Web.Models.Order", b =>
+            modelBuilder.Entity("StudentBazaar.Entities.Models.Order", b =>
                 {
-                    b.HasOne("StudentBazaar.Web.Models.ApplicationUser", "Buyer")
+                    b.HasOne("StudentBazaar.Entities.Models.ApplicationUser", "Buyer")
                         .WithMany("OrdersPlaced")
                         .HasForeignKey("BuyerId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("StudentBazaar.Web.Models.Listing", "Listing")
+                    b.HasOne("StudentBazaar.Entities.Models.Listing", "Listing")
                         .WithMany("Orders")
                         .HasForeignKey("ListingId")
                         .OnDelete(DeleteBehavior.Cascade);
@@ -1258,21 +1276,21 @@ namespace StudentBazaar.Web.Migrations
                     b.Navigation("Listing");
                 });
 
-            modelBuilder.Entity("StudentBazaar.Web.Models.OrderItem", b =>
+            modelBuilder.Entity("StudentBazaar.Entities.Models.OrderItem", b =>
                 {
-                    b.HasOne("StudentBazaar.Web.Models.Order", "Order")
+                    b.HasOne("StudentBazaar.Entities.Models.Order", "Order")
                         .WithMany("OrderItems")
                         .HasForeignKey("OrderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("StudentBazaar.Web.Models.Product", "Product")
+                    b.HasOne("StudentBazaar.Entities.Models.Product", "Product")
                         .WithMany()
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("StudentBazaar.Web.Models.Product", null)
+                    b.HasOne("StudentBazaar.Entities.Models.Product", null)
                         .WithMany("OrderItems")
                         .HasForeignKey("ProductId1");
 
@@ -1281,15 +1299,15 @@ namespace StudentBazaar.Web.Migrations
                     b.Navigation("Product");
                 });
 
-            modelBuilder.Entity("StudentBazaar.Web.Models.Product", b =>
+            modelBuilder.Entity("StudentBazaar.Entities.Models.Product", b =>
                 {
-                    b.HasOne("StudentBazaar.Web.Models.ProductCategory", "Category")
+                    b.HasOne("StudentBazaar.Entities.Models.ProductCategory", "Category")
                         .WithMany("Products")
                         .HasForeignKey("CategoryId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("StudentBazaar.Web.Models.ApplicationUser", "Owner")
+                    b.HasOne("StudentBazaar.Entities.Models.ApplicationUser", "Owner")
                         .WithMany()
                         .HasForeignKey("OwnerId");
 
@@ -1298,9 +1316,9 @@ namespace StudentBazaar.Web.Migrations
                     b.Navigation("Owner");
                 });
 
-            modelBuilder.Entity("StudentBazaar.Web.Models.ProductImage", b =>
+            modelBuilder.Entity("StudentBazaar.Entities.Models.ProductImage", b =>
                 {
-                    b.HasOne("StudentBazaar.Web.Models.Product", "Product")
+                    b.HasOne("StudentBazaar.Entities.Models.Product", "Product")
                         .WithMany("Images")
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1309,15 +1327,15 @@ namespace StudentBazaar.Web.Migrations
                     b.Navigation("Product");
                 });
 
-            modelBuilder.Entity("StudentBazaar.Web.Models.Rating", b =>
+            modelBuilder.Entity("StudentBazaar.Entities.Models.Rating", b =>
                 {
-                    b.HasOne("StudentBazaar.Web.Models.Product", "Product")
+                    b.HasOne("StudentBazaar.Entities.Models.Product", "Product")
                         .WithMany("Ratings")
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("StudentBazaar.Web.Models.ApplicationUser", "User")
+                    b.HasOne("StudentBazaar.Entities.Models.ApplicationUser", "User")
                         .WithMany("RatingsGiven")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -1328,15 +1346,15 @@ namespace StudentBazaar.Web.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("StudentBazaar.Web.Models.Report", b =>
+            modelBuilder.Entity("StudentBazaar.Entities.Models.Report", b =>
                 {
-                    b.HasOne("StudentBazaar.Web.Models.ApplicationUser", "Reporter")
+                    b.HasOne("StudentBazaar.Entities.Models.ApplicationUser", "Reporter")
                         .WithMany("ReportsSubmitted")
                         .HasForeignKey("ReporterId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("StudentBazaar.Web.Models.ApplicationUser", "ResolvedBy")
+                    b.HasOne("StudentBazaar.Entities.Models.ApplicationUser", "ResolvedBy")
                         .WithMany("ReportsResolved")
                         .HasForeignKey("ResolvedById")
                         .OnDelete(DeleteBehavior.Restrict);
@@ -1346,15 +1364,15 @@ namespace StudentBazaar.Web.Migrations
                     b.Navigation("ResolvedBy");
                 });
 
-            modelBuilder.Entity("StudentBazaar.Web.Models.Shipment", b =>
+            modelBuilder.Entity("StudentBazaar.Entities.Models.Shipment", b =>
                 {
-                    b.HasOne("StudentBazaar.Web.Models.Order", "Order")
+                    b.HasOne("StudentBazaar.Entities.Models.Order", "Order")
                         .WithOne("Shipment")
-                        .HasForeignKey("StudentBazaar.Web.Models.Shipment", "OrderId")
+                        .HasForeignKey("StudentBazaar.Entities.Models.Shipment", "OrderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("StudentBazaar.Web.Models.ApplicationUser", "Shipper")
+                    b.HasOne("StudentBazaar.Entities.Models.ApplicationUser", "Shipper")
                         .WithMany("ShipmentsHandled")
                         .HasForeignKey("ShipperId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -1365,15 +1383,15 @@ namespace StudentBazaar.Web.Migrations
                     b.Navigation("Shipper");
                 });
 
-            modelBuilder.Entity("StudentBazaar.Web.Models.ShoppingCartItem", b =>
+            modelBuilder.Entity("StudentBazaar.Entities.Models.ShoppingCartItem", b =>
                 {
-                    b.HasOne("StudentBazaar.Web.Models.Listing", "Listing")
+                    b.HasOne("StudentBazaar.Entities.Models.Listing", "Listing")
                         .WithMany("ShoppingCartItems")
                         .HasForeignKey("ListingId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("StudentBazaar.Web.Models.ApplicationUser", "User")
+                    b.HasOne("StudentBazaar.Entities.Models.ApplicationUser", "User")
                         .WithMany("ShoppingCartItems")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1384,13 +1402,13 @@ namespace StudentBazaar.Web.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("StudentBazaar.Web.Models.StudentVerification", b =>
+            modelBuilder.Entity("StudentBazaar.Entities.Models.StudentVerification", b =>
                 {
-                    b.HasOne("StudentBazaar.Web.Models.ApplicationUser", "ApprovedBy")
+                    b.HasOne("StudentBazaar.Entities.Models.ApplicationUser", "ApprovedBy")
                         .WithMany()
                         .HasForeignKey("ApprovedById");
 
-                    b.HasOne("StudentBazaar.Web.Models.ApplicationUser", "User")
+                    b.HasOne("StudentBazaar.Entities.Models.ApplicationUser", "User")
                         .WithMany("Verifications")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -1401,9 +1419,9 @@ namespace StudentBazaar.Web.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("StudentBazaar.Web.Models.Transaction", b =>
+            modelBuilder.Entity("StudentBazaar.Entities.Models.Transaction", b =>
                 {
-                    b.HasOne("StudentBazaar.Web.Models.Order", "Order")
+                    b.HasOne("StudentBazaar.Entities.Models.Order", "Order")
                         .WithMany("Transactions")
                         .HasForeignKey("OrderId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1412,7 +1430,7 @@ namespace StudentBazaar.Web.Migrations
                     b.Navigation("Order");
                 });
 
-            modelBuilder.Entity("StudentBazaar.Web.Models.ApplicationUser", b =>
+            modelBuilder.Entity("StudentBazaar.Entities.Models.ApplicationUser", b =>
                 {
                     b.Navigation("ActivityLogs");
 
@@ -1441,21 +1459,21 @@ namespace StudentBazaar.Web.Migrations
                     b.Navigation("Verifications");
                 });
 
-            modelBuilder.Entity("StudentBazaar.Web.Models.College", b =>
+            modelBuilder.Entity("StudentBazaar.Entities.Models.College", b =>
                 {
                     b.Navigation("Majors");
 
                     b.Navigation("Users");
                 });
 
-            modelBuilder.Entity("StudentBazaar.Web.Models.Listing", b =>
+            modelBuilder.Entity("StudentBazaar.Entities.Models.Listing", b =>
                 {
                     b.Navigation("Orders");
 
                     b.Navigation("ShoppingCartItems");
                 });
 
-            modelBuilder.Entity("StudentBazaar.Web.Models.Order", b =>
+            modelBuilder.Entity("StudentBazaar.Entities.Models.Order", b =>
                 {
                     b.Navigation("OrderItems");
 
@@ -1464,7 +1482,7 @@ namespace StudentBazaar.Web.Migrations
                     b.Navigation("Transactions");
                 });
 
-            modelBuilder.Entity("StudentBazaar.Web.Models.Product", b =>
+            modelBuilder.Entity("StudentBazaar.Entities.Models.Product", b =>
                 {
                     b.Navigation("Carts");
 
@@ -1477,12 +1495,12 @@ namespace StudentBazaar.Web.Migrations
                     b.Navigation("Ratings");
                 });
 
-            modelBuilder.Entity("StudentBazaar.Web.Models.ProductCategory", b =>
+            modelBuilder.Entity("StudentBazaar.Entities.Models.ProductCategory", b =>
                 {
                     b.Navigation("Products");
                 });
 
-            modelBuilder.Entity("StudentBazaar.Web.Models.University", b =>
+            modelBuilder.Entity("StudentBazaar.Entities.Models.University", b =>
                 {
                     b.Navigation("Colleges");
 

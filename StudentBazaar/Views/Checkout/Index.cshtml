@@ -718,11 +718,6 @@
                 </div>
 
                 <div class="summary-item">
-                    <span class="summary-item-label">Tax</span>
-                    <span class="summary-item-value">@Model.Tax.ToString("F2") EGP</span>
-                </div>
-
-                <div class="summary-item">
                     <span class="summary-item-label">Total</span>
                     <span class="summary-item-value" id="totalDisplay">@Model.Total.ToString("F2") EGP</span>
                 </div>
@@ -836,7 +831,6 @@
             // Handle shipping option changes
             const shippingInputs = document.querySelectorAll('input[name="ShippingOption"]');
             const subtotalValue = parseFloat('@Model.Subtotal');
-            const taxValue = parseFloat('@Model.Tax');
             const shippingDisplay = document.getElementById('shippingDisplay');
             const totalDisplay = document.getElementById('totalDisplay');
 
@@ -859,9 +853,8 @@
                     }
                 }
 
-
                 // Update total
-                const total = subtotalValue + shippingCost + taxValue;
+                const total = subtotalValue + shippingCost;
                 if (totalDisplay) {
                     totalDisplay.textContent = total.toFixed(2) + ' EGP';
                 }

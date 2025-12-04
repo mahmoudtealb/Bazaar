@@ -155,6 +155,16 @@ namespace StudentBazaar.Web.Controllers
 
             if (result.Succeeded)
             {
+                // التحقق من حالة Block
+                var user = await _userManager.FindByEmailAsync(model.Email);
+                if (user != null && user.IsBlocked)
+                {
+                    await _signInManager.SignOutAsync();
+                    ModelState.AddModelError(string.Empty, 
+                        $"Your account has been blocked. Reason: {user.BlockReason ?? "Violation of terms and conditions"}. Please contact support for more information.");
+                    return View(model);
+                }
+
                 if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
                     return LocalRedirect(returnUrl);
 

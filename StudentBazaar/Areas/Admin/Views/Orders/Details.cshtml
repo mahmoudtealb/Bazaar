@@ -1,4 +1,5 @@
 @model StudentBazaar.Entities.Models.Order
+@using StudentBazaar.Entities.Models
 @{
     ViewData["Title"] = "Order Details";
     Layout = "_AdminLayout";
@@ -133,9 +134,99 @@
                 </div>
             </div>
 
+            <!-- Order Status Management -->
+            <div class="card shadow mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Order Status Management</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.Status == OrderStatus.Pending)
+                    {
+                        <form asp-action="UpdateStatus" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@Model.Id" />
+                            <input type="hidden" name="newStatus" value="@OrderStatus.Confirmed" />
+                            <button type="submit" class="btn btn-success w-100 mb-2" 
+                                    onclick="return confirm('Are you sure you want to confirm this order?');">
+                                <i class="bi bi-check-circle"></i> Confirm Order
+                            </button>
+                        </form>
+                        <form asp-action="UpdateStatus" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@Model.Id" />
+                            <input type="hidden" name="newStatus" value="@OrderStatus.Cancelled" />
+                            <button type="submit" class="btn btn-danger w-100" 
+                                    onclick="return confirm('Are you sure you want to cancel this order?');">
+                                <i class="bi bi-x-circle"></i> Cancel Order
+                            </button>
+                        </form>
+                    }
+                    else if (Model.Status == OrderStatus.Confirmed)
+                    {
+                        <form asp-action="UpdateStatus" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@Model.Id" />
+                            <input type="hidden" name="newStatus" value="@OrderStatus.Shipped" />
+                            <button type="submit" class="btn btn-primary w-100 mb-2">
+                                <i class="bi bi-truck"></i> Mark as Shipped
+                            </button>
+                        </form>
+                        <form asp-action="UpdateStatus" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@Model.Id" />
+                            <input type="hidden" name="newStatus" value="@OrderStatus.Cancelled" />
+                            <button type="submit" class="btn btn-danger w-100" 
+                                    onclick="return confirm('Are you sure you want to cancel this order?');">
+                                <i class="bi bi-x-circle"></i> Cancel Order
+                            </button>
+                        </form>
+                    }
+                    else if (Model.Status == OrderStatus.Shipped)
+                    {
+                        <form asp-action="UpdateStatus" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@Model.Id" />
+                            <input type="hidden" name="newStatus" value="@OrderStatus.Delivered" />
+                            <button type="submit" class="btn btn-success w-100 mb-2">
+                                <i class="bi bi-check-circle"></i> Mark as Delivered
+                            </button>
+                        </form>
+                        <p class="text-muted small mb-0 mt-2">
+                            <i class="bi bi-info-circle"></i> Once delivered, the customer can rate the product.
+                        </p>
+                    }
+                    else if (Model.Status == OrderStatus.Delivered)
+                    {
+                        <form asp-action="UpdateStatus" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@Model.Id" />
+                            <input type="hidden" name="newStatus" value="@OrderStatus.Completed" />
+                            <button type="submit" class="btn btn-success w-100">
+                                <i class="bi bi-check-double"></i> Mark as Completed
+                            </button>
+                        </form>
+                        <p class="text-success small mb-0 mt-2">
+                            <i class="bi bi-check-circle"></i> Customer can now rate this product.
+                        </p>
+                    }
+                    else if (Model.Status == OrderStatus.Completed)
+                    {
+                        <div class="alert alert-success mb-0">
+                            <i class="bi bi-check-circle"></i> Order completed successfully.
+                        </div>
+                    }
+                    else if (Model.Status == OrderStatus.Cancelled)
+                    {
+                        <div class="alert alert-danger mb-0">
+                            <i class="bi bi-x-circle"></i> This order has been cancelled.
+                        </div>
+                    }
+                </div>
+            </div>
+
             <div class="card shadow">
                 <div class="card-body">
-                    <a asp-action="Index" class="btn btn-secondary">Back to Orders</a>
+                    <a asp-action="Index" class="btn btn-secondary w-100">Back to Orders</a>
                 </div>
             </div>
         </div>

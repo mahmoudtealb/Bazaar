@@ -31,9 +31,8 @@ namespace StudentBazaar.Web.Areas.Admin.Controllers
                 TotalOrders = await _context.Orders.CountAsync(),
                 PendingReports = await _context.Reports.Where(r => !r.Resolved).CountAsync(),
                 PendingVerifications = await _context.StudentVerifications.Where(v => !v.Approved).CountAsync(),
-                TotalRevenue = await _context.Orders
-                    .Where(o => o.Status == OrderStatus.Completed)
-                    .SumAsync(o => o.TotalAmount),
+                TotalRevenue = await _context.Products
+                    .SumAsync(p => p.Price),
                 RecentProducts = await _context.Products
                     .Include(p => p.Category)
                     .OrderByDescending(p => p.CreatedAt)

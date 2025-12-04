@@ -1,4 +1,8 @@
-
+using StudentBazaar.DataAccess;
+using StudentBazaar.Entities.Models;
+using StudentBazaar.Web.Hubs;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
 
 namespace StudentBazaar.Web.Services
 {
@@ -6,11 +10,6 @@ namespace StudentBazaar.Web.Services
     {
         Task SendNotificationAsync(int userId, string title, string message, string? type = null, string? linkUrl = null);
         Task BroadcastToAdminsAsync(string title, string message, string? type = null, string? linkUrl = null);
-        
-        // Unread messages methods
-        int GetUnreadMessagesCount(int userId);
-        Task<int> GetUnreadMessagesCountAsync(int userId);
-        Task MarkConversationAsReadAsync(int userId, int otherUserId);
     }
 
     public class NotificationService : INotificationService
@@ -32,81 +31,58 @@ namespace StudentBazaar.Web.Services
                 Title = title,
                 Message = message,
                 Type = type ?? "Info",
-                LinkUrl = linkUrl
+                LinkUrl = linkUrl,
+                CreatedAt = DateTime.UtcNow
             };
 
             _context.Notifications.Add(notification);
             await _context.SaveChangesAsync();
+
+            // Send SignalR notification
+            await _hubContext.Clients.User(userId.ToString()).SendAsync("AdminNotification", new
+            {
+                id = notification.Id,
+                title = notification.Title,
+                message = notification.Message,
+                type = notification.Type,
+                linkUrl = notification.LinkUrl,
+                createdAt = notification.CreatedAt
+            });
         }
 
         public async Task BroadcastToAdminsAsync(string title, string message, string? type = "Info", string? linkUrl = null)
         {
             var adminUsers = await _context.Users
-                .Where(u => _context.UserRoles.Any(ur => ur.UserId == u.Id && _context.Roles.Any(r => r.Id == ur.RoleId && r.Name == "Admin")))
+                .Where(u => _context.UserRoles.Any(ur => ur.UserId == u.Id && 
+                    _context.Roles.Any(r => r.Id == ur.RoleId && r.Name == "Admin")))
                 .ToListAsync();
 
+            var now = DateTime.UtcNow;
             foreach (var admin in adminUsers)
             {
-                await SendNotificationAsync(admin.Id, title, message, type ?? "Info", linkUrl);
-            }
-
-            // Send real-time notification via SignalR
-            await _hubContext.Clients.Group("Admins").SendAsync("AdminNotification", new { title, message, type = type ?? "Info", linkUrl });
-            
-            // Also send specific event notifications
-            if (title == "New Product" && linkUrl != null)
-            {
-                // Extract product ID from link URL (format: /Admin/Products/Details/{id})
-                var productIdMatch = System.Text.RegularExpressions.Regex.Match(linkUrl, @"/Admin/Products/Details/(\d+)");
-                if (productIdMatch.Success && int.TryParse(productIdMatch.Groups[1].Value, out int productId))
+                var notification = new Notification
                 {
-                    await _hubContext.Clients.Group("Admins").SendAsync("NewProduct", productId);
-                }
+                    UserId = admin.Id,
+                    Title = title,
+                    Message = message,
+                    Type = type,
+                    LinkUrl = linkUrl,
+                    CreatedAt = now
+                };
+
+                _context.Notifications.Add(notification);
             }
-            else if (title == "New Order" && linkUrl != null)
+
+            await _context.SaveChangesAsync();
+
+            // Broadcast to all admins via SignalR
+            await _hubContext.Clients.Group("Admins").SendAsync("AdminNotification", new
             {
-                // Extract order ID from link URL (format: /Admin/Orders/Details/{id})
-                var orderIdMatch = System.Text.RegularExpressions.Regex.Match(linkUrl, @"/Admin/Orders/Details/(\d+)");
-                if (orderIdMatch.Success && int.TryParse(orderIdMatch.Groups[1].Value, out int orderId))
-                {
-                    await _hubContext.Clients.Group("Admins").SendAsync("NewOrder", orderId);
-                }
-            }
-        }
-
-        // ============================
-        // Unread Messages Methods
-        // ============================
-
-        public int GetUnreadMessagesCount(int userId)
-        {
-            return _context.ChatMessages
-                .Count(m => m.ReceiverId == userId && !m.IsRead);
-        }
-
-        public async Task<int> GetUnreadMessagesCountAsync(int userId)
-        {
-            return await _context.ChatMessages
-                .CountAsync(m => m.ReceiverId == userId && !m.IsRead);
-        }
-
-        public async Task MarkConversationAsReadAsync(int userId, int otherUserId)
-        {
-            var unreadMessages = await _context.ChatMessages
-                .Where(m => m.ReceiverId == userId && 
-                           m.SenderId == otherUserId && 
-                           !m.IsRead)
-                .ToListAsync();
-
-            foreach (var message in unreadMessages)
-            {
-                message.IsRead = true;
-            }
-
-            if (unreadMessages.Any())
-            {
-                await _context.SaveChangesAsync();
-            }
+                title = title,
+                message = message,
+                type = type,
+                linkUrl = linkUrl
+            });
         }
     }
 }

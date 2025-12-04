@@ -42,6 +42,7 @@
                             <th>Trust Score</th>
                             <th>Verified</th>
                             <th>Suspended</th>
+                            <th>Blocked</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -71,6 +72,16 @@
                                     else
                                     {
                                         <span class="badge bg-success">Active</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (user.IsBlocked)
+                                    {
+                                        <span class="badge bg-danger">Blocked</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-success">Not Blocked</span>
                                     }
                                 </td>
                                 <td>

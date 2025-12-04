@@ -1,4 +1,5 @@
 @model StudentBazaar.Web.ViewModels.AdminDashboardViewModel
+@using StudentBazaar.Entities.Models
 @{
     ViewData["Title"] = "Admin Dashboard";
     Layout = "_AdminLayout";
@@ -215,6 +216,7 @@
             </div>
         </div>
     </div>
+
 </div>
 
 @section Scripts {
@@ -337,6 +339,23 @@
                     }
                 }
             }
+        });
+        
+        // Update notifications badge immediately when dashboard is opened
+        document.addEventListener('DOMContentLoaded', function() {
+            // Wait for server to process the read status, then update badge
+            setTimeout(function() {
+                if (typeof window.updateNotificationsBadge === 'function') {
+                    window.updateNotificationsBadge();
+                }
+            }, 500);
+            
+            // Also update after longer delay to ensure sync
+            setTimeout(function() {
+                if (typeof window.updateNotificationsBadge === 'function') {
+                    window.updateNotificationsBadge();
+                }
+            }, 2000);
         });
     </script>
 }

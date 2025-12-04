@@ -1,4 +1,9 @@
-
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using StudentBazaar.DataAccess;
+using StudentBazaar.Entities.Models;
 
 namespace StudentBazaar.Web.Areas.Admin.Controllers
 {
@@ -107,12 +112,67 @@ namespace StudentBazaar.Web.Areas.Admin.Controllers
             return RedirectToAction("Details", new { id });
         }
 
+        // ======================
+        // Block User
+        // ======================
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> BlockUser(int id, string? reason)
+        {
+            var user = await _context.Users.FindAsync(id);
+            if (user == null)
+                return NotFound();
+
+            // لا يمكن حظر الأدمن
+            var userRoles = await _userManager.GetRolesAsync(user);
+            if (userRoles.Contains("Admin"))
+            {
+                TempData["Error"] = "Cannot block an admin user.";
+                return RedirectToAction("Details", new { id });
+            }
+
+            var currentAdminId = _userManager.GetUserId(User);
+            if (int.TryParse(currentAdminId, out int adminId))
+            {
+                user.BlockedByUserId = adminId;
+            }
+
+            user.IsBlocked = true;
+            user.BlockReason = reason ?? "Violation of terms and conditions";
+            user.BlockedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+            TempData["Success"] = $"User '{user.FullName}' has been blocked successfully.";
+            return RedirectToAction("Details", new { id });
+        }
+
+        // ======================
+        // Unblock User
+        // ======================
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UnblockUser(int id)
+        {
+            var user = await _context.Users.FindAsync(id);
+            if (user == null)
+                return NotFound();
+
+            user.IsBlocked = false;
+            user.BlockReason = null;
+            user.BlockedAt = null;
+            user.BlockedByUserId = null;
+
+            await _context.SaveChangesAsync();
+            TempData["Success"] = $"User '{user.FullName}' has been unblocked successfully.";
+            return RedirectToAction("Details", new { id });
+        }
+
         public async Task<IActionResult> ExportCsv()
         {
             var users = await _context.Users.ToListAsync();
-            var csv = "Id,Email,FullName,TrustScore,IsVerified,IsSuspended,CreatedAt\n";
+            var csv = "Id,Email,FullName,TrustScore,IsVerified,IsSuspended,IsBlocked,BlockReason,BlockedAt,CreatedAt\n";
             csv += string.Join("\n", users.Select(u => 
-                $"{u.Id},{u.Email},{u.FullName},{u.TrustScore},{u.IsVerified},{u.IsSuspended},{u.CreatedAt}"));
+                $"{u.Id},{u.Email},{u.FullName},{u.TrustScore},{u.IsVerified},{u.IsSuspended},{u.IsBlocked},\"{u.BlockReason ?? ""}\",{u.BlockedAt?.ToString("yyyy-MM-dd HH:mm") ?? ""},{u.CreatedAt}"));
 
             return File(System.Text.Encoding.UTF8.GetBytes(csv), "text/csv", "users.csv");
         }

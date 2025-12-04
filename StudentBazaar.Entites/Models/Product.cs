@@ -21,6 +21,11 @@ namespace StudentBazaar.Entities.Models
         [Range(0.01, 999999.99, ErrorMessage = "Price must be between 0.01 and 999999.99")]
         public decimal Price { get; set; }
 
+        [DisplayName("Price Per Day")]
+        [Column(TypeName = "decimal(18, 2)")]
+        [Range(0.01, 999999.99, ErrorMessage = "Price per day must be between 0.01 and 999999.99")]
+        public decimal? PricePerDay { get; set; }
+
         public int? OwnerId { get; set; }
 
         public ApplicationUser? Owner { get; set; }
@@ -39,6 +44,9 @@ namespace StudentBazaar.Entities.Models
         public bool IsSold { get; set; } = false;
 
         public bool IsFeatured { get; set; } = false;
+
+        [DisplayName("For Rent")]
+        public bool IsForRent { get; set; } = false;
 
         [ForeignKey(nameof(CategoryId))]
         public ProductCategory? Category { get; set; } 

@@ -1,7 +1,7 @@
 @model IEnumerable<StudentBazaar.Entities.Models.Product>
 
 @{
-    ViewData["Title"] = "Products for Buy";
+    ViewData["Title"] = "Unlock the bazar";
 }
 
 <div class="container py-5">
@@ -9,16 +9,15 @@
     <!-- ===================================================== -->
     <!--                         HEADER                        -->
     <!-- ===================================================== -->
-    <div class="bg-white p-4 rounded-4 shadow-sm mb-4 d-flex justify-content-between align-items-center">
-        <div>
-            <h2 class="fw-bold mb-1 text-primary">Products for Buy</h2>
-            <p class="text-muted mb-0">Explore items available from other sellers.</p>
+    <div class="hero-header mb-5">
+        <div class="hero-content">
+            <h1 class="hero-title">Unlock the bazar</h1>
+            <p class="hero-subtitle">The easiest way for students to buy & sell.</p>
         </div>
-
         @if (User.Identity?.IsAuthenticated ?? false)
         {
-            <a asp-action="Create" class="btn btn-primary btn-lg rounded-pill px-4 shadow-sm">
-                <i class="bi bi-plus-circle me-1"></i> Sell an Item
+            <a asp-action="Create" class="btn-sell-item">
+                <i class="bi bi-plus-circle me-2"></i> Sell an Item
             </a>
         }
     </div>
@@ -26,34 +25,47 @@
     <!-- ===================================================== -->
     <!--                   SEARCH & FILTER                     -->
     <!-- ===================================================== -->
-    <div class="bg-white p-4 rounded-4 shadow-sm mb-4">
+    <div class="search-section mb-5">
         <form asp-action="Index" method="get">
-            <div class="row g-3">
-                <div class="col-md-6">
-                    <label class="form-label fw-semibold">Search Product</label>
-                    <input type="text" name="q" class="form-control form-control-lg rounded-pill"
-                           placeholder="🔍 Enter product name" value="@ViewBag.CurrentQuery" />
+            <div class="search-container">
+                <div class="search-input-wrapper">
+                    <input type="text" name="q" class="search-input"
+                           placeholder="   Enter product or college name..." value="@ViewBag.CurrentQuery" />
                 </div>
 
-                <div class="col-md-4">
-                    <label class="form-label fw-semibold">College</label>
-                    <select name="collegeId" class="form-select form-select-lg rounded-pill">
+                <!-- College Dropdown Filter -->
+                <div class="search-select-wrapper">
+                    @{
+                        var colleges = ViewBag.Colleges as IEnumerable<StudentBazaar.Entities.Models.College>;
+                        int? currentCollegeId = ViewBag.CurrentCollegeId as int?;
+                    }
+                    <select name="collegeId" class="search-select">
                         <option value="">All Colleges</option>
-                        @foreach (var c in (IEnumerable<StudentBazaar.Entities.Models.College>)ViewBag.Colleges)
+                        @if (colleges != null)
                         {
-                            var selected = (ViewBag.CurrentCollegeId != null && (int)ViewBag.CurrentCollegeId == c.Id)
-                            ? "selected" : "";
-
-                            <option value="@c.Id" selected="@selected">@c.CollegeName</option>
+                            foreach (var college in colleges)
+                            {
+                                bool isSelected = currentCollegeId.HasValue && currentCollegeId.Value == college.Id;
+                                if (isSelected)
+                                {
+                                    <option value="@college.Id" selected="selected">
+                                        @college.CollegeName
+                                    </option>
+                                }
+                                else
+                                {
+                                    <option value="@college.Id">
+                                        @college.CollegeName
+                                    </option>
+                                }
+                            }
                         }
                     </select>
                 </div>
 
-                <div class="col-md-2 d-flex align-items-end">
-                    <button type="submit" class="btn btn-primary btn-lg w-100 rounded-pill shadow-sm">
-                        Search
-                    </button>
-                </div>
+                <button type="submit" class="search-btn">
+                    <span>Search</span>
+                </button>
             </div>
         </form>
     </div>
@@ -92,11 +104,11 @@
                 bool canManage = User.IsInRole("Admin") ||
                 (item.OwnerId != null && item.OwnerId.ToString() == userId);
 
-                <div class="col-md-6 col-lg-4 col-xl-3">
-                    <div class="product-card shadow-sm rounded-4 overflow-hidden bg-white h-100">
+                <div class="col-md-6 col-lg-4 col-xl-3 mb-4">
+                    <div class="modern-product-card">
 
                         <!-- Product Image -->
-                        <a asp-action="Details" asp-route-id="@item.Id">
+                        <a asp-action="Details" asp-route-id="@item.Id" class="product-image-link">
                             <div class="product-image-wrapper">
                                 @if (mainImg != null)
                                 {
@@ -105,53 +117,96 @@
                                 }
                                 else
                                 {
-                                    <div class="product-image-empty">No Image</div>
+                                    <div class="product-image-empty">
+                                        <i class="bi bi-image"></i>
+                                        <span>No Image</span>
+                                    </div>
                                 }
+                                <div class="product-overlay">
+                                    <span class="view-details-btn">View Details</span>
+                                </div>
                             </div>
                         </a>
 
                         <!-- Product Body -->
-                        <div class="p-3">
-                            <h5 class="fw-bold mb-1 text-dark">@item.Name</h5>
-                            <p class="text-muted mb-1">@item.Category?.CategoryName</p>
-                            <p class="fw-bold text-success fs-5">@item.Price</p>
-                        </div>
-
-                        <!-- Buttons -->
-                        <div class="px-3 pb-3 d-flex justify-content-between">
-
-                            <a asp-action="Details" asp-route-id="@item.Id"
-                               class="btn btn-outline-secondary btn-sm rounded-pill px-3">
-                                View
-                            </a>
-
-                            @if (canManage)
+                        <div class="product-card-body">
+                            <h5 class="product-name">@item.Name</h5>
+                            
+                            <!-- Rating Display -->
+                            @if (item.Ratings != null && item.Ratings.Any())
                             {
-                                <div class="btn-group">
-                                    <a asp-action="Edit" asp-route-id="@item.Id"
-                                       class="btn btn-outline-warning btn-sm rounded-pill">Edit</a>
-
-                                    <a asp-action="Delete" asp-route-id="@item.Id"
-                                       class="btn btn-outline-danger btn-sm rounded-pill">Delete</a>
+                                var avgRating = item.Ratings.Average(r => r.Stars);
+                                var ratingCount = item.Ratings.Count;
+                                <div class="product-rating mb-2">
+                                    <div class="stars">
+                                        @for (int i = 1; i <= 5; i++)
+                                        {
+                                            if (i <= Math.Round(avgRating))
+                                            {
+                                                <i class="bi bi-star-fill"></i>
+                                            }
+                                            else if (i - 0.5 <= avgRating)
+                                            {
+                                                <i class="bi bi-star-half"></i>
+                                            }
+                                            else
+                                            {
+                                                <i class="bi bi-star"></i>
+                                            }
+                                        }
+                                    </div>
+                                    <span class="rating-value">@avgRating.ToString("F1")</span>
+                                    <span class="rating-count">(@ratingCount)</span>
                                 </div>
                             }
-                            else if (User.Identity?.IsAuthenticated ?? false)
+                            else
                             {
-                                <div class="btn-group">
-                                    <a asp-controller="Chat" asp-action="WithSeller"
-                                       asp-route-productId="@item.Id"
-                                       class="btn btn-warning btn-sm rounded-pill">Contact</a>
-
-                                    <form asp-controller="Cart" asp-action="AddProductToCart" method="post">
-                                        <input type="hidden" name="productId" value="@item.Id" />
-                                        <input type="hidden" name="quantity" value="1" />
-                                        <button type="submit"
-                                                class="btn btn-success btn-sm rounded-pill px-3">
-                                            Add
-                                        </button>
-                                    </form>
+                                <div class="product-rating mb-2">
+                                    <div class="stars" style="color: #ddd;">
+                                        <i class="bi bi-star"></i>
+                                        <i class="bi bi-star"></i>
+                                        <i class="bi bi-star"></i>
+                                        <i class="bi bi-star"></i>
+                                        <i class="bi bi-star"></i>
+                                    </div>
+                                    <span class="rating-count" style="color: #999;">No ratings</span>
                                 </div>
                             }
+                            
+                            <!-- Buttons -->
+                            <div class="product-actions">
+                                <a asp-action="Details" asp-route-id="@item.Id" class="btn-view">
+                                    View
+                                </a>
+
+                                @if (canManage)
+                                {
+                                    <div class="action-buttons">
+                                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn-edit">
+                                            Edit
+                                        </a>
+                                        <a asp-action="Delete" asp-route-id="@item.Id" class="btn-delete">
+                                            Delete
+                                        </a>
+                                    </div>
+                                }
+                                else if (User.Identity?.IsAuthenticated ?? false)
+                                {
+                                    <div class="action-buttons">
+                                        <a asp-controller="Chat" asp-action="WithSeller"
+                                           asp-route-productId="@item.Id" class="btn-contact">
+                                            Contact
+                                        </a>
+                                        <form asp-controller="Cart" asp-action="AddProductToCart" method="post" class="d-inline">
+                                            <input type="hidden" name="productId" value="@item.Id" />
+                                            <input type="hidden" name="quantity" value="1" />
+                                            <button type="submit" class="btn-add-cart">
+                                                Add to Cart
+                                            </button>
+                                        </form>
+                                    </div>
+                                }
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -161,39 +216,385 @@
 </div>
 
 <style>
-    .product-card {
-        transition: .2s ease;
+    /* ============================================
+       MODERN HERO HEADER
+       ============================================ */
+    .hero-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 20px;
+        padding: 60px 40px;
+        color: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3);
+        margin-bottom: 40px;
     }
 
-        .product-card:hover {
-            transform: translateY(-6px);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.12);
-        }
+    .hero-content {
+        flex: 1;
+    }
+
+    .hero-title {
+        font-size: 3rem;
+        font-weight: 800;
+        margin-bottom: 10px;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .hero-subtitle {
+        font-size: 1.25rem;
+        opacity: 0.95;
+        margin: 0;
+    }
+
+    .btn-sell-item {
+        background: white;
+        color: #667eea;
+        padding: 14px 32px;
+        border-radius: 50px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+
+    .btn-sell-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        color: #764ba2;
+    }
+
+    /* ============================================
+       MODERN SEARCH SECTION
+       ============================================ */
+    .search-section {
+        background: white;
+        border-radius: 16px;
+        padding: 30px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+
+    .search-container {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .search-input-wrapper {
+        flex: 1 1 45%;
+        min-width: 220px;
+    }
+
+    .search-select-wrapper {
+        flex: 0 0 220px;
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 16px 24px;
+        border: 2px solid #e0e0e0;
+        border-radius: 50px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        outline: none;
+    }
+
+    .search-input:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+    }
+
+    .search-select {
+        width: 100%;
+        padding: 14px 18px;
+        border: 2px solid #e0e0e0;
+        border-radius: 50px;
+        font-size: 0.95rem;
+        background-color: #f7fafc;
+        color: #4a5568;
+        outline: none;
+        transition: all 0.3s ease;
+    }
+
+    .search-select:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+    }
+
+    .search-btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 16px 40px;
+        border-radius: 50px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+
+    .search-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    /* ============================================
+       MODERN PRODUCT CARDS
+       ============================================ */
+    .modern-product-card {
+        background: white;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .modern-product-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+    }
+
+    .product-image-link {
+        display: block;
+        position: relative;
+        overflow: hidden;
+    }
 
     .product-image-wrapper {
-        height: 220px;
+        height: 260px;
         overflow: hidden;
+        position: relative;
+        background: #f8f9fa;
     }
 
     .product-image {
         width: 100%;
         height: 100%;
         object-fit: cover;
-        transition: .25s ease;
+        transition: transform 0.4s ease;
     }
 
-        .product-image:hover {
-            transform: scale(1.05);
-        }
+    .product-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(to bottom, transparent 0%, rgba(102, 126, 234, 0.8) 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .view-details-btn {
+        color: white;
+        font-weight: 600;
+        font-size: 1.1rem;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+
+    .modern-product-card:hover .product-overlay {
+        opacity: 1;
+    }
+
+    .modern-product-card:hover .product-image {
+        transform: scale(1.1);
+    }
 
     .product-image-empty {
-        background: #f8f9fa;
-        color: #999;
-        height: 220px;
+        height: 100%;
         display: flex;
+        flex-direction: column;
         justify-content: center;
         align-items: center;
-        font-size: 1.1rem;
-        font-weight: 500;
+        color: #999;
+        font-size: 1rem;
+        gap: 8px;
+    }
+
+    .product-image-empty i {
+        font-size: 3rem;
+        opacity: 0.5;
+    }
+
+    .product-card-body {
+        padding: 24px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .product-name {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #2d3748;
+        margin-bottom: 12px;
+        line-height: 1.4;
+        min-height: 3.2em;
+    }
+
+    .product-rating {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 12px;
+        font-size: 0.9rem;
+    }
+
+    .product-rating .stars {
+        color: #ffc107;
+        display: flex;
+        gap: 2px;
+        font-size: 0.95rem;
+    }
+
+    .product-rating .rating-value {
+        color: #2d3748;
+        font-weight: 600;
+        font-size: 0.95rem;
+    }
+
+    .product-rating .rating-count {
+        color: #718096;
+        font-size: 0.85rem;
+    }
+
+    .product-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .btn-view, .btn-edit, .btn-delete, .btn-contact, .btn-add-cart {
+        padding: 10px 20px;
+        border-radius: 25px;
+        font-weight: 600;
+        text-decoration: none;
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 0.9rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .btn-view {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+
+    .btn-view:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        color: white;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .btn-edit {
+        background: #ffc107;
+        color: #000;
+    }
+
+    .btn-edit:hover {
+        background: #ffca2c;
+        transform: translateY(-2px);
+        color: #000;
+    }
+
+    .btn-delete {
+        background: #dc3545;
+        color: white;
+    }
+
+    .btn-delete:hover {
+        background: #bb2d3b;
+        transform: translateY(-2px);
+        color: white;
+    }
+
+    .btn-contact {
+        background: #ff9800;
+        color: white;
+    }
+
+    .btn-contact:hover {
+        background: #fb8c00;
+        transform: translateY(-2px);
+        color: white;
+    }
+
+    .btn-add-cart {
+        background: #28a745;
+        color: white;
+    }
+
+    .btn-add-cart:hover {
+        background: #218838;
+        transform: translateY(-2px);
+        color: white;
+    }
+
+    /* ============================================
+       RESPONSIVE DESIGN
+       ============================================ */
+    @@media (max-width: 768px) {
+        .hero-header {
+            flex-direction: column;
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .hero-title {
+            font-size: 2rem;
+        }
+
+        .hero-subtitle {
+            font-size: 1rem;
+        }
+
+        .search-container {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .search-input-wrapper,
+        .search-select-wrapper {
+            flex: 1 1 100%;
+        }
+
+        .search-btn {
+            width: 100%;
+        }
+
+        .product-actions {
+            flex-direction: column;
+        }
+
+        .btn-view, .action-buttons {
+            width: 100%;
+        }
+
+        .action-buttons {
+            flex-direction: column;
+        }
     }
 </style>

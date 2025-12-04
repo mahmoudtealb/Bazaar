@@ -9,8 +9,14 @@
     <title>@ViewData["Title"] - StudentBazaar</title>
 
     <link href="~/css/bootstrap.min (3).css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/buttons.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/ui-enhancements.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/professional-ui.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/StudentBazaar.styles.css" asp-append-version="true" />
 </head>
 <body>
@@ -38,17 +44,20 @@
         string displayName = overrideName ?? (currentUser?.FullName ?? User.Identity?.Name ?? "User");
     }
     <header>
-        <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom box-shadow mb-3">
+        <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom box-shadow mb-3 modern-navbar">
             <div class="container-fluid">
 
                 <!-- Logo -->
-                <a class="navbar-brand fw-bold" asp-area="" asp-controller="Product" asp-action="Index">
-                    StudentBazaar
+                <a class="navbar-brand fw-bold brand-logo" asp-area="" asp-controller="Product" asp-action="Index">
+                    <span class="brand-text">StudentBazaar</span>
                 </a>
 
                 <!-- Search Box -->
-                <form class="d-none d-md-flex ms-3 flex-grow-1" asp-controller="Product" asp-action="Index" method="get">
-                    <input type="text" name="q" class="form-control" placeholder="Search products..." />
+                <form class="d-none d-md-flex flex-grow-1 modern-search" asp-controller="Product" asp-action="Index" method="get">
+                    <div class="search-wrapper">
+                        <i class="bi bi-search search-icon"></i>
+                        <input type="text" name="q" class="form-control modern-search-input" placeholder="   Search products..." />
+                    </div>
                 </form>
 
                 <!-- Toggle -->
@@ -66,20 +75,55 @@
                         {
                             <li class="nav-item">
                                 <a class="nav-link text-dark @(currentController == "Product" && currentAction == "MyProducts" ? "active fw-bold" : "")"
-                                   asp-controller="Product" asp-action="MyProducts">Products for Sale</a>
+                                   asp-controller="Product" asp-action="MyProducts">
+                                    <i class="bi bi-shop me-1"></i> Products for Sale
+                                </a>
                             </li>
 
                             <li class="nav-item">
                                 <a class="nav-link text-dark @(currentController == "Product" && currentAction == "Index" ? "active fw-bold" : "")"
-                                   asp-controller="Product" asp-action="Index">Products for Buy</a>
+                                   asp-controller="Product" asp-action="Index">
+                                    <i class="bi bi-bag-check me-1"></i> Products for Buy
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a class="nav-link text-dark @(currentController == "Product" && currentAction == "ForRent" ? "active fw-bold" : "")"
+                                   asp-controller="Product" asp-action="ForRent">
+                                    <i class="bi bi-calendar-check me-1"></i> Products for Rent
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a class="nav-link text-success fw-bold @(currentController == "Product" && currentAction == "Create" ? "active" : "")"
+                                   asp-controller="Product" asp-action="Create">
+                                    <i class="bi bi-plus-circle me-1"></i> Add Product
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a class="nav-link text-info fw-bold @(currentController == "Product" && currentAction == "CreateRental" ? "active" : "")"
+                                   asp-controller="Product" asp-action="CreateRental">
+                                    <i class="bi bi-calendar-check me-1"></i> Rent Items
+                                </a>
                             </li>
                         }
                         else
                         {
-                           @*  <li class="nav-item">
+                            <!-- Show Products for Buy and Rent for anonymous users -->
+                            <li class="nav-item">
                                 <a class="nav-link text-dark @(currentController == "Product" && currentAction == "Index" ? "active fw-bold" : "")"
-                                   asp-controller="Product" asp-action="Index">Shop</a>
-                            </li> *@
+                                   asp-controller="Product" asp-action="Index">
+                                    <i class="bi bi-bag-check me-1"></i> Products for Buy
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a class="nav-link text-dark @(currentController == "Product" && currentAction == "ForRent" ? "active fw-bold" : "")"
+                                   asp-controller="Product" asp-action="ForRent">
+                                    <i class="bi bi-calendar-check me-1"></i> Products for Rent
+                                </a>
+                            </li>
                         }
 
                        @*  <li class="nav-item">
@@ -130,14 +174,16 @@ asp-controller="Home" asp-action="Index">Home</a>
                             <!-- Orders -->
                             <li class="nav-item me-3">
                                 <a class="nav-link @(currentController == "Order" ? "active fw-bold" : "")"
-                                   asp-controller="Order" asp-action="Index">📦 Orders</a>
+                                   asp-controller="Order" asp-action="Index">
+                                    <i class="bi bi-box-seam me-1"></i> Orders
+                                </a>
                             </li> 
 
                             <!-- Cart -->
                             <li class="nav-item me-3">
                                 <a class="nav-link @(currentController == "Cart" ? "active fw-bold" : "")"
                                    asp-controller="Cart" asp-action="Index">
-                                    🛒 Cart
+                                    <i class="bi bi-cart3 me-1"></i> Cart
                                 </a>
                             </li>
 
@@ -145,7 +191,7 @@ asp-controller="Home" asp-action="Index">Home</a>
                             <li class="nav-item me-3">
                                 <a class="nav-link position-relative @(currentController == "Chat" ? "active fw-bold" : "")"
                                    asp-controller="Chat" asp-action="Open">
-                                    💬 Messages
+                                    <i class="bi bi-chat-dots me-1"></i> Messages
                                     <span id="msgBadge" class="badge-notification">0</span>
                                 </a>
                             </li>
@@ -153,21 +199,13 @@ asp-controller="Home" asp-action="Index">Home</a>
                             <!-- Dashboard -->
                             @if (isAdmin)
                             {
-                                <!-- Dashboard Link -->
-                                <li class="nav-item me-3">
-                                    <a class="nav-link @(currentController == "Dashboard" && currentArea == "Admin" ? "active fw-bold" : "") text-danger fw-bold"
-                                       asp-area="Admin" asp-controller="Dashboard" asp-action="Index">
-                                        📊 Dashboard
-                                    </a>
-                                </li>
-                                
                                 <!-- Notifications Dropdown -->
-                                <li class="nav-item dropdown me-3" id="notificationsDropdownContainer" style="display: none;">
+                                <li class="nav-item dropdown me-3" id="notificationsDropdownContainer" style="position: relative; z-index: 1050;">
                                     <a class="nav-link position-relative" data-bs-toggle="dropdown" id="notificationsDropdown" role="button" aria-expanded="false">
-                                        🔔
-                                        <span id="notificationsBadge" class="badge-notification" style="display: none;">0</span>
+                                        <i class="bi bi-bell"></i>
+                                        <span id="notificationsBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display: none; font-size: 0.65rem; z-index: 1051;">0</span>
                                     </a>
-                                    <ul class="dropdown-menu dropdown-menu-end" id="dashboardNotificationsList" style="width: 350px; max-height: 400px; overflow-y: auto;">
+                                    <ul class="dropdown-menu dropdown-menu-end" id="dashboardNotificationsList" style="width: 350px; max-height: 400px; overflow-y: auto; z-index: 1051 !important; position: absolute !important;">
                                         <li><h6 class="dropdown-header">Notifications</h6></li>
                                         <li><hr class="dropdown-divider"></li>
                                         <li id="notificationsLoading" class="px-3 py-2 text-muted">
@@ -178,30 +216,60 @@ asp-controller="Home" asp-action="Index">Home</a>
                                         </li>
                                         <li><hr class="dropdown-divider"></li>
                                         <li>
-                                            <a class="dropdown-item text-center text-primary" asp-area="Admin" asp-controller="Dashboard" asp-action="Index">
-                                                <strong>View All →</strong>
+                                            <button type="button" class="dropdown-item text-center" id="markAllAsReadBtn" style="border: none; background: none; width: 100%; cursor: pointer;">
+                                                <small class="text-primary"><strong>Mark All as Read</strong></small>
+                                            </button>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item text-center" asp-area="Admin" asp-controller="Dashboard" asp-action="Index">
+                                                <small class="text-primary"><strong>View All →</strong></small>
                                             </a>
                                         </li>
                                     </ul>
+                                </li>
+
+                                <!-- Dashboard Link -->
+                                <li class="nav-item me-3">
+                                    <a class="nav-link @(currentController == "Dashboard" && currentArea == "Admin" ? "active fw-bold" : "") text-danger fw-bold"
+                                       asp-area="Admin" asp-controller="Dashboard" asp-action="Index">
+                                        <i class="bi bi-speedometer2 me-1"></i> Dashboard
+                                    </a>
                                 </li>
                             }
 
                             <!-- Profile -->
                             <li class="nav-item dropdown me-3">
-                                <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
-                                    👤 @displayName
+                                <a class="nav-link dropdown-toggle d-flex align-items-center" data-bs-toggle="dropdown" role="button" aria-expanded="false">
+                                    <i class="bi bi-person-circle me-1"></i> 
+                                    <span class="d-none d-md-inline">@displayName</span>
                                 </a>
                                 <ul class="dropdown-menu dropdown-menu-end">
-                                    <li><a class="dropdown-item" asp-controller="Account" asp-action="Profile">📝 My Profile</a></li>
-                                   @*  <li><a class="dropdown-item" asp-controller="Account" asp-action="Settings">⚙️ Settings</a></li> *@
+                                    <li>
+                                        <h6 class="dropdown-header">
+                                            <i class="bi bi-person me-1"></i> @displayName
+                                        </h6>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="Account" asp-action="Profile">
+                                            <i class="bi bi-person me-2"></i> My Profile
+                                        </a>
+                                    </li>
+                                   @*  <li>
+                                        <a class="dropdown-item" asp-controller="Account" asp-action="Settings">
+                                            <i class="bi bi-gear me-2"></i> Settings
+                                        </a>
+                                    </li> *@
                                 </ul>
                             </li>
 
                             <!-- Logout -->
                             <li class="nav-item">
-                                <form asp-controller="Account" asp-action="Logout" method="post">
+                                <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
                                     @Html.AntiForgeryToken()
-                                    <button type="submit" class="btn btn-danger">Logout</button>
+                                    <button type="submit" class="btn btn-danger btn-sm">
+                                        <i class="bi bi-box-arrow-right me-1"></i> Logout
+                                    </button>
                                 </form>
                             </li>
                         }
@@ -346,249 +414,236 @@ asp-controller="Home" asp-action="Index">Home</a>
     @if (isAuthenticated)
     {
         <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
+    }
+
+    @if (isAdmin)
+    {
         <script>
-            // Set current user ID for notifications.js
-            window.currentUserId = '@(currentUser != null ? currentUser.Id.ToString() : "")';
-            window.isAdmin = @(isAdmin ? "true" : "false");
-        </script>
-        <script src="~/js/notifications.js" asp-append-version="true"></script>
-        @if (isAdmin)
-        {
-            <script>
-                // Dashboard Notifications for Admin
-                (function() {
-                    let adminHubConnection = null;
-                    const notificationsBadge = document.getElementById('notificationsBadge');
-                    const notificationsContainer = document.getElementById('notificationsDropdownContainer');
+            // Admin Notifications System
+            (function() {
+                let adminHubConnection = null;
+                const notificationsBadge = document.getElementById('notificationsBadge');
+                const notificationsContainer = document.getElementById('notificationsDropdownContainer');
+                const notificationsList = document.getElementById('dashboardNotificationsList');
+                
+                if (!notificationsBadge || !notificationsContainer || !notificationsList) return;
+                
+                // Function to update notifications badge
+                window.updateNotificationsBadge = async function() {
+                    try {
+                        const response = await fetch('/Admin/Notifications/GetDashboardNotificationsCount');
+                        if (response.ok) {
+                            const data = await response.json();
+                            const count = data.count || 0;
+                            
+                            if (count > 0) {
+                                notificationsBadge.textContent = count > 99 ? '99+' : count.toString();
+                                notificationsBadge.style.display = 'inline-block';
+                            } else {
+                                notificationsBadge.style.display = 'none';
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Error updating notifications badge:', error);
+                    }
+                };
+                
+                // Function to load notifications in dropdown
+                async function loadNotifications() {
+                    const loadingEl = document.getElementById('notificationsLoading');
+                    const emptyEl = document.getElementById('notificationsEmpty');
                     
-                    if (!notificationsBadge || !notificationsContainer) return;
-                    
-                    // Hide badge and container initially
-                    notificationsBadge.style.display = 'none';
-                    notificationsContainer.style.display = 'none';
-                    
-                    // Function to update notifications badge
-                    async function updateNotificationsBadge() {
-                        try {
-                            const response = await fetch('/Admin/Notifications/GetDashboardNotificationsCount');
-                            if (response.ok) {
-                                const data = await response.json();
-                                const count = data.count || 0;
-                                
-                                if (notificationsBadge && notificationsContainer) {
-                                    if (count > 0) {
-                                        notificationsBadge.textContent = count > 99 ? '99+' : count;
-                                        notificationsBadge.classList.add('show');
-                                        notificationsContainer.style.display = 'block';
-                                        
-                                        // Update browser tab title if there are notifications
-                                        document.title = `(${count}) Dashboard - StudentBazaar`;
+                    try {
+                        const response = await fetch('/Admin/Notifications/GetNotifications');
+                        if (response.ok) {
+                            const notifications = await response.json();
+                            
+                            if (loadingEl) loadingEl.style.display = 'none';
+                            if (emptyEl) emptyEl.style.display = 'none';
+                            
+                            // Clear existing notifications
+                            const itemsToRemove = notificationsList.querySelectorAll('li:not(.dropdown-header):not(.dropdown-divider):not(#notificationsLoading):not(#notificationsEmpty)');
+                            itemsToRemove.forEach(item => {
+                                const isButton = item.id === 'markAllAsReadBtn' || item.querySelector('#markAllAsReadBtn');
+                                const isViewAll = item.querySelector('a[href*="/Admin/Dashboard"]');
+                                if (!isButton && !isViewAll) {
+                                    item.remove();
+                                }
+                            });
+                            
+                            if (notifications && notifications.length > 0) {
+                                notifications.forEach(function(notif) {
+                                    const iconClass = notif.type?.toLowerCase() === 'success' ? '✅' : 
+                                                     notif.type?.toLowerCase() === 'warning' ? '⚠️' : 
+                                                     notif.type?.toLowerCase() === 'error' ? '❌' : 'ℹ️';
+                                    
+                                    const itemClass = notif.isRead ? '' : 'fw-bold bg-light';
+                                    const date = new Date(notif.createdAt);
+                                    const timeAgo = getTimeAgo(date);
+                                    
+                                    const li = document.createElement('li');
+                                    li.className = itemClass;
+                                    
+                                    let html = `<a class="dropdown-item ${notif.linkUrl ? '' : 'pe-none'}" ${notif.linkUrl ? `href="${notif.linkUrl}"` : ''} data-notification-id="${notif.id}">`;
+                                    html += `<div class="d-flex align-items-center">`;
+                                    html += `<span class="me-2">${iconClass}</span>`;
+                                    html += `<div class="flex-grow-1">`;
+                                    html += `<strong class="small">${escapeHtml(notif.title)}</strong>`;
+                                    html += `<small class="text-muted d-block mt-1">${escapeHtml(notif.message)}</small>`;
+                                    html += `<small class="text-muted d-block mt-1">${timeAgo}</small>`;
+                                    html += `</div></div></a>`;
+                                    
+                                    li.innerHTML = html;
+                                    
+                                    const dividers = notificationsList.querySelectorAll('.dropdown-divider');
+                                    if (dividers.length > 0) {
+                                        const lastDivider = dividers[dividers.length - 1];
+                                        notificationsList.insertBefore(li, lastDivider);
                                     } else {
-                                        notificationsBadge.classList.remove('show');
-                                        notificationsContainer.style.display = 'none';
-                                        document.title = 'Dashboard - StudentBazaar';
-                                    }
-                                }
-                            }
-                        } catch (error) {
-                            console.error('Error updating notifications badge:', error);
-                        }
-                    }
-                    
-                    // Function to load notifications in dropdown
-                    async function loadNotifications() {
-                        const notificationsList = document.getElementById('dashboardNotificationsList');
-                        const loadingEl = document.getElementById('notificationsLoading');
-                        const emptyEl = document.getElementById('notificationsEmpty');
-                        
-                        if (!notificationsList) return;
-                        
-                        try {
-                            const response = await fetch('/Admin/Notifications/GetNotifications');
-                            if (response.ok) {
-                                const notifications = await response.json();
-                                
-                                // Remove loading and empty messages
-                                if (loadingEl) loadingEl.style.display = 'none';
-                                if (emptyEl) emptyEl.style.display = 'none';
-                                
-                                // Clear existing notifications (except header and divider)
-                                const itemsToRemove = notificationsList.querySelectorAll('li:not(.dropdown-header):not(.dropdown-divider):not(#notificationsLoading):not(#notificationsEmpty)');
-                                itemsToRemove.forEach(item => item.remove());
-                                
-                                if (notifications && notifications.length > 0) {
-                                    notifications.forEach(function(notif) {
-                                        const iconClass = notif.type?.toLowerCase() === 'success' ? '✅' : 
-                                                         notif.type?.toLowerCase() === 'warning' ? '⚠️' : 
-                                                         notif.type?.toLowerCase() === 'error' ? '❌' : 'ℹ️';
-                                        
-                                        const itemClass = notif.isRead ? '' : 'fw-bold bg-light';
-                                        
-                                        const date = new Date(notif.createdAt);
-                                        const timeAgo = getTimeAgo(date);
-                                        
-                                        const li = document.createElement('li');
-                                        li.className = itemClass;
-                                        
-                                        let html = `<a class="dropdown-item ${notif.linkUrl ? '' : 'pe-none'}" ${notif.linkUrl ? `href="${notif.linkUrl}"` : ''}>`;
-                                        html += `<div class="d-flex align-items-center">`;
-                                        html += `<span class="me-2">${iconClass}</span>`;
-                                        html += `<div class="flex-grow-1">`;
-                                        html += `<strong class="small">${escapeHtml(notif.title)}</strong>`;
-                                        html += `<small class="text-muted d-block mt-1">${timeAgo}</small>`;
-                                        html += `</div>`;
-                                        html += `</div>`;
-                                        html += `</a>`;
-                                        
-                                        li.innerHTML = html;
                                         notificationsList.appendChild(li);
-                                    });
-                                } else {
-                                    if (emptyEl) emptyEl.style.display = 'block';
+                                    }
+                                    
+                                    if (notif.linkUrl) {
+                                        li.querySelector('a').addEventListener('click', function() {
+                                            if (!notif.isRead) {
+                                                markAsRead(notif.id);
+                                            }
+                                        });
+                                    }
+                                });
+                            } else {
+                                if (emptyEl) emptyEl.style.display = 'block';
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Error loading notifications:', error);
+                        if (loadingEl) loadingEl.innerHTML = '<small class="text-danger">Error loading notifications</small>';
+                    }
+                }
+                
+                async function markAsRead(notificationId) {
+                    try {
+                        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+                        const response = await fetch('/Admin/Notifications/MarkAsRead', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'RequestVerificationToken': token
+                            },
+                            body: JSON.stringify({ id: notificationId })
+                        });
+                        
+                        if (response.ok) {
+                            updateNotificationsBadge();
+                        }
+                    } catch (error) {
+                        console.error('Error marking notification as read:', error);
+                    }
+                }
+                
+                const markAllAsReadBtn = document.getElementById('markAllAsReadBtn');
+                if (markAllAsReadBtn) {
+                    markAllAsReadBtn.addEventListener('click', async function(e) {
+                        e.preventDefault();
+                        try {
+                            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+                            const response = await fetch('/Admin/Notifications/MarkAllAsRead', {
+                                method: 'POST',
+                                headers: {
+                                    'RequestVerificationToken': token
                                 }
+                            });
+                            
+                            if (response.ok) {
+                                updateNotificationsBadge();
+                                loadNotifications();
                             }
                         } catch (error) {
-                            console.error('Error loading notifications:', error);
-                            if (loadingEl) loadingEl.innerHTML = '<small class="text-danger">Error loading notifications</small>';
+                            console.error('Error marking all as read:', error);
                         }
+                    });
+                }
+                
+                function getTimeAgo(date) {
+                    const now = new Date();
+                    const diff = now - date;
+                    const seconds = Math.floor(diff / 1000);
+                    const minutes = Math.floor(seconds / 60);
+                    const hours = Math.floor(minutes / 60);
+                    const days = Math.floor(hours / 24);
+                    
+                    if (days > 0) return `${days} day${days > 1 ? 's' : ''} ago`;
+                    if (hours > 0) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+                    if (minutes > 0) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+                    return 'Just now';
+                }
+                
+                function escapeHtml(text) {
+                    const div = document.createElement('div');
+                    div.textContent = text;
+                    return div.innerHTML;
+                }
+                
+                function setupAdminHub() {
+                    if (typeof signalR === 'undefined') {
+                        setInterval(updateNotificationsBadge, 5000);
+                        return;
                     }
                     
-                    // Helper function to get time ago
-                    function getTimeAgo(date) {
-                        const now = new Date();
-                        const diff = now - date;
-                        const seconds = Math.floor(diff / 1000);
-                        const minutes = Math.floor(seconds / 60);
-                        const hours = Math.floor(minutes / 60);
-                        const days = Math.floor(hours / 24);
+                    try {
+                        adminHubConnection = new signalR.HubConnectionBuilder()
+                            .withUrl("/adminhub")
+                            .withAutomaticReconnect()
+                            .build();
                         
-                        if (days > 0) return `${days} day${days > 1 ? 's' : ''} ago`;
-                        if (hours > 0) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
-                        if (minutes > 0) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
-                        return 'Just now';
-                    }
-                    
-                    // Helper function to escape HTML
-                    function escapeHtml(text) {
-                        const div = document.createElement('div');
-                        div.textContent = text;
-                        return div.innerHTML;
-                    }
-                    
-                    // Setup SignalR connection for admin notifications
-                    function setupAdminHub() {
-                        if (typeof signalR === 'undefined') {
-                            console.warn('SignalR not available for admin notifications');
-                            // Fallback to polling
-                            setInterval(updateNotificationsBadge, 5000);
-                            return;
-                        }
+                        adminHubConnection.on("AdminNotification", function(data) {
+                            updateNotificationsBadge();
+                            const dropdown = bootstrap.Dropdown.getInstance(document.getElementById('notificationsDropdown'));
+                            if (dropdown && dropdown._isShown()) {
+                                loadNotifications();
+                            }
+                        });
                         
-                        try {
-                            adminHubConnection = new signalR.HubConnectionBuilder()
-                                .withUrl("/adminhub")
-                                .withAutomaticReconnect()
-                                .build();
-                            
-                            // Listen for admin notifications
-                            adminHubConnection.on("AdminNotification", function(data) {
-                                updateNotificationsBadge();
-                            });
-                            
-                            adminHubConnection.on("NewProduct", function(productId) {
-                                updateNotificationsBadge();
-                            });
-                            
-                            adminHubConnection.on("NewReport", function(reportId) {
-                                updateNotificationsBadge();
-                            });
-                            
-                            adminHubConnection.on("NewVerification", function(verificationId) {
-                                updateNotificationsBadge();
-                            });
-                            
-                            adminHubConnection.on("SuspiciousActivity", function(message) {
-                                updateNotificationsBadge();
-                            });
-                            
-                            adminHubConnection.on("NewOrder", function(orderId) {
-                                updateNotificationsBadge();
-                                // Reload notifications if dropdown is open
-                                const dropdown = bootstrap.Dropdown.getInstance(document.getElementById('notificationsDropdown'));
-                                if (dropdown && dropdown._isShown()) {
-                                    loadNotifications();
-                                }
-                            });
-                            
-                            adminHubConnection.on("ProductApproved", function(productId) {
-                                updateNotificationsBadge();
-                                // Reload notifications if dropdown is open
-                                const dropdown = bootstrap.Dropdown.getInstance(document.getElementById('notificationsDropdown'));
-                                if (dropdown && dropdown._isShown()) {
-                                    loadNotifications();
-                                }
-                            });
-                            
-                            // Start connection
-                            adminHubConnection.start()
-                                .then(function() {
-                                    console.log('Admin Hub connected');
-                                    // Join admin group
-                                    adminHubConnection.invoke("JoinAdminGroup");
-                                    // Initial update
-                                    updateNotificationsBadge();
-                                })
-                                .catch(function(error) {
-                                    console.warn('Admin Hub connection failed, using polling:', error);
-                                    // Fallback to polling
-                                    setInterval(updateNotificationsBadge, 5000);
-                                });
-                            
-                            // Handle reconnection
-                            adminHubConnection.onreconnecting(function() {
-                                console.log('Admin Hub reconnecting...');
-                            });
-                            
-                            adminHubConnection.onreconnected(function() {
-                                console.log('Admin Hub reconnected');
+                        adminHubConnection.start()
+                            .then(function() {
                                 adminHubConnection.invoke("JoinAdminGroup");
                                 updateNotificationsBadge();
+                            })
+                            .catch(function(error) {
+                                console.warn('Admin Hub connection failed, using polling:', error);
+                                setInterval(updateNotificationsBadge, 5000);
                             });
-                            
-                        } catch (error) {
-                            console.error('Error setting up Admin Hub:', error);
-                            // Fallback to polling
-                            setInterval(updateNotificationsBadge, 5000);
-                        }
-                    }
-                    
-                    // Load notifications when dropdown is opened
-                    const notificationsDropdown = document.getElementById('notificationsDropdown');
-                    if (notificationsDropdown) {
-                        notificationsDropdown.addEventListener('shown.bs.dropdown', function() {
-                            loadNotifications();
-                        });
-                    }
-                    
-                    // Initialize
-                    if (document.readyState === 'loading') {
-                        document.addEventListener('DOMContentLoaded', function() {
-                            // Initial update
+                        
+                        adminHubConnection.onreconnected(function() {
+                            adminHubConnection.invoke("JoinAdminGroup");
                             updateNotificationsBadge();
-                            setupAdminHub();
-                            // Also use polling as backup
-                            setInterval(updateNotificationsBadge, 10000);
                         });
-                    } else {
-                        // Initial update
-                        updateNotificationsBadge();
-                        setupAdminHub();
-                        // Also use polling as backup
-                        setInterval(updateNotificationsBadge, 10000);
+                    } catch (error) {
+                        console.error('Error setting up Admin Hub:', error);
+                        setInterval(updateNotificationsBadge, 5000);
                     }
-                })();
-            </script>
-        }
+                }
+                
+                const notificationsDropdown = document.getElementById('notificationsDropdown');
+                if (notificationsDropdown) {
+                    notificationsDropdown.addEventListener('shown.bs.dropdown', function() {
+                        loadNotifications();
+                    });
+                }
+                
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', function() {
+                        setTimeout(updateNotificationsBadge, 100);
+                        setupAdminHub();
+                        setInterval(updateNotificationsBadge, 10000);
+                    });
+                } else {
+                    setTimeout(updateNotificationsBadge, 100);
+                    setupAdminHub();
+                    setInterval(updateNotificationsBadge, 10000);
+                }
+            })();
+        </script>
     }
 
     @await RenderSectionAsync("Scripts", required: false)

@@ -1,5 +1,13 @@
 ﻿using StudentBazaar.Web.Hubs;
+using System.Globalization;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
+using StudentBazaar.DataAccess;
+using StudentBazaar.Entities.Models;
 
+var cultureInfo = new CultureInfo("en-EG");
+CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
+CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
 var builder = WebApplication.CreateBuilder(args);
 
 // ==============================
@@ -25,13 +33,13 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole<int>>(options =>
     options.Password.RequireNonAlphanumeric = false;
 })
 .AddEntityFrameworkStores<ApplicationDbContext>()
-.AddDefaultTokenProviders()
-.AddDefaultUI();
+.AddDefaultTokenProviders();
 
 // ==============================
-// 3- MVC Controllers + Views
+// 3- MVC Controllers + Views + Razor Pages
 // ==============================
 builder.Services.AddControllersWithViews();
+builder.Services.AddRazorPages();
 
 // ==============================
 // 4- Repositories
@@ -75,6 +83,45 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 // ==============================
+// 8- Check Blocked Users Middleware
+// ==============================
+app.Use(async (context, next) =>
+{
+    // تخطي التحقق لصفحة Login نفسها لتجنب loop
+    if (context.Request.Path.StartsWithSegments("/Account/Login"))
+    {
+        await next();
+        return;
+    }
+    
+    if (context.User?.Identity?.IsAuthenticated == true)
+    {
+        using (var scope = app.Services.CreateScope())
+        {
+            var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+            var userId = userManager.GetUserId(context.User);
+            
+            if (!string.IsNullOrEmpty(userId) && int.TryParse(userId, out int userIdInt))
+            {
+                var user = await userManager.FindByIdAsync(userId);
+                if (user != null && user.IsBlocked)
+                {
+                    // تسجيل الخروج تلقائياً
+                    var signInManager = scope.ServiceProvider.GetRequiredService<SignInManager<ApplicationUser>>();
+                    await signInManager.SignOutAsync();
+                    
+                    // إعادة توجيه إلى صفحة Login مع رسالة
+                    context.Response.Redirect($"/Account/Login?blocked=true&reason={Uri.EscapeDataString(user.BlockReason ?? "Violation of terms and conditions")}");
+                    return;
+                }
+            }
+        }
+    }
+    
+    await next();
+});
+
+// ==============================
 // 6- Routing
 // ==============================
 
@@ -94,10 +141,44 @@ app.MapHub<AdminHub>("/adminhub");
 app.MapRazorPages();
 
 // ==============================
-// 7- Seed Roles + Admin User
+// 7- Apply Migrations & Seed Roles + Admin User
 // ==============================
 using (var scope = app.Services.CreateScope())
 {
+    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    
+    // Apply pending migrations automatically
+    try
+    {
+        context.Database.Migrate();
+    }
+        catch (Exception ex)
+        {
+            // If migration fails, try to add columns manually via SQL
+            try
+            {
+                var sql = @"
+                IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('AspNetUsers') AND name = 'IsBlocked')
+                    ALTER TABLE AspNetUsers ADD IsBlocked BIT NOT NULL DEFAULT 0;
+                IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('AspNetUsers') AND name = 'BlockReason')
+                    ALTER TABLE AspNetUsers ADD BlockReason NVARCHAR(500) NULL;
+                IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('AspNetUsers') AND name = 'BlockedAt')
+                    ALTER TABLE AspNetUsers ADD BlockedAt DATETIME2 NULL;
+                IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('AspNetUsers') AND name = 'BlockedByUserId')
+                    ALTER TABLE AspNetUsers ADD BlockedByUserId INT NULL;
+                IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Products') AND name = 'IsForRent')
+                    ALTER TABLE Products ADD IsForRent BIT NOT NULL DEFAULT 0;
+                IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Products') AND name = 'PricePerDay')
+                    ALTER TABLE Products ADD PricePerDay DECIMAL(18, 2) NULL;
+            ";
+                context.Database.ExecuteSqlRaw(sql);
+            }
+            catch
+            {
+                // Ignore if columns already exist
+            }
+        }
+    
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole<int>>>();
     var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
 

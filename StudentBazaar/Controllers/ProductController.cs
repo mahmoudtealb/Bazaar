@@ -61,8 +61,11 @@ namespace StudentBazaar.Web.Controllers
         public async Task<IActionResult> Index(string? q = null, int? collegeId = null)
         {
             var products = await _repo.GetAllAsync(
-                includeWord: "Category,Images,Listings,Ratings,Owner"
+                includeWord: "Category,Images,Listings,Ratings,Owner,Owner.College"
             );
+
+            // Only show products for sale (not for rent) in Products for Buy page
+            products = products.Where(p => p.IsForRent == false);
 
             // Only show approved products to regular users (admins can see all)
             if (!(User.IsInRole("Admin")))
@@ -89,8 +92,14 @@ namespace StudentBazaar.Web.Controllers
                 );
             }
 
-            if (collegeId.HasValue)
-                products = products.Where(p => p.Owner != null && p.Owner.CollegeId == collegeId.Value);
+            if (collegeId.HasValue && collegeId.Value > 0)
+            {
+                products = products.Where(p =>
+                    p.Owner != null &&
+                    p.Owner.CollegeId.HasValue &&
+                    p.Owner.CollegeId.Value == collegeId.Value
+                );
+            }
 
             var colleges = await _collegeRepo.GetAllAsync();
             ViewBag.Colleges = colleges;
@@ -141,12 +150,68 @@ namespace StudentBazaar.Web.Controllers
             return View(products);
         }
 
+        // ============================
+        // PRODUCTS FOR RENT
+        // ============================
+
+        [AllowAnonymous]
+        public async Task<IActionResult> ForRent(string? q = null, int? collegeId = null)
+        {
+            var products = await _repo.GetAllAsync(
+                includeWord: "Category,Images,Listings,Ratings,Owner,Owner.College"
+            );
+
+            // Only show products for rent
+            products = products.Where(p => p.IsForRent == true);
+
+            // Only show approved products to regular users (admins can see all)
+            if (!(User.IsInRole("Admin")))
+            {
+                products = products.Where(p => p.IsApproved == true && !p.IsSold);
+            }
+
+            // Exclude current user's products if authenticated
+            if (User.Identity?.IsAuthenticated ?? false)
+            {
+                var userIdStr = _userManager.GetUserId(User);
+                if (!string.IsNullOrEmpty(userIdStr))
+                {
+                    products = products.Where(p => p.SellerId == null || p.SellerId != userIdStr);
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(q))
+            {
+                var qLower = q.Trim();
+                products = products.Where(p =>
+                    p.Name.Contains(qLower, StringComparison.OrdinalIgnoreCase) ||
+                    (p.Owner != null && p.Owner.College != null && p.Owner.College.CollegeName.Contains(qLower, StringComparison.OrdinalIgnoreCase))
+                );
+            }
+
+            if (collegeId.HasValue && collegeId.Value > 0)
+            {
+                products = products.Where(p =>
+                    p.Owner != null &&
+                    p.Owner.CollegeId.HasValue &&
+                    p.Owner.CollegeId.Value == collegeId.Value
+                );
+            }
+
+            var colleges = await _collegeRepo.GetAllAsync();
+            ViewBag.Colleges = colleges;
+            ViewBag.CurrentQuery = q;
+            ViewBag.CurrentCollegeId = collegeId;
+
+            return View(products);
+        }
+
         [AllowAnonymous]
         public async Task<IActionResult> Details(int id)
         {
             var product = await _repo.GetFirstOrDefaultAsync(
                 p => p.Id == id,
-                includeWord: "Category,Images,Listings,Ratings,Owner"
+                includeWord: "Category,Images,Listings,Ratings,Ratings.User,Owner"
             );
 
             if (product == null)
@@ -183,6 +248,26 @@ namespace StudentBazaar.Web.Controllers
                                      product.Listings.Any(l => l.Status == ListingStatus.Available);
             ViewBag.HasAvailableListing = hasAvailableListing;
 
+            // حساب متوسط Rating
+            if (product.Ratings != null && product.Ratings.Any())
+            {
+                ViewBag.AverageRating = product.Ratings.Average(r => r.Stars);
+                ViewBag.TotalRatings = product.Ratings.Count;
+            }
+            else
+            {
+                ViewBag.AverageRating = 0;
+                ViewBag.TotalRatings = 0;
+            }
+
+            // التحقق من Rating الحالي للمستخدم (إن وجد)
+            if (User.Identity?.IsAuthenticated ?? false)
+            {
+                var currentUserId = GetCurrentUserId();
+                var userRating = product.Ratings?.FirstOrDefault(r => r.UserId == currentUserId);
+                ViewBag.UserRating = userRating;
+            }
+
             return View(product);
         }
 
@@ -195,6 +280,91 @@ namespace StudentBazaar.Web.Controllers
         {
             var model = await PopulateCreateViewModel();
             return View(model);
+        }
+
+        // ============================
+        // CREATE RENTAL PRODUCT
+        // ============================
+
+        [Authorize]
+        public async Task<IActionResult> CreateRental()
+        {
+            var model = await PopulateCreateViewModel();
+            // Pre-set IsForRent to true for rental products
+            model.Product.IsForRent = true;
+            return View(model);
+        }
+
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreateRental(ProductCreateViewModel model)
+        {
+            // Force IsForRent to true for rental products
+            if (model.Product != null)
+            {
+                model.Product.IsForRent = true;
+            }
+
+            if (model.Product == null || model.Product.CategoryId == null || model.Product.CategoryId <= 0)
+                ModelState.AddModelError("Product.CategoryId", "Please select a category.");
+
+            // Validate PricePerDay for rental products
+            if (model.Product != null && (!model.Product.PricePerDay.HasValue || model.Product.PricePerDay.Value <= 0))
+            {
+                ModelState.AddModelError("Product.PricePerDay", "Price per day is required for rental products.");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                model = await PopulateCreateViewModel(model.Product);
+                if (model.Product != null)
+                {
+                    model.Product.IsForRent = true;
+                }
+                return View(model);
+            }
+
+            var product = model.Product;
+            product.CreatedAt = DateTime.UtcNow;
+            product.IsForRent = true; // Ensure it's set to true
+
+            // ربط المنتج بصاحب الحساب الحالي
+            var userId = GetCurrentUserId();
+            product.OwnerId = userId;
+            
+            // Save SellerId as string
+            var userIdStr = _userManager.GetUserId(User);
+            product.SellerId = userIdStr;
+
+            // Set product as Pending (requires admin approval)
+            product.IsApproved = false;
+            product.IsSold = false;
+            product.IsFeatured = false;
+
+            await _repo.AddAsync(product);
+            await _repo.SaveAsync();
+
+            await HandleUploadedFiles(product, model.Files);
+
+            // Send notification to admins about new rental product
+            try
+            {
+                var notificationService = HttpContext.RequestServices.GetRequiredService<StudentBazaar.Web.Services.INotificationService>();
+                await notificationService.BroadcastToAdminsAsync(
+                    "New Rental Product",
+                    $"New rental product '{product.Name}' is pending approval",
+                    "Info",
+                    $"/Admin/Products/Details/{product.Id}"
+                );
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error sending notification: {ex.Message}");
+            }
+
+            TempData["Success"] = "Rental product created successfully! Your product is pending admin approval and will be visible to other users once approved.";
+            return RedirectToAction(nameof(ForRent));
         }
 
         [Authorize]
@@ -226,6 +396,8 @@ namespace StudentBazaar.Web.Controllers
             product.IsApproved = false;
             product.IsSold = false;
             product.IsFeatured = false;
+            
+            // IsForRent is already set from model binding (from radio buttons)
 
             await _repo.AddAsync(product);
             await _repo.SaveAsync();
@@ -238,14 +410,13 @@ namespace StudentBazaar.Web.Controllers
                 var notificationService = HttpContext.RequestServices.GetRequiredService<StudentBazaar.Web.Services.INotificationService>();
                 await notificationService.BroadcastToAdminsAsync(
                     "New Product",
-                    "New Product",
+                    $"New product '{product.Name}' is pending approval",
                     "Info",
                     $"/Admin/Products/Details/{product.Id}"
                 );
             }
             catch (Exception ex)
             {
-                // Log error but don't fail the product creation
                 System.Diagnostics.Debug.WriteLine($"Error sending notification: {ex.Message}");
             }
 
@@ -309,6 +480,7 @@ namespace StudentBazaar.Web.Controllers
             existing.Name = model.Product.Name;
             existing.CategoryId = model.Product.CategoryId;
             existing.Price = model.Product.Price;
+            existing.IsForRent = model.Product.IsForRent; // Update IsForRent
             existing.UpdatedAt = DateTime.UtcNow;
             
             // Ensure SellerId is set if not already set

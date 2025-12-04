@@ -1,4 +1,5 @@
-﻿
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace StudentBazaar.Entities.Models
 {
@@ -30,6 +31,18 @@ namespace StudentBazaar.Entities.Models
         public bool IsSuspended { get; set; } = false;
 
         public DateTime? SuspendedUntil { get; set; }
+
+        // ==========================
+        // 🔹 Block Management
+        // ==========================
+        public bool IsBlocked { get; set; } = false;
+
+        [MaxLength(500)]
+        public string? BlockReason { get; set; }
+
+        public DateTime? BlockedAt { get; set; }
+
+        public int? BlockedByUserId { get; set; }
 
         // ==========================
         // 🔹 Timestamps

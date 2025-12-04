@@ -12,6 +12,11 @@
         <div class="alert alert-success">@TempData["Success"]</div>
     }
 
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+
     <div class="card shadow">
         <div class="card-body">
             <dl class="row">
@@ -55,6 +60,28 @@
                     }
                 </dd>
 
+                <dt class="col-sm-3">Blocked</dt>
+                <dd class="col-sm-9">
+                    @if (Model.IsBlocked)
+                    {
+                        <span class="badge bg-danger">Blocked</span>
+                        @if (Model.BlockedAt.HasValue)
+                        {
+                            <span class="text-muted">(Since: @Model.BlockedAt.Value.ToString("yyyy-MM-dd HH:mm"))</span>
+                        }
+                        @if (!string.IsNullOrEmpty(Model.BlockReason))
+                        {
+                            <div class="mt-2">
+                                <strong>Reason:</strong> <span class="text-danger">@Model.BlockReason</span>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <span class="badge bg-success">Not Blocked</span>
+                    }
+                </dd>
+
                 <dt class="col-sm-3">Roles</dt>
                 <dd class="col-sm-9">
                     @foreach (var role in ViewBag.Roles as List<string>)
@@ -65,29 +92,98 @@
             </dl>
 
             <div class="mt-4">
-                @if (!Model.IsSuspended)
-                {
-                    <form asp-action="Suspend" method="post" class="d-inline">
-                        @Html.AntiForgeryToken()
-                        <input type="hidden" name="id" value="@Model.Id" />
-                        <input type="number" name="days" placeholder="Days" class="form-control d-inline w-auto" />
-                        <button type="submit" class="btn btn-danger">Suspend</button>
-                    </form>
-                }
-                else
-                {
-                    <form asp-action="Activate" method="post" class="d-inline">
-                        @Html.AntiForgeryToken()
-                        <input type="hidden" name="id" value="@Model.Id" />
-                        <button type="submit" class="btn btn-success">Activate</button>
-                    </form>
-                }
-                <form asp-action="UpdateTrustScore" method="post" class="d-inline">
-                    @Html.AntiForgeryToken()
-                    <input type="hidden" name="id" value="@Model.Id" />
-                    <input type="number" name="score" min="0" max="100" value="@Model.TrustScore" class="form-control d-inline w-auto" />
-                    <button type="submit" class="btn btn-warning">Update Trust Score</button>
-                </form>
+                <h5 class="mb-3">User Management Actions</h5>
+                
+                <!-- Block/Unblock Section -->
+                <div class="card mb-3">
+                    <div class="card-header bg-danger text-white">
+                        <strong>Block Management</strong>
+                    </div>
+                    <div class="card-body">
+                        @if (!Model.IsBlocked)
+                        {
+                            <form asp-action="BlockUser" method="post" onsubmit="return confirm('Are you sure you want to block this user? They will not be able to login.');">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@Model.Id" />
+                                <div class="mb-3">
+                                    <label for="reason" class="form-label">Block Reason (Optional)</label>
+                                    <textarea name="reason" id="reason" class="form-control" rows="3" 
+                                              placeholder="Enter the reason for blocking this user..."></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-danger">
+                                    <i class="bi bi-ban"></i> Block User
+                                </button>
+                            </form>
+                        }
+                        else
+                        {
+                            <div class="alert alert-warning">
+                                <strong>User is currently blocked.</strong>
+                                @if (!string.IsNullOrEmpty(Model.BlockReason))
+                                {
+                                    <p class="mb-0"><strong>Reason:</strong> @Model.BlockReason</p>
+                                }
+                                @if (Model.BlockedAt.HasValue)
+                                {
+                                    <p class="mb-0"><strong>Blocked Since:</strong> @Model.BlockedAt.Value.ToString("yyyy-MM-dd HH:mm")</p>
+                                }
+                            </div>
+                            <form asp-action="UnblockUser" method="post" onsubmit="return confirm('Are you sure you want to unblock this user?');">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@Model.Id" />
+                                <button type="submit" class="btn btn-success">
+                                    <i class="bi bi-check-circle"></i> Unblock User
+                                </button>
+                            </form>
+                        }
+                    </div>
+                </div>
+
+                <!-- Suspend/Activate Section -->
+                <div class="card mb-3">
+                    <div class="card-header bg-warning text-dark">
+                        <strong>Suspension Management</strong>
+                    </div>
+                    <div class="card-body">
+                        @if (!Model.IsSuspended)
+                        {
+                            <form asp-action="Suspend" method="post" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@Model.Id" />
+                                <div class="input-group">
+                                    <input type="number" name="days" placeholder="Days" class="form-control w-auto" min="1" />
+                                    <button type="submit" class="btn btn-warning">Suspend</button>
+                                </div>
+                            </form>
+                        }
+                        else
+                        {
+                            <form asp-action="Activate" method="post" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@Model.Id" />
+                                <button type="submit" class="btn btn-success">Activate</button>
+                            </form>
+                        }
+                    </div>
+                </div>
+
+                <!-- Trust Score Section -->
+                <div class="card mb-3">
+                    <div class="card-header bg-info text-white">
+                        <strong>Trust Score Management</strong>
+                    </div>
+                    <div class="card-body">
+                        <form asp-action="UpdateTrustScore" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@Model.Id" />
+                            <div class="input-group">
+                                <input type="number" name="score" min="0" max="100" value="@Model.TrustScore" class="form-control w-auto" />
+                                <button type="submit" class="btn btn-info">Update Trust Score</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
                 <a asp-action="Index" class="btn btn-primary">Back to List</a>
             </div>
         </div>
