@@ -4,36 +4,48 @@
     Layout = "_AdminLayout";
 }
 
-<div class="container-fluid">
-    <h1 class="h3 mb-4">Users Management</h1>
+<div class="container-fluid page-container">
+    <div class="page-header">
+        <h1 class="h3">Users Management</h1>
+    </div>
 
-    @if (TempData["Success"] != null)
-    {
-        <div class="alert alert-success">@TempData["Success"]</div>
-    }
+    <partial name="_AdminAlerts" />
 
     <!-- Search -->
-    <div class="card shadow mb-4">
+    <div class="card shadow filter-section">
         <div class="card-body">
-            <form method="get" class="row g-3">
-                <div class="col-md-8">
-                    <input type="text" name="search" class="form-control" placeholder="Search by name or email..." value="@ViewContext.HttpContext.Request.Query["search"]">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-12 col-md-8">
+                    <label class="form-label">Search Users</label>
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="bi bi-search"></i>
+                        </span>
+                        <input type="text" name="search" class="form-control" placeholder="Search by name or email..." value="@ViewContext.HttpContext.Request.Query["search"]">
+                    </div>
                 </div>
-                <div class="col-md-2">
-                    <button type="submit" class="btn btn-primary">Search</button>
+                <div class="col-6 col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-search me-1"></i> Search
+                    </button>
                 </div>
-                <div class="col-md-2">
-                    <a asp-action="ExportCsv" class="btn btn-success">Export CSV</a>
+                <div class="col-6 col-md-2">
+                    <a asp-action="ExportCsv" class="btn btn-success w-100">
+                        <i class="bi bi-download me-1"></i> Export CSV
+                    </a>
                 </div>
             </form>
         </div>
     </div>
 
     <!-- Users Table -->
-    <div class="card shadow">
+    <div class="card shadow table-section">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="bi bi-people me-2"></i>Users List</h5>
+        </div>
         <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-bordered">
+            <div class="table-responsive table-container">
+                <table class="table table-bordered table-hover">
                     <thead>
                         <tr>
                            @*  <th>ID</th> *@
@@ -51,10 +63,10 @@
                         {
                             <tr>
                                 @* <td>@user.Id</td> *@
-                                <td>@user.FullName</td>
-                                <td>@user.Email</td>
-                                <td>@user.TrustScore</td>
-                                <td>
+                                <td data-label="Name">@user.FullName</td>
+                                <td data-label="Email">@user.Email</td>
+                                <td data-label="Trust Score">@user.TrustScore</td>
+                                <td data-label="Verified">
                                     @if (user.IsVerified)
                                     {
                                         <span class="badge bg-success">Verified</span>
@@ -64,7 +76,7 @@
                                         <span class="badge bg-warning">Not Verified</span>
                                     }
                                 </td>
-                                <td>
+                                <td data-label="Suspended">
                                     @if (user.IsSuspended)
                                     {
                                         <span class="badge bg-danger">Suspended</span>
@@ -74,7 +86,7 @@
                                         <span class="badge bg-success">Active</span>
                                     }
                                 </td>
-                                <td>
+                                <td data-label="Blocked">
                                     @if (user.IsBlocked)
                                     {
                                         <span class="badge bg-danger">Blocked</span>
@@ -84,8 +96,10 @@
                                         <span class="badge bg-success">Not Blocked</span>
                                     }
                                 </td>
-                                <td>
-                                    <a asp-action="Details" asp-route-id="@user.Id" class="btn btn-sm btn-info">View</a>
+                                <td data-label="Actions">
+                                    <a asp-action="Details" asp-route-id="@user.Id" class="btn btn-sm btn-info">
+                                        <i class="bi bi-eye me-1"></i> View
+                                    </a>
                                 </td>
                             </tr>
                         }
@@ -96,8 +110,8 @@
             <!-- Pagination -->
             @if (ViewBag.TotalPages > 1)
             {
-                <nav>
-                    <ul class="pagination">
+                <nav class="mt-4">
+                    <ul class="pagination justify-content-center">
                         @for (int i = 1; i <= ViewBag.TotalPages; i++)
                         {
                             <li class="page-item @(i == ViewBag.Page ? "active" : "")">

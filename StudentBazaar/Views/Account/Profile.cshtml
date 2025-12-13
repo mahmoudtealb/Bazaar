@@ -116,8 +116,21 @@
                             <small class="form-text text-muted">Upload a new profile picture (JPG, PNG, GIF, max 5MB)</small>
                         </div>
 
-                        <button type="submit" class="btn btn-primary">Update Profile</button>
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">Update Profile</button>
+                        </div>
                     </form>
+
+                    @if (!string.IsNullOrEmpty(Model.ProfilePictureUrl))
+                    {
+                        <form asp-action="DeleteProfilePicture" method="post" class="mt-2">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-danger" 
+                                    onclick="return confirm('Are you sure you want to delete your profile picture?');">
+                                <i class="bi bi-trash"></i> Delete Picture
+                            </button>
+                        </form>
+                    }
                 </div>
             </div>
 

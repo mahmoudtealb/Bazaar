@@ -295,7 +295,7 @@ p {
    PROFESSIONAL NAVBAR
    ============================================ */
 .navbar {
-    padding: var(--spacing-md) 0;
+    padding:/* var(--spacing-md)*/ 0;
     box-shadow: var(--shadow-sm);
     position: relative;
     z-index: 1030;

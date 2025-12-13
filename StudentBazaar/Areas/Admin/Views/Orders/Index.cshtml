@@ -4,30 +4,32 @@
     Layout = "_AdminLayout";
 }
 
-<div class="container-fluid">
-    <h1 class="h3 mb-4">Orders Management</h1>
+<div class="container-fluid page-container">
+    <div class="page-header">
+        <h1 class="h3">Orders Management</h1>
+    </div>
 
     <!-- Statistics -->
-    <div class="row mb-4">
-        <div class="col-md-4">
-            <div class="stat-card success">
-                <div class="stat-label">Total Revenue</div>
-                <div class="stat-value">@ViewBag.TotalRevenue.ToString("F2") EGP</div>
-            </div>
+    <div class="stats-grid section-spacing">
+        <div class="stat-card success">
+            <div class="stat-label">Total Revenue</div>
+            <div class="stat-value">@ViewBag.TotalRevenue.ToString("F2") EGP</div>
         </div>
-        <div class="col-md-4">
-            <div class="stat-card info">
-                <div class="stat-label">Monthly Revenue</div>
-                <div class="stat-value">@ViewBag.MonthlyRevenue.ToString("F2") EGP</div>
-            </div>
+        <div class="stat-card info">
+            <div class="stat-label">Monthly Revenue</div>
+            <div class="stat-value">@ViewBag.MonthlyRevenue.ToString("F2") EGP</div>
         </div>
     </div>
 
     <!-- Filters -->
-    <div class="card shadow mb-4">
+    <div class="card shadow filter-section">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="bi bi-funnel me-2"></i>Filter Orders</h5>
+        </div>
         <div class="card-body">
-            <form method="get" class="row g-3">
-                <div class="col-md-3">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-12 col-md-3">
+                    <label class="form-label">Status</label>
                     <select name="status" class="form-select">
                         <option value="">All Status</option>
                         <option value="Pending">Pending</option>
@@ -35,24 +37,31 @@
                         <option value="Cancelled">Cancelled</option>
                     </select>
                 </div>
-                <div class="col-md-3">
+                <div class="col-12 col-md-3">
+                    <label class="form-label">From Date</label>
                     <input type="date" name="fromDate" class="form-control" value="@ViewContext.HttpContext.Request.Query["fromDate"]">
                 </div>
-                <div class="col-md-3">
+                <div class="col-12 col-md-3">
+                    <label class="form-label">To Date</label>
                     <input type="date" name="toDate" class="form-control" value="@ViewContext.HttpContext.Request.Query["toDate"]">
                 </div>
-                <div class="col-md-2">
-                    <button type="submit" class="btn btn-primary">Filter</button>
+                <div class="col-12 col-md-3">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-funnel me-1"></i> Filter
+                    </button>
                 </div>
             </form>
         </div>
     </div>
 
     <!-- Orders Table -->
-    <div class="card shadow">
+    <div class="card shadow table-section">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="bi bi-cart-check me-2"></i>Orders List</h5>
+        </div>
         <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-bordered">
+            <div class="table-responsive table-container">
+                <table class="table table-bordered table-hover">
                     <thead>
                         <tr>
                           @*   <th>Order ID</th> *@
@@ -69,8 +78,8 @@
                         {
                             <tr>
                                @*  <td>#@order.Id</td> *@
-                                <td>@order.Buyer?.FullName</td>
-                                <td>
+                                <td data-label="Buyer">@order.Buyer?.FullName</td>
+                                <td data-label="Product">
                                     @if (order.OrderItems != null && order.OrderItems.Any())
                                     {
                                         var firstItem = order.OrderItems.First();
@@ -85,8 +94,8 @@
                                         <text>No items</text>
                                     }
                                 </td>
-                                <td><strong>@order.TotalAmount.ToString("F2") </strong></td>
-                                <td>
+                                <td data-label="Amount"><strong>@order.TotalAmount.ToString("F2") </strong></td>
+                                <td data-label="Status">
                                     @{
                                         var statusClass = order.Status switch
                                         {
@@ -101,10 +110,10 @@
                                     }
                                     <span class="badge bg-@statusClass">@order.Status</span>
                                 </td>
-                                <td>@order.OrderDate.ToString("yyyy-MM-dd HH:mm")</td>
-                                <td>
+                                <td data-label="Date">@order.OrderDate.ToString("yyyy-MM-dd HH:mm")</td>
+                                <td data-label="Actions">
                                     <a asp-action="Details" asp-route-id="@order.Id" class="btn btn-sm btn-info" title="View Order Details">
-                                        <i class="fas fa-eye"></i> View
+                                        <i class="bi bi-eye me-1"></i> View
                                     </a>
                                 </td>
                             </tr>

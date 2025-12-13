@@ -14,12 +14,6 @@
             <h1 class="hero-title">Unlock the bazar</h1>
             <p class="hero-subtitle">The easiest way for students to buy & sell.</p>
         </div>
-        @if (User.Identity?.IsAuthenticated ?? false)
-        {
-            <a asp-action="Create" class="btn-sell-item">
-                <i class="bi bi-plus-circle me-2"></i> Sell an Item
-            </a>
-        }
     </div>
 
     <!-- ===================================================== -->
@@ -29,8 +23,9 @@
         <form asp-action="Index" method="get">
             <div class="search-container">
                 <div class="search-input-wrapper">
+                    <i class="bi bi-search search-icon"></i>
                     <input type="text" name="q" class="search-input"
-                           placeholder="   Enter product or college name..." value="@ViewBag.CurrentQuery" />
+                           placeholder="Enter product name..." value="@ViewBag.CurrentQuery" />
                 </div>
 
                 <!-- College Dropdown Filter -->
@@ -132,47 +127,6 @@
                         <div class="product-card-body">
                             <h5 class="product-name">@item.Name</h5>
                             
-                            <!-- Rating Display -->
-                            @if (item.Ratings != null && item.Ratings.Any())
-                            {
-                                var avgRating = item.Ratings.Average(r => r.Stars);
-                                var ratingCount = item.Ratings.Count;
-                                <div class="product-rating mb-2">
-                                    <div class="stars">
-                                        @for (int i = 1; i <= 5; i++)
-                                        {
-                                            if (i <= Math.Round(avgRating))
-                                            {
-                                                <i class="bi bi-star-fill"></i>
-                                            }
-                                            else if (i - 0.5 <= avgRating)
-                                            {
-                                                <i class="bi bi-star-half"></i>
-                                            }
-                                            else
-                                            {
-                                                <i class="bi bi-star"></i>
-                                            }
-                                        }
-                                    </div>
-                                    <span class="rating-value">@avgRating.ToString("F1")</span>
-                                    <span class="rating-count">(@ratingCount)</span>
-                                </div>
-                            }
-                            else
-                            {
-                                <div class="product-rating mb-2">
-                                    <div class="stars" style="color: #ddd;">
-                                        <i class="bi bi-star"></i>
-                                        <i class="bi bi-star"></i>
-                                        <i class="bi bi-star"></i>
-                                        <i class="bi bi-star"></i>
-                                        <i class="bi bi-star"></i>
-                                    </div>
-                                    <span class="rating-count" style="color: #999;">No ratings</span>
-                                </div>
-                            }
-                            
                             <!-- Buttons -->
                             <div class="product-actions">
                                 <a asp-action="Details" asp-route-id="@item.Id" class="btn-view">
@@ -248,25 +202,6 @@
         margin: 0;
     }
 
-    .btn-sell-item {
-        background: white;
-        color: #667eea;
-        padding: 14px 32px;
-        border-radius: 50px;
-        font-weight: 600;
-        text-decoration: none;
-        display: inline-flex;
-        align-items: center;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-    }
-
-    .btn-sell-item:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(0,0,0,0.3);
-        color: #764ba2;
-    }
-
     /* ============================================
        MODERN SEARCH SECTION
        ============================================ */
@@ -287,15 +222,23 @@
     .search-input-wrapper {
         flex: 1 1 45%;
         min-width: 220px;
+        position: relative;
     }
 
-    .search-select-wrapper {
-        flex: 0 0 220px;
+    .search-icon {
+        position: absolute;
+        left: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #999;
+        z-index: 10;
+        pointer-events: none;
+        font-size: 18px;
     }
 
     .search-input {
         width: 100%;
-        padding: 16px 24px;
+        padding: 16px 24px 16px 48px;
         border: 2px solid #e0e0e0;
         border-radius: 50px;
         font-size: 1rem;
@@ -306,6 +249,10 @@
     .search-input:focus {
         border-color: #667eea;
         box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+    }
+
+    .search-select-wrapper {
+        flex: 0 0 220px;
     }
 
     .search-select {
@@ -443,32 +390,6 @@
         min-height: 3.2em;
     }
 
-    .product-rating {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        margin-bottom: 12px;
-        font-size: 0.9rem;
-    }
-
-    .product-rating .stars {
-        color: #ffc107;
-        display: flex;
-        gap: 2px;
-        font-size: 0.95rem;
-    }
-
-    .product-rating .rating-value {
-        color: #2d3748;
-        font-weight: 600;
-        font-size: 0.95rem;
-    }
-
-    .product-rating .rating-count {
-        color: #718096;
-        font-size: 0.85rem;
-    }
-
     .product-actions {
         display: flex;
         justify-content: space-between;
@@ -532,25 +453,32 @@
     }
 
     .btn-contact {
-        background: #ff9800;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100% 100% );
+        transform: translateY(-2px);
         color: white;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
     }
 
     .btn-contact:hover {
-        background: #fb8c00;
+            background:   #764ba2 ;
         transform: translateY(-2px);
         color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
     }
 
     .btn-add-cart {
-        background: #28a745;
+        background:  linear-gradient(135deg, #667eea 0%, #764ba2 100% 100% );
+        transform: translateY(-2px);
         color: white;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
     }
 
     .btn-add-cart:hover {
-        background: #218838;
+            background:  #667eea ;
+         
         transform: translateY(-2px);
         color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
     }
 
     /* ============================================

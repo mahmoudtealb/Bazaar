@@ -1,18 +1,15 @@
+@using System.Text.Encodings.Web
+@* Toast notifications are handled automatically by JavaScript in _AdminLayout.cshtml *@
+@* Store TempData messages in data attributes for JavaScript to read *@
 @if (TempData["Success"] != null)
 {
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-        <i class="fas fa-check-circle me-2"></i>
-        <strong>Success!</strong> @TempData["Success"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
+    var successMessage = TempData["Success"]?.ToString() ?? "";
+    <div class="tempdata-message d-none" data-message="@HtmlEncoder.Default.Encode(successMessage)" data-type="success"></div>
 }
 
 @if (TempData["Error"] != null)
 {
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        <i class="fas fa-exclamation-circle me-2"></i>
-        <strong>Error!</strong> @TempData["Error"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
+    var errorMessage = TempData["Error"]?.ToString() ?? "";
+    <div class="tempdata-message d-none" data-message="@HtmlEncoder.Default.Encode(errorMessage)" data-type="error"></div>
 }
 

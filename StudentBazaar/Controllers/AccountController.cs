@@ -305,7 +305,8 @@ namespace StudentBazaar.Web.Controllers
             foreach (var error in result.Errors)
                 ModelState.AddModelError(string.Empty, error.Description);
 
-            ViewBag.Universities = await _context.Universities
+            // Rebuild the ViewModel for error case
+            var universities = await _context.Universities
                 .Select(u => new SelectListItem
                 {
                     Value = u.Id.ToString(),
@@ -314,7 +315,7 @@ namespace StudentBazaar.Web.Controllers
                 })
                 .ToListAsync();
 
-            ViewBag.Colleges = user.UniversityId.HasValue
+            var colleges = user.UniversityId.HasValue
                 ? await _context.Colleges
                     .Where(c => c.UniversityId == user.UniversityId.Value)
                     .Select(c => new SelectListItem
@@ -326,7 +327,20 @@ namespace StudentBazaar.Web.Controllers
                     .ToListAsync()
                 : new List<SelectListItem>();
 
-            return View("Profile", user);
+            var model = new ProfileViewModel
+            {
+                FullName = user.FullName,
+                Email = user.Email ?? string.Empty,
+                PhoneNumber = user.PhoneNumber,
+                Address = user.Address,
+                UniversityId = user.UniversityId,
+                CollegeId = user.CollegeId,
+                ProfilePictureUrl = user.ProfilePictureUrl,
+                Universities = universities,
+                Colleges = colleges
+            };
+
+            return View("Profile", model);
         }
 
         // ======================
@@ -356,6 +370,44 @@ namespace StudentBazaar.Web.Controllers
 
             foreach (var error in result.Errors)
                 TempData["Error"] = error.Description;
+
+            return RedirectToAction(nameof(Profile));
+        }
+
+        // ======================
+        // Delete Profile Picture
+        // ======================
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteProfilePicture()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+                return NotFound();
+
+            // Delete profile picture file if exists
+            if (!string.IsNullOrEmpty(user.ProfilePictureUrl))
+            {
+                var filePath = Path.Combine(_env.WebRootPath, user.ProfilePictureUrl.TrimStart('/').Replace('/', Path.DirectorySeparatorChar));
+                if (System.IO.File.Exists(filePath))
+                {
+                    System.IO.File.Delete(filePath);
+                }
+            }
+
+            // Clear profile picture URL
+            user.ProfilePictureUrl = null;
+            var result = await _userManager.UpdateAsync(user);
+
+            if (result.Succeeded)
+            {
+                TempData["Success"] = "Profile picture deleted successfully!";
+            }
+            else
+            {
+                TempData["Error"] = "Failed to delete profile picture.";
+            }
 
             return RedirectToAction(nameof(Profile));
         }

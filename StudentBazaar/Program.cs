@@ -152,32 +152,38 @@ using (var scope = app.Services.CreateScope())
     {
         context.Database.Migrate();
     }
-        catch (Exception ex)
-        {
-            // If migration fails, try to add columns manually via SQL
-            try
-            {
-                var sql = @"
-                IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('AspNetUsers') AND name = 'IsBlocked')
-                    ALTER TABLE AspNetUsers ADD IsBlocked BIT NOT NULL DEFAULT 0;
-                IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('AspNetUsers') AND name = 'BlockReason')
-                    ALTER TABLE AspNetUsers ADD BlockReason NVARCHAR(500) NULL;
-                IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('AspNetUsers') AND name = 'BlockedAt')
-                    ALTER TABLE AspNetUsers ADD BlockedAt DATETIME2 NULL;
-                IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('AspNetUsers') AND name = 'BlockedByUserId')
-                    ALTER TABLE AspNetUsers ADD BlockedByUserId INT NULL;
-                IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Products') AND name = 'IsForRent')
-                    ALTER TABLE Products ADD IsForRent BIT NOT NULL DEFAULT 0;
-                IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Products') AND name = 'PricePerDay')
-                    ALTER TABLE Products ADD PricePerDay DECIMAL(18, 2) NULL;
-            ";
-                context.Database.ExecuteSqlRaw(sql);
-            }
-            catch
-            {
-                // Ignore if columns already exist
-            }
-        }
+    catch (Exception ex)
+    {
+        // If migration fails, try to add columns manually via SQL
+    }
+    
+    // Always ensure required columns exist (fallback for manual SQL execution)
+    try
+    {
+        var sql = @"
+            IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('AspNetUsers') AND name = 'IsBlocked')
+                ALTER TABLE AspNetUsers ADD IsBlocked BIT NOT NULL DEFAULT 0;
+            IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('AspNetUsers') AND name = 'BlockReason')
+                ALTER TABLE AspNetUsers ADD BlockReason NVARCHAR(500) NULL;
+            IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('AspNetUsers') AND name = 'BlockedAt')
+                ALTER TABLE AspNetUsers ADD BlockedAt DATETIME2 NULL;
+            IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('AspNetUsers') AND name = 'BlockedByUserId')
+                ALTER TABLE AspNetUsers ADD BlockedByUserId INT NULL;
+            IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Products') AND name = 'IsForRent')
+                ALTER TABLE Products ADD IsForRent BIT NOT NULL DEFAULT 0;
+            IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Products') AND name = 'PricePerDay')
+                ALTER TABLE Products ADD PricePerDay DECIMAL(18, 2) NULL;
+            IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('ChatMessages') AND name = 'DeletedBySender')
+                ALTER TABLE ChatMessages ADD DeletedBySender BIT NOT NULL DEFAULT 0;
+            IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('ChatMessages') AND name = 'DeletedByReceiver')
+                ALTER TABLE ChatMessages ADD DeletedByReceiver BIT NOT NULL DEFAULT 0;
+        ";
+        context.Database.ExecuteSqlRaw(sql);
+    }
+    catch
+    {
+        // Ignore if columns already exist or if table doesn't exist yet
+    }
     
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole<int>>>();
     var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();

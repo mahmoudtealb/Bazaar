@@ -28,5 +28,9 @@ namespace StudentBazaar.Entities.Models
 
             [ForeignKey(nameof(ReceiverId))]
             public ApplicationUser Receiver { get; set; } = null!;
+
+            // Soft delete flags - allows one user to delete conversation without affecting the other user
+            public bool DeletedBySender { get; set; } = false;
+            public bool DeletedByReceiver { get; set; } = false;
         }
 }

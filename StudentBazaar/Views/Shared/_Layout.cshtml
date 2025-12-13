@@ -42,35 +42,46 @@
         // 👇 اسم يتعرض في الـNavbar (ممكن نغيّره من أي View عن طريق ViewData["NavDisplayName"])
         string? overrideName = ViewData["NavDisplayName"] as string;
         string displayName = overrideName ?? (currentUser?.FullName ?? User.Identity?.Name ?? "User");
+        string? profilePicture = currentUser?.ProfilePictureUrl;
+        
+        // Ensure profile picture URL is properly formatted
+        if (!string.IsNullOrEmpty(profilePicture) && !profilePicture.StartsWith("http") && !profilePicture.StartsWith("/"))
+        {
+            profilePicture = "/" + profilePicture.TrimStart('/');
+        }
     }
     <header>
-        <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom box-shadow mb-3 modern-navbar">
-            <div class="container-fluid">
+        <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom box-shadow mb-3 compact-navbar">
+            <div class="container-fluid flex-column py-2">
+                <!-- First Row: Logo + Search -->
+                <div class="d-flex align-items-center w-100 mb-1">
+                    <a class="navbar-brand me-3 mb-0 py-0 d-flex align-items-center" asp-area="" asp-controller="Product" asp-action="Index" style="text-decoration: none;">
+                        <img src="~/images/profiles/logo(2).png" @* alt="StudentBazaar" *@ style="height: 100px; width: auto; object-fit: contain;" />
+                    </a>
+                    
+                    <!-- Search Box next to Logo -->
+                    <form class="d-flex flex-grow-1 compact-search-form" asp-controller="Product" asp-action="Index" method="get" style="max-width: 600px;">
+                        <div class="input-group input-group-sm w-100">
+                            @* <span class="input-group-text bg-white border-end-0 py-1 px-2">
+                                <i class="bi bi-search" style="font-size: 0.9rem;"></i>
+                            </span> *@
+                            <input type="text" name="q" class="form-control border-start-0 border-end-0 py-1" placeholder="Search products..." value="@ViewBag.CurrentQuery" style="font-size: 0.9rem;" />
+                            <button class="btn btn-primary border-start-0 py-1 px-3" type="submit" style="font-size: 0.85rem;">
+                                Search
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <button class="navbar-toggler ms-auto py-0" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar"
+                            aria-expanded="false" aria-label="Toggle navigation" style="padding: 0.2rem 0.4rem;">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                </div>
 
-                <!-- Logo -->
-                <a class="navbar-brand fw-bold brand-logo" asp-area="" asp-controller="Product" asp-action="Index">
-                    <span class="brand-text">StudentBazaar</span>
-                </a>
-
-                <!-- Search Box -->
-                <form class="d-none d-md-flex flex-grow-1 modern-search" asp-controller="Product" asp-action="Index" method="get">
-                    <div class="search-wrapper">
-                        <i class="bi bi-search search-icon"></i>
-                        <input type="text" name="q" class="form-control modern-search-input" placeholder="   Search products..." />
-                    </div>
-                </form>
-
-                <!-- Toggle -->
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-
-
-                <div class="collapse navbar-collapse" id="mainNavbar">
-
-                    <!-- LEFT LINKS -->
-                    <ul class="navbar-nav me-auto">
-
+                <!-- Second Row: Navigation Links + Icons -->
+                <div class="collapse navbar-collapse w-100" id="mainNavbar">
+                    <!-- CENTER LINKS -->
+                    <ul class="navbar-nav">
                         @if (isAuthenticated)
                         {
                             <li class="nav-item">
@@ -110,7 +121,6 @@
                         }
                         else
                         {
-                            <!-- Show Products for Buy and Rent for anonymous users -->
                             <li class="nav-item">
                                 <a class="nav-link text-dark @(currentController == "Product" && currentAction == "Index" ? "active fw-bold" : "")"
                                    asp-controller="Product" asp-action="Index">
@@ -125,74 +135,41 @@
                                 </a>
                             </li>
                         }
-
-                       @*  <li class="nav-item">
-                            <a class="nav-link text-dark @(currentController == "Home" && currentAction == "Index" ? "active fw-bold" : "")"
-asp-controller="Home" asp-action="Index">Home</a>
-                        </li> *@
-
-                        <!-- Mega Menu -->
-                       @*  <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle text-dark" data-bs-toggle="dropdown">Categories</a>
-                            <ul class="dropdown-menu p-3" style="width: 350px;">
-                                <li><a class="dropdown-item" asp-controller="Product" asp-action="ByCategory" asp-route-id="1">Electronics</a></li>
-                                <li><a class="dropdown-item" asp-controller="Product" asp-action="ByCategory" asp-route-id="2">Books</a></li>
-                                <li><a class="dropdown-item" asp-controller="Product" asp-action="ByCategory" asp-route-id="3">Clothes</a></li>
-                                <li><a class="dropdown-item" asp-controller="Product" asp-action="ByCategory" asp-route-id="4">Furniture</a></li>
-                            </ul>
-                        </li> *@
-
                     </ul>
 
-
-                    <!-- RIGHT SIDE -->
-                    <ul class="navbar-nav align-items-center">
+                    <!-- RIGHT SIDE - Icons Only -->
+                    <ul class="navbar-nav ms-auto align-items-center">
 
                         @if (isAuthenticated)
                         {
-                           @*  <!-- Notifications -->
-                            <li class="nav-item dropdown me-3">
-                                <a class="nav-link position-relative" data-bs-toggle="dropdown">
-                                    🔔
-                                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">3</span>
-                                </a>
-                                <ul class="dropdown-menu dropdown-menu-end p-2" style="width:300px;">
-                                    <li><strong class="dropdown-header">Notifications</strong></li>
-                                    <li><hr /></li>
-                                    <li><a class="dropdown-item">Your order has been shipped ✔</a></li>
-                                    <li><a class="dropdown-item">New message received 💬</a></li>
-                                    <li><a class="dropdown-item">Price dropped for item you liked 🔽</a></li>
-                                </ul>
-                            </li> *@
-
-                           @*  <!-- Wishlist -->
-                            <li class="nav-item me-3">
-                                <a class="nav-link @(currentController == "Wishlist" ? "active fw-bold" : "")"
-                                   asp-controller="Wishlist" asp-action="Index">❤️ Wishlist</a>
-                            </li> *@
-
                             <!-- Orders -->
-                            <li class="nav-item me-3">
+                            <li class="nav-item me-2">
                                 <a class="nav-link @(currentController == "Order" ? "active fw-bold" : "")"
-                                   asp-controller="Order" asp-action="Index">
-                                    <i class="bi bi-box-seam me-1"></i> Orders
+                                   asp-controller="Order" asp-action="Index"
+                                   title="Orders">
+                                    <i class="bi bi-box-seam"></i>
+                                    <span class="d-lg-none ms-1">Orders</span>
                                 </a>
                             </li> 
 
                             <!-- Cart -->
-                            <li class="nav-item me-3">
+                            <li class="nav-item me-2">
                                 <a class="nav-link @(currentController == "Cart" ? "active fw-bold" : "")"
-                                   asp-controller="Cart" asp-action="Index">
-                                    <i class="bi bi-cart3 me-1"></i> Cart
+                                   asp-controller="Cart" asp-action="Index"
+                                   title="Cart">
+                                    <i class="bi bi-cart3"></i>
+                                    <span class="d-lg-none ms-1">Cart</span>
                                 </a>
                             </li>
 
                             <!-- Messages -->
-                            <li class="nav-item me-3">
+                            <li class="nav-item me-2">
                                 <a class="nav-link position-relative @(currentController == "Chat" ? "active fw-bold" : "")"
-                                   asp-controller="Chat" asp-action="Open">
-                                    <i class="bi bi-chat-dots me-1"></i> Messages
+                                   asp-controller="Chat" asp-action="Open"
+                                   title="Messages">
+                                    <i class="bi bi-chat-dots"></i>
                                     <span id="msgBadge" class="badge-notification">0</span>
+                                    <span class="d-lg-none ms-1">Messages</span>
                                 </a>
                             </li>
 
@@ -200,8 +177,8 @@ asp-controller="Home" asp-action="Index">Home</a>
                             @if (isAdmin)
                             {
                                 <!-- Notifications Dropdown -->
-                                <li class="nav-item dropdown me-3" id="notificationsDropdownContainer" style="position: relative; z-index: 1050;">
-                                    <a class="nav-link position-relative" data-bs-toggle="dropdown" id="notificationsDropdown" role="button" aria-expanded="false">
+                                <li class="nav-item dropdown me-2" id="notificationsDropdownContainer" style="position: relative; z-index: 1050;">
+                                    <a class="nav-link position-relative" data-bs-toggle="dropdown" id="notificationsDropdown" role="button" aria-expanded="false" title="Notifications">
                                         <i class="bi bi-bell"></i>
                                         <span id="notificationsBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display: none; font-size: 0.65rem; z-index: 1051;">0</span>
                                     </a>
@@ -229,25 +206,57 @@ asp-controller="Home" asp-action="Index">Home</a>
                                 </li>
 
                                 <!-- Dashboard Link -->
-                                <li class="nav-item me-3">
+                                <li class="nav-item me-2">
                                     <a class="nav-link @(currentController == "Dashboard" && currentArea == "Admin" ? "active fw-bold" : "") text-danger fw-bold"
-                                       asp-area="Admin" asp-controller="Dashboard" asp-action="Index">
-                                        <i class="bi bi-speedometer2 me-1"></i> Dashboard
+                                       asp-area="Admin" asp-controller="Dashboard" asp-action="Index"
+                                       title="Dashboard">
+                                        <i class="bi bi-speedometer2"></i>
+                                        <span class="d-lg-none ms-1">Dashboard</span>
                                     </a>
                                 </li>
                             }
 
                             <!-- Profile -->
-                            <li class="nav-item dropdown me-3">
-                                <a class="nav-link dropdown-toggle d-flex align-items-center" data-bs-toggle="dropdown" role="button" aria-expanded="false">
-                                    <i class="bi bi-person-circle me-1"></i> 
-                                    <span class="d-none d-md-inline">@displayName</span>
+                            <li class="nav-item dropdown me-2">
+                                <a class="nav-link dropdown-toggle d-flex align-items-center" data-bs-toggle="dropdown" role="button" aria-expanded="false" title="@displayName">
+                                    @if (!string.IsNullOrEmpty(profilePicture) && !string.IsNullOrWhiteSpace(profilePicture))
+                                    {
+                                        <img src="@profilePicture" alt="@displayName" 
+                                             class="rounded-circle" 
+                                             style="width: 32px; height: 32px; object-fit: cover; border: 2px solid #dee2e6;"
+                                             onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block';">
+                                        <i class="bi bi-person-circle" style="display: none;"></i>
+                                    }
+                                    else
+                                    {
+                                    <i class="bi bi-person-circle"></i> 
+                                    }
+                                    <span class="d-lg-none ms-2">@displayName</span>
                                 </a>
                                 <ul class="dropdown-menu dropdown-menu-end">
                                     <li>
-                                        <h6 class="dropdown-header">
-                                            <i class="bi bi-person me-1"></i> @displayName
-                                        </h6>
+                                        <div class="dropdown-header d-flex align-items-center gap-2">
+                                            @if (!string.IsNullOrEmpty(profilePicture) && !string.IsNullOrWhiteSpace(profilePicture))
+                                            {
+                                                <img src="@profilePicture" alt="@displayName" 
+                                                     class="rounded-circle" 
+                                                     style="width: 32px; height: 32px; object-fit: cover; border: 2px solid #dee2e6;">
+                                            }
+                                            else
+                                            {
+                                                <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center" 
+                                                     style="width: 32px; height: 32px; color: white; font-size: 14px; font-weight: bold;">
+                                                    @(displayName.Length > 0 ? displayName.Substring(0, 1).ToUpper() : "U")
+                                                </div>
+                                            }
+                                            <div>
+                                                <div class="fw-bold" style="font-size: 0.9rem;">@displayName</div>
+                                                @if (currentUser?.Email != null)
+                                                {
+                                                    <div class="text-muted" style="font-size: 0.75rem;">@currentUser.Email</div>
+                                                }
+                                            </div>
+                                        </div>
                                     </li>
                                     <li><hr class="dropdown-divider"></li>
                                     <li>
@@ -255,32 +264,26 @@ asp-controller="Home" asp-action="Index">Home</a>
                                             <i class="bi bi-person me-2"></i> My Profile
                                         </a>
                                     </li>
-                                   @*  <li>
-                                        <a class="dropdown-item" asp-controller="Account" asp-action="Settings">
-                                            <i class="bi bi-gear me-2"></i> Settings
-                                        </a>
-                                    </li> *@
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline w-100">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="dropdown-item text-danger">
+                                                <i class="bi bi-box-arrow-right me-2"></i> Logout
+                                            </button>
+                                        </form>
+                                    </li>
                                 </ul>
-                            </li>
-
-                            <!-- Logout -->
-                            <li class="nav-item">
-                                <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
-                                    @Html.AntiForgeryToken()
-                                    <button type="submit" class="btn btn-danger btn-sm">
-                                        <i class="bi bi-box-arrow-right me-1"></i> Logout
-                                    </button>
-                                </form>
                             </li>
                         }
                         else
                         {
                             <!-- Guest -->
                             <li class="nav-item me-2">
-                                <a class="btn btn-outline-primary" asp-controller="Account" asp-action="Login">Login</a>
+                                <a class="btn btn-outline-primary btn-sm" asp-controller="Account" asp-action="Login">Login</a>
                             </li>
                             <li class="nav-item">
-                                <a class="btn btn-primary" asp-controller="Account" asp-action="Register">Register</a>
+                                <a class="btn btn-primary btn-sm" asp-controller="Account" asp-action="Register">Register</a>
                             </li>
                         }
                     </ul>
@@ -645,6 +648,7 @@ asp-controller="Home" asp-action="Index">Home</a>
             })();
         </script>
     }
+
 
     @await RenderSectionAsync("Scripts", required: false)
 </body>

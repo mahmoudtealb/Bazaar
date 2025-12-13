@@ -38,14 +38,24 @@
                     <!-- Password -->
                     <div class="mb-3">
                         <label asp-for="Password" class="form-label"></label>
-                        <input asp-for="Password" type="password" class="form-control" placeholder="Password" />
+                        <div class="input-group">
+                            <input asp-for="Password" type="password" class="form-control" id="passwordInput" placeholder="Password" />
+                            <button class="btn btn-outline-secondary" type="button" id="togglePassword" title="Show/Hide Password">
+                                <i class="bi bi-eye" id="passwordIcon"></i>
+                            </button>
+                        </div>
                         <span asp-validation-for="Password" class="text-danger"></span>
                     </div>
 
                     <!-- Confirm Password -->
                     <div class="mb-3">
                         <label asp-for="ConfirmPassword" class="form-label"></label>
-                        <input asp-for="ConfirmPassword" type="password" class="form-control" placeholder="Confirm Password" />
+                        <div class="input-group">
+                            <input asp-for="ConfirmPassword" type="password" class="form-control" id="confirmPasswordInput" placeholder="Confirm Password" />
+                            <button class="btn btn-outline-secondary" type="button" id="toggleConfirmPassword" title="Show/Hide Password">
+                                <i class="bi bi-eye" id="confirmPasswordIcon"></i>
+                            </button>
+                        </div>
                         <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
                     </div>
 
@@ -145,6 +155,51 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        // Password toggle functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            // Password field toggle
+            const passwordInput = document.getElementById('passwordInput');
+            const togglePassword = document.getElementById('togglePassword');
+            const passwordIcon = document.getElementById('passwordIcon');
+            
+            if (togglePassword) {
+                togglePassword.addEventListener('click', function() {
+                    const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                    passwordInput.setAttribute('type', type);
+                    
+                    if (type === 'password') {
+                        passwordIcon.classList.remove('bi-eye-slash');
+                        passwordIcon.classList.add('bi-eye');
+                    } else {
+                        passwordIcon.classList.remove('bi-eye');
+                        passwordIcon.classList.add('bi-eye-slash');
+                    }
+                });
+            }
+            
+            // Confirm Password field toggle
+            const confirmPasswordInput = document.getElementById('confirmPasswordInput');
+            const toggleConfirmPassword = document.getElementById('toggleConfirmPassword');
+            const confirmPasswordIcon = document.getElementById('confirmPasswordIcon');
+            
+            if (toggleConfirmPassword) {
+                toggleConfirmPassword.addEventListener('click', function() {
+                    const type = confirmPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                    confirmPasswordInput.setAttribute('type', type);
+                    
+                    if (type === 'password') {
+                        confirmPasswordIcon.classList.remove('bi-eye-slash');
+                        confirmPasswordIcon.classList.add('bi-eye');
+                    } else {
+                        confirmPasswordIcon.classList.remove('bi-eye');
+                        confirmPasswordIcon.classList.add('bi-eye-slash');
+                    }
+                });
+            }
+        });
+    </script>
 
     <script>
         $(document).ready(function () {

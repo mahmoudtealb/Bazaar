@@ -58,7 +58,9 @@ namespace StudentBazaar.Web.Controllers
             var messages = await _chatRepo.GetAllAsync(
                 m => m.ProductId == productId &&
                      ((m.SenderId == currentUserId && m.ReceiverId == otherUserId) ||
-                      (m.SenderId == otherUserId && m.ReceiverId == currentUserId)),
+                      (m.SenderId == otherUserId && m.ReceiverId == currentUserId)) &&
+                     !(m.SenderId == currentUserId && m.DeletedBySender) &&
+                     !(m.ReceiverId == currentUserId && m.DeletedByReceiver),
                 includeWord: "Sender,Receiver");
 
             // Mark all unread messages as read when opening the conversation
@@ -100,7 +102,9 @@ namespace StudentBazaar.Web.Controllers
         private async Task<List<ConversationSummary>> GetAllConversationsAsync(int currentUserId)
         {
             var allMessages = await _chatRepo.GetAllAsync(
-                m => m.SenderId == currentUserId || m.ReceiverId == currentUserId,
+                m => (m.SenderId == currentUserId || m.ReceiverId == currentUserId) &&
+                     !(m.SenderId == currentUserId && m.DeletedBySender) &&
+                     !(m.ReceiverId == currentUserId && m.DeletedByReceiver),
                 includeWord: "Product,Sender,Receiver");
 
             var conversations = allMessages
@@ -172,7 +176,9 @@ namespace StudentBazaar.Web.Controllers
             var messages = await _chatRepo.GetAllAsync(
                 m => m.ProductId == productId.Value &&
                      ((m.SenderId == currentUserId && m.ReceiverId == otherUserId.Value) ||
-                      (m.SenderId == otherUserId.Value && m.ReceiverId == currentUserId)),
+                      (m.SenderId == otherUserId.Value && m.ReceiverId == currentUserId)) &&
+                     !(m.SenderId == currentUserId && m.DeletedBySender) &&
+                     !(m.ReceiverId == currentUserId && m.DeletedByReceiver),
                 includeWord: "Sender,Receiver");
 
             // Mark all unread messages as read when opening the conversation
@@ -274,7 +280,7 @@ namespace StudentBazaar.Web.Controllers
         }
 
         // ==========================
-        // 4) حذف المحادثة
+        // 4) حذف المحادثة (من جانب واحد فقط)
         // ==========================
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -284,7 +290,7 @@ namespace StudentBazaar.Web.Controllers
             {
                 var currentUserId = GetCurrentUserId();
 
-                // جلب جميع الرسائل في هذه المحادثة
+                // جلب جميع الرسائل في هذه المحادثة (بما في ذلك المحذوفة مسبقاً)
                 var messages = await _chatRepo.GetAllAsync(
                     m => m.ProductId == productId &&
                          ((m.SenderId == currentUserId && m.ReceiverId == otherUserId) ||
@@ -293,11 +299,22 @@ namespace StudentBazaar.Web.Controllers
                 if (!messages.Any())
                 {
                     TempData["Info"] = "No messages found to delete.";
-                    return RedirectToAction("MyConversations");
+                    return RedirectToAction("Open");
                 }
 
-                // حذف جميع الرسائل
-                _chatRepo.RemoveRange(messages);
+                // تعيين علامة الحذف للمستخدم الحالي فقط
+                foreach (var message in messages)
+                {
+                    if (message.SenderId == currentUserId)
+                    {
+                        message.DeletedBySender = true;
+                    }
+                    if (message.ReceiverId == currentUserId)
+                    {
+                        message.DeletedByReceiver = true;
+                    }
+                }
+
                 await _chatRepo.SaveAsync();
 
                 TempData["Success"] = "Conversation deleted successfully.";
